@@ -11,13 +11,12 @@ import { CreateResourceDto } from './dto/create-resource.dto';
 import { UpdateResourceDto } from './dto/update-resource.dto';
 import { ResourceResponseDto } from './dto/resource-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RolesGuard, Roles, Role } from '../common';
 
 @ApiTags('lesson-resources')
 @Controller('lessons/:lessonId/resources')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('instructor', 'admin')
+@Roles(Role.Instrutor, Role.Admin)
 @ApiCookieAuth('access_token')
 @ApiBearerAuth()
 @ApiParam({ name: 'lessonId', description: 'ID da aula', type: String })

@@ -1,5 +1,5 @@
 import {
-  Injectable, NotFoundException, ForbiddenException, BadRequestException, ConflictException,
+  Injectable, NotFoundException, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import slugify from 'slugify';
 import { CoursesRepository } from './courses.repository';

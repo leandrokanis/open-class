@@ -27,7 +27,12 @@ async function bootstrap() {
     .setDescription(
       'API da plataforma Open Class — cursos online open source e self-hosted.\n\n' +
       '**Autenticação**: use o cookie `access_token` (setado automaticamente no login) ' +
-      'ou envie o JWT no header `Authorization: Bearer <token>`.',
+      'ou envie o JWT no header `Authorization: Bearer <token>`.\n\n' +
+      '**Papéis (RBAC)**:\n' +
+      '- `aluno` — pode se matricular e acessar conteúdo próprio\n' +
+      '- `instrutor` — pode criar e editar seus cursos\n' +
+      '- `admin` — acesso total (usuários, cursos, matrículas)\n\n' +
+      'Rotas protegidas retornam `401` quando não autenticado e `403` quando o papel é insuficiente.',
     )
     .setVersion('0.3.0')
     .addCookieAuth('access_token')

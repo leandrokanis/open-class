@@ -12,8 +12,7 @@ import { UpdateModuleDto } from './dto/update-module.dto';
 import { ReorderModulesDto } from './dto/reorder-modules.dto';
 import { ModuleResponseDto, ModuleListResponseDto, ReorderResponseDto } from './dto/module-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RolesGuard, Roles, Role } from '../common';
 
 @ApiTags('modules')
 @Controller()
@@ -22,7 +21,7 @@ export class ModulesController {
 
   @Post('courses/:courseId/modules')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('instructor', 'admin')
+  @Roles(Role.Instrutor, Role.Admin)
   @ApiCookieAuth('access_token')
   @ApiBearerAuth()
   @ApiParam({ name: 'courseId', description: 'ID do curso', type: String })
@@ -50,7 +49,7 @@ export class ModulesController {
 
   @Patch('courses/:courseId/modules/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('instructor', 'admin')
+  @Roles(Role.Instrutor, Role.Admin)
   @ApiCookieAuth('access_token')
   @ApiBearerAuth()
   @ApiParam({ name: 'courseId', description: 'ID do curso', type: String })
@@ -69,7 +68,7 @@ export class ModulesController {
 
   @Delete('courses/:courseId/modules/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('instructor', 'admin')
+  @Roles(Role.Instrutor, Role.Admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiCookieAuth('access_token')
   @ApiBearerAuth()
@@ -87,7 +86,7 @@ export class ModulesController {
 
   @Put('courses/:courseId/modules/reorder')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('instructor', 'admin')
+  @Roles(Role.Instrutor, Role.Admin)
   @ApiCookieAuth('access_token')
   @ApiBearerAuth()
   @ApiParam({ name: 'courseId', description: 'ID do curso', type: String })

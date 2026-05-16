@@ -12,7 +12,7 @@ import {
 } from './dto/responses.dto';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard, Roles } from './guards/roles.guard';
+import { RolesGuard, Roles, Role } from '../common';
 import { CoursesService } from './courses.service';
 import { UploadService } from './upload/upload.service';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -24,7 +24,7 @@ type AuthRequest = Request & { user: { id: string; email: string; role: string }
 @ApiCookieAuth('access_token')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('instrutor', 'admin')
+@Roles(Role.Instrutor, Role.Admin)
 @Controller('courses')
 export class CoursesController {
   constructor(
@@ -145,3 +145,5 @@ export class CoursesController {
     return { data: await this.coursesService.uploadThumbnail(id, req.user, file) };
   }
 }
+
+export type { CourseListItemDto };

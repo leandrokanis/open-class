@@ -35,14 +35,14 @@ export class LessonsService {
 
   async findByModule(moduleId: string, userRole?: string) {
     const all = await this.repo.findByModule(moduleId);
-    if (userRole === 'instructor' || userRole === 'admin') return all;
+    if (userRole === 'instrutor' || userRole === 'admin') return all;
     return all.filter((l) => l.visibility === 'visible');
   }
 
   async findById(id: string, userRole?: string) {
     const lesson = await this.repo.findByIdWithResources(id);
     if (!lesson) throw new NotFoundException('Aula não encontrada.');
-    if (lesson.visibility !== 'visible' && userRole !== 'instructor' && userRole !== 'admin') {
+    if (lesson.visibility !== 'visible' && userRole !== 'instrutor' && userRole !== 'admin') {
       throw new NotFoundException('Aula não encontrada.');
     }
     return lesson;

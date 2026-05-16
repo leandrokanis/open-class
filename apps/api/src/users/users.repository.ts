@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq, and, isNull, gt } from 'drizzle-orm';
 import { users, passwordResetTokens, type NewUser } from '@open-class/db';
+import type { Role } from '../common';
 import type { Db } from '../db';
 
 @Injectable()
@@ -59,6 +60,21 @@ export class UsersRepository {
         gt(passwordResetTokens.expiresAt, now),
       ),
     });
+  }
+
+  findAll() {
+    return this.db.query.users.findMany({
+      columns: { passwordHash: false },
+    });
+  }
+
+  async updateRole(id: string, role: Role) {
+    const [user] = await this.db
+      .update(users)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
   }
 
   async markPasswordResetTokenUsed(id: string) {
