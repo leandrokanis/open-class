@@ -27,22 +27,22 @@ export class LessonsService {
       description: dto.description,
       youtubeUrl: dto.youtubeUrl,
       youtubeVideoId: videoId,
-      durationSeconds,
+      duration: durationSeconds,
       position,
-      isVisible: dto.isVisible ?? true,
+      visibility: (dto.isVisible ?? true) ? 'visible' : 'hidden',
     });
   }
 
   async findByModule(moduleId: string, userRole?: string) {
     const all = await this.repo.findByModule(moduleId);
     if (userRole === 'instructor' || userRole === 'admin') return all;
-    return all.filter((l: { isVisible: boolean }) => l.isVisible);
+    return all.filter((l) => l.visibility === 'visible');
   }
 
   async findById(id: string, userRole?: string) {
     const lesson = await this.repo.findByIdWithResources(id);
     if (!lesson) throw new NotFoundException('Aula não encontrada.');
-    if (!lesson.isVisible && userRole !== 'instructor' && userRole !== 'admin') {
+    if (lesson.visibility !== 'visible' && userRole !== 'instructor' && userRole !== 'admin') {
       throw new NotFoundException('Aula não encontrada.');
     }
     return lesson;
@@ -54,12 +54,12 @@ export class LessonsService {
     await this.assertModuleOwnership(lesson.moduleId, userId, userRole);
 
     let youtubeVideoId = lesson.youtubeVideoId;
-    let durationSeconds = lesson.durationSeconds;
+    let duration = lesson.duration;
 
     if (dto.youtubeUrl && dto.youtubeUrl !== lesson.youtubeUrl) {
       const info = await this.youtube.validateAndFetchInfo(dto.youtubeUrl);
       youtubeVideoId = info.videoId;
-      durationSeconds = info.durationSeconds;
+      duration = info.durationSeconds;
     }
 
     return this.repo.update(id, {
@@ -67,8 +67,10 @@ export class LessonsService {
       description: dto.description,
       youtubeUrl: dto.youtubeUrl,
       youtubeVideoId,
-      durationSeconds,
-      isVisible: dto.isVisible,
+      duration,
+      ...(dto.isVisible !== undefined
+        ? { visibility: dto.isVisible ? 'visible' : 'hidden' }
+        : {}),
     });
   }
 

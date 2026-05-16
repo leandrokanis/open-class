@@ -62,7 +62,7 @@ export class ModulesRepository {
       .select({
         moduleId:            modules.id,
         lessonsCount:        sql<number>`count(${lessons.id})::int`,
-        totalDurationSeconds: sql<number>`coalesce(sum(${lessons.durationSeconds}), 0)::int`,
+        totalDurationSeconds: sql<number>`coalesce(sum(${lessons.duration}), 0)::int`,
       })
       .from(modules)
       .leftJoin(lessons, eq(lessons.moduleId, modules.id))

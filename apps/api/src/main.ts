@@ -8,6 +8,7 @@ import { HttpExceptionFilter } from './filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.setGlobalPrefix('api');
   app.use(cookieParser());
 
   app.enableCors({
@@ -28,7 +29,7 @@ async function bootstrap() {
       '**Autenticação**: use o cookie `access_token` (setado automaticamente no login) ' +
       'ou envie o JWT no header `Authorization: Bearer <token>`.',
     )
-    .setVersion('0.2.0')
+    .setVersion('0.3.0')
     .addCookieAuth('access_token')
     .addBearerAuth()
     .build();
