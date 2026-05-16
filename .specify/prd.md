@@ -526,17 +526,17 @@ O `cloudflared` é instalado diretamente no host e configurado fora do `docker-c
 ### Stack Tecnológica (Proposta)
 
 
-| Camada         | Tecnologia                | Justificativa                                      |
-| -------------- | ------------------------- | -------------------------------------------------- |
-| Frontend       | Next.js (App Router)      | SSR/SSG para SEO, ecossistema React maduro         |
-| UI             | Tailwind CSS + shadcn/ui  | Leveza, customização de tema via CSS variables     |
+| Camada         | Tecnologia                | Justificativa                                             |
+| -------------- | ------------------------- | --------------------------------------------------------- |
+| Frontend       | Next.js (App Router)      | SSR/SSG para SEO, ecossistema React maduro                |
+| UI             | Tailwind CSS + shadcn/ui  | Leveza, customização de tema via CSS variables            |
 | Backend        | NestJS + Express          | Arquitetura modular, convenções claras, TypeScript nativo |
-| ORM            | Drizzle ORM               | Type-safe, migrações simples, sem CLI pesado       |
-| Banco de dados | PostgreSQL                | Confiável, suportado nativamente em Coolify/CasaOS |
-| Auth           | Lucia Auth ou NextAuth v5 | Sessões seguras sem dependência de serviço externo |
-| Exposição      | Cloudflare Tunnel (host)  | TLS automático sem abrir portas, sem proxy no compose |
-| Container      | Docker + Docker Compose   | Padrão da indústria, suportado em CasaOS e Coolify |
-| Monorepo       | Turborepo                 | Build incremental, workspaces npm                  |
+| ORM            | Drizzle ORM               | Type-safe, migrações simples, sem CLI pesado              |
+| Banco de dados | PostgreSQL                | Confiável, suportado nativamente em Coolify/CasaOS        |
+| Auth           | Lucia Auth ou NextAuth v5 | Sessões seguras sem dependência de serviço externo        |
+| Exposição      | Cloudflare Tunnel (host)  | TLS automático sem abrir portas, sem proxy no compose     |
+| Container      | Docker + Docker Compose   | Padrão da indústria, suportado em CasaOS e Coolify        |
+| Monorepo       | Turborepo                 | Build incremental, workspaces npm                         |
 
 
 ### Requisitos de Infraestrutura Mínimos
@@ -643,12 +643,12 @@ BRAND_ACCENT_COLOR="#f59e0b"
 
 Infraestrutura e autenticação completa no backend.
 
-- [ ] Setup do monorepo (Turborepo, workspaces npm)
-- [ ] Docker Compose: PostgreSQL + API (NestJS) + Frontend shell (Next.js inerte)
+- [x] Setup do monorepo (Turborepo, workspaces npm)
+- [x] Docker Compose: PostgreSQL + API (NestJS) + Frontend shell (Next.js inerte)
 - [ ] CI/CD básico (lint, typecheck, testes unitários)
-- [ ] Modelo de dados inicial — schema Drizzle + primeiras migrations
+- [x] Modelo de dados inicial — schema Drizzle + primeiras migrations
   - `users`, `sessions`, `roles`
-- [ ] Módulo de autenticação (API)
+- [x] Módulo de autenticação (API)
   - Registro com e-mail e senha (argon2id)
   - Login com JWT (httpOnly cookie)
   - Recuperação de senha via SMTP
@@ -724,8 +724,8 @@ Implementação da interface com contratos de API já estáveis.
 
 - [ ] i18n — pt-BR (padrão) e en
 - [ ] Testes de integração end-to-end (Playwright)
-- [ ] Otimização de performance (LCP < 2,5s, RAM idle < 256MB)
-- [ ] Otimização das imagens Docker (< 500MB total comprimido)
+- [ ] Otimização de performance (LCP &lt; 2,5s, RAM idle &lt; 256MB)
+- [ ] Otimização das imagens Docker (&lt; 500MB total comprimido)
 - [ ] Documentação completa (README, guia de deploy, variáveis de ambiente, guia de atualização)
 - [ ] Checklist OWASP Top 10
 - [ ] Release v1.0 + publicação open source (MIT)
