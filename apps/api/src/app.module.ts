@@ -5,6 +5,9 @@ import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { DatabaseModule } from './db/database.module';
+import { YouTubeModule } from './youtube/youtube.module';
+import { ModulesModule } from './modules/modules.module';
+import { LessonsModule } from './lessons/lessons.module';
 
 @Module({
   imports: [
@@ -18,6 +21,9 @@ import { DatabaseModule } from './db/database.module';
       googleCallbackUrl: process.env.GOOGLE_CALLBACK_URL,
     }),
     UsersModule,
+    YouTubeModule,
+    ModulesModule,
+    LessonsModule,
   ],
   controllers: [AppController],
   providers: [

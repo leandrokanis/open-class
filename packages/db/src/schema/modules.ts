@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, integer, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, integer, boolean, timestamp, index } from 'drizzle-orm/pg-core';
 import { courses } from './courses';
 
 export const modules = pgTable(
@@ -9,6 +9,7 @@ export const modules = pgTable(
     title:       varchar('title', { length: 255 }).notNull(),
     description: text('description'),
     position:    integer('position').notNull(),
+    isVisible:   boolean('is_visible').notNull().default(true),
     createdAt:   timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt:   timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
