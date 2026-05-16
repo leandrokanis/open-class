@@ -507,7 +507,7 @@ Internet → Cloudflare Edge (TLS) ─── cloudflared (host) ───▶ por
                           │
                   ┌───────▼──────┐    ┌──────────────────┐
                   │   Next.js    │───▶│   API (REST)     │
-                  │  (SSR/CSR)   │    │  Node.js/Fastify │
+                  │  (SSR/CSR)   │    │  Node.js/NestJS  │
                   └──────────────┘    └────────┬─────────┘
                                                │
                                       ┌────────▼─────────┐
@@ -635,37 +635,100 @@ BRAND_ACCENT_COLOR="#f59e0b"
 
 ## 10. Cronograma e Marcos
 
-### Fase 1 — Fundação (Semanas 1–4)
+> **Estratégia de build:** API-first. A interface é implementada somente após os contratos da API estarem estáveis, evitando retrabalho por suposições feitas no frontend.
 
-- [ ] Setup do monorepo (Turborepo, workspaces)
-- [ ] Docker Compose com PostgreSQL, API e Frontend
-- [ ] Sistema de autenticação completo (registro, login, sessão, recuperação)
-- [ ] Modelo de dados inicial (migrations)
-- [ ] CI/CD básico (lint, typecheck, testes)
+---
 
-### Fase 2 — Conteúdo (Semanas 5–8)
+### Fase 1 — Fundação (Semanas 1–2)
 
-- [ ] CRUD de cursos, módulos e aulas (instrutor)
-- [ ] Validação e embed de URLs do YouTube
-- [ ] Catálogo público com busca e filtros
+Infraestrutura e autenticação completa no backend.
+
+- [ ] Setup do monorepo (Turborepo, workspaces npm)
+- [ ] Docker Compose: PostgreSQL + API (NestJS) + Frontend shell (Next.js inerte)
+- [ ] CI/CD básico (lint, typecheck, testes unitários)
+- [ ] Modelo de dados inicial — schema Drizzle + primeiras migrations
+  - `users`, `sessions`, `roles`
+- [ ] Módulo de autenticação (API)
+  - Registro com e-mail e senha (argon2id)
+  - Login com JWT (httpOnly cookie)
+  - Recuperação de senha via SMTP
+  - OAuth Google (opcional via env vars)
+  - Rate limiting nas rotas de auth
+
+---
+
+### Fase 2 — API: Conteúdo (Semanas 3–5)
+
+CRUD completo de cursos, módulos e aulas.
+
+- [ ] Migrations: `courses`, `modules`, `lessons`, `enrollments`
+- [ ] Módulo de cursos (API)
+  - CRUD completo (instrutor)
+  - Upload de thumbnail
+  - Publicar / despublicar
+  - Visibilidade por módulo e por aula
+- [ ] Módulo de aulas (API)
+  - Validação de URL do YouTube
+  - Busca automática de duração via YouTube Data API v3
+  - Recursos (links externos) por aula
+  - Reordenação de módulos e aulas
+- [ ] Sistema de papéis e permissões (guards NestJS)
+  - `aluno`, `instrutor`, `admin`
+
+---
+
+### Fase 3 — API: Catálogo, Progresso e Admin (Semanas 6–8)
+
+Endpoints de consumo de conteúdo e administração.
+
+- [ ] Migrations: `progress`, `categories`, `platform_config`
+- [ ] Módulo de catálogo (API)
+  - Listagem pública com filtros (categoria, nível) e busca (título, descrição)
+  - Paginação por cursor
+  - Endpoint de detalhes do curso (currículo expandido)
+- [ ] Módulo de progresso (API)
+  - Marcar aula como concluída / não concluída
+  - Percentual de conclusão por curso
+  - Última aula acessada por curso
+- [ ] Módulo administrativo (API)
+  - CRUD de usuários (promover, desativar)
+  - Gestão de cursos (publicar, despublicar, excluir soft)
+  - CRUD de categorias com reordenação
+- [ ] Módulo white-label (API)
+  - Leitura e escrita de configurações (nome, logo, cores, tipografia)
+  - Env vars com precedência sobre banco
+
+---
+
+### Fase 4 — UI: Telas Principais (Semanas 9–12)
+
+Implementação da interface com contratos de API já estáveis.
+
+- [ ] Setup de design system (shadcn/ui + tokens de tema via CSS variables)
+- [ ] Telas de autenticação (login, registro, recuperação de senha)
+- [ ] Home / Catálogo de cursos (busca, filtros, paginação)
 - [ ] Página de detalhes do curso
-- [ ] Player de aula
-
-### Fase 3 — Progresso e Admin (Semanas 9–12)
-
-- [ ] Rastreamento de progresso (aula concluída)
-- [ ] Dashboard do aluno
+- [ ] Player de aula (embed YouTube + currículo lateral + marcação de progresso)
+- [ ] Dashboard do aluno ("Meu Aprendizado")
+- [ ] Painel do instrutor
+  - Visão geral (métricas)
+  - Editor de curso (informações + currículo)
+  - Editor de aula (link YouTube + recursos + visibilidade)
 - [ ] Painel administrativo (usuários, cursos, categorias)
-- [ ] Sistema de papéis e permissões
+- [ ] Configurações de perfil do usuário
+- [ ] Configurações da plataforma (white-label, SMTP)
 
-### Fase 4 — White-label e Deploy (Semanas 13–16)
+---
 
-- [ ] Configuração white-label (painel + variáveis de ambiente)
-- [ ] i18n (pt-BR e en)
-- [ ] Otimização de performance e tamanho das imagens Docker
-- [ ] Documentação completa (README, guia de deploy, variáveis)
-- [ ] Testes de integração end-to-end
-- [ ] Release v1.0
+### Fase 5 — Qualidade e Release (Semanas 13–16)
+
+- [ ] i18n — pt-BR (padrão) e en
+- [ ] Testes de integração end-to-end (Playwright)
+- [ ] Otimização de performance (LCP < 2,5s, RAM idle < 256MB)
+- [ ] Otimização das imagens Docker (< 500MB total comprimido)
+- [ ] Documentação completa (README, guia de deploy, variáveis de ambiente, guia de atualização)
+- [ ] Checklist OWASP Top 10
+- [ ] Release v1.0 + publicação open source (MIT)
 
 ---
 
