@@ -1,0 +1,27 @@
+import { Module } from '@nestjs/common';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { AppController } from './app.controller';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { DatabaseModule } from './db/database.module';
+
+@Module({
+  imports: [
+    DatabaseModule,
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
+    AuthModule.register({
+      jwtSecret: process.env.JWT_SECRET ?? 'dev-secret-change-in-production',
+      jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
+      googleClientId: process.env.GOOGLE_CLIENT_ID,
+      googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      googleCallbackUrl: process.env.GOOGLE_CALLBACK_URL,
+    }),
+    UsersModule,
+  ],
+  controllers: [AppController],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
+})
+export class AppModule {}
