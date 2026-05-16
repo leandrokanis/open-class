@@ -7,14 +7,17 @@ import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { DatabaseModule } from './db/database.module';
+import { CommonModule } from './common';
 import { YouTubeModule } from './youtube/youtube.module';
 import { ModulesModule } from './modules/modules.module';
 import { LessonsModule } from './lessons/lessons.module';
 import { CoursesModule } from './courses/courses.module';
+import { EnrollmentsModule } from './enrollments/enrollments.module';
 
 @Module({
   imports: [
     DatabaseModule,
+    CommonModule,
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
@@ -32,6 +35,7 @@ import { CoursesModule } from './courses/courses.module';
     ModulesModule,
     LessonsModule,
     CoursesModule,
+    EnrollmentsModule,
   ],
   controllers: [AppController],
   providers: [

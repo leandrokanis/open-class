@@ -15,6 +15,7 @@ Decisões técnicas significativas do projeto Open Class, documentadas no format
 | [ADR-007](007-docker-compose-deploy.md) | Docker Compose para deploy self-hosted | Aceito | 2026-05-16 |
 | [ADR-008](008-rate-limiting-in-memory.md) | Rate limiting in-memory sem Redis | Aceito | 2026-05-16 |
 | [ADR-009](009-google-oauth-condicional.md) | Google OAuth como módulo condicional | Aceito | 2026-05-16 |
+| [ADR-010](010-roles-permissions-guard.md) | Autorização por papel via RolesGuard + @Roles() | Aceito | 2026-05-16 |
 
 ## Como usar
 

@@ -4,7 +4,7 @@ For additional context about technologies to be used, project structure,
 
 shell commands, and other important information, read the current plan:
 
-`specs/003-courses-api-crud/plan.md`
+`specs/001-roles-permissions/plan.md`
 
 <!-- SPECKIT END -->
 
@@ -27,4 +27,3 @@ Use speckit skills to drive spec-driven development:
 5. `/speckit-implement` - Execute
 
 For PRD generation, use `/prd-generator`.
-

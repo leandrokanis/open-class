@@ -15,8 +15,7 @@ import {
 } from './dto/lesson-response.dto';
 import { ReorderResponseDto } from '../modules/dto/module-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RolesGuard, Roles, Role } from '../common';
 
 @ApiTags('lessons')
 @Controller()
@@ -25,7 +24,7 @@ export class LessonsController {
 
   @Post('modules/:moduleId/lessons')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('instructor', 'admin')
+  @Roles(Role.Instrutor, Role.Admin)
   @ApiCookieAuth('access_token')
   @ApiBearerAuth()
   @ApiParam({ name: 'moduleId', description: 'ID do módulo', type: String })
@@ -69,7 +68,7 @@ export class LessonsController {
 
   @Patch('lessons/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('instructor', 'admin')
+  @Roles(Role.Instrutor, Role.Admin)
   @ApiCookieAuth('access_token')
   @ApiBearerAuth()
   @ApiParam({ name: 'id', description: 'ID da aula', type: String })
@@ -86,7 +85,7 @@ export class LessonsController {
 
   @Delete('lessons/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('instructor', 'admin')
+  @Roles(Role.Instrutor, Role.Admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiCookieAuth('access_token')
   @ApiBearerAuth()
@@ -102,7 +101,7 @@ export class LessonsController {
 
   @Put('modules/:moduleId/lessons/reorder')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('instructor', 'admin')
+  @Roles(Role.Instrutor, Role.Admin)
   @ApiCookieAuth('access_token')
   @ApiBearerAuth()
   @ApiParam({ name: 'moduleId', description: 'ID do módulo', type: String })
