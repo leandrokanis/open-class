@@ -11,6 +11,12 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import {
+  RegisterResponseDto,
+  LoginResponseDto,
+  MeResponseDto,
+  MessageResponseDto,
+} from './dto/auth-response.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
@@ -23,13 +29,14 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Criar conta com e-mail e senha' })
-  @ApiResponse({ status: 201, description: 'Conta criada. Cookie access_token setado.' })
+  @ApiBody({ type: RegisterDto })
+  @ApiResponse({ status: 201, description: 'Conta criada.', type: RegisterResponseDto })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
   @ApiResponse({ status: 409, description: 'E-mail já cadastrado.' })
   async register(
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<RegisterResponseDto> {
     const user = await this.authService.register(dto, res);
     return {
       data: {
@@ -37,7 +44,7 @@ export class AuthController {
         name: user.name,
         email: user.email,
         role: user.role,
-        avatarUrl: user.avatarUrl,
+        avatarUrl: user.avatarUrl ?? null,
         createdAt: user.createdAt,
       },
     };
@@ -48,13 +55,26 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Autenticar com e-mail e senha' })
   @ApiBody({ type: LoginDto })
-  @ApiResponse({ status: 200, description: 'Autenticado. Cookie access_token setado.' })
+  @ApiResponse({ status: 200, description: 'Autenticado. Cookie access_token setado.', type: LoginResponseDto })
   @ApiResponse({ status: 401, description: 'Credenciais inválidas.' })
   @ApiResponse({ status: 403, description: 'Conta desativada.' })
-  login(@Req() req: Request & { user: User }, @Res({ passthrough: true }) res: Response) {
+  login(
+    @Req() req: Request & { user: User },
+    @Res({ passthrough: true }) res: Response,
+  ): LoginResponseDto {
     const { id, email, role, avatarUrl, name } = req.user;
     const token = this.authService.issueToken(id, email, role, res);
-    return { data: { id, name, email, role, avatarUrl, access_token: token } };
+    return {
+      data: {
+        id,
+        name: name ?? '',
+        email,
+        role,
+        avatarUrl: avatarUrl ?? null,
+        createdAt: req.user.createdAt,
+        access_token: token,
+      },
+    };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -62,9 +82,11 @@ export class AuthController {
   @ApiCookieAuth('access_token')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retorna o usuário autenticado' })
-  @ApiResponse({ status: 200, description: 'Dados do usuário.' })
+  @ApiResponse({ status: 200, description: 'Dados do usuário.', type: MeResponseDto })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
-  me(@Req() req: Request & { user: { id: string; email: string; role: string } }) {
+  me(
+    @Req() req: Request & { user: { id: string; email: string; role: string } },
+  ): MeResponseDto {
     return { data: req.user };
   }
 
@@ -75,6 +97,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Encerrar sessão' })
   @ApiResponse({ status: 204, description: 'Cookie removido.' })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
   logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('access_token');
   }
@@ -83,8 +106,10 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Solicitar link de recuperação de senha por e-mail' })
-  @ApiResponse({ status: 200, description: 'E-mail enviado (resposta genérica para evitar enumeração).' })
-  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiResponse({ status: 200, description: 'E-mail enviado (resposta genérica para evitar enumeração de usuários).', type: MessageResponseDto })
+  @ApiResponse({ status: 429, description: 'Muitas tentativas. Aguarde 15 minutos.' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<MessageResponseDto> {
     await this.authService.forgotPassword(dto.email);
     return { data: { message: 'Se o e-mail existir, um link foi enviado.' } };
   }
@@ -93,9 +118,11 @@ export class AuthController {
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Redefinir senha com token recebido por e-mail' })
-  @ApiResponse({ status: 200, description: 'Senha redefinida.' })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiResponse({ status: 200, description: 'Senha redefinida com sucesso.', type: MessageResponseDto })
   @ApiResponse({ status: 400, description: 'Token inválido, expirado ou já utilizado.' })
-  async resetPassword(@Body() dto: ResetPasswordDto) {
+  @ApiResponse({ status: 429, description: 'Muitas tentativas. Aguarde 15 minutos.' })
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<MessageResponseDto> {
     await this.authService.resetPassword(dto.token, dto.password);
     return { data: { message: 'Senha redefinida com sucesso.' } };
   }

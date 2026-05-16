@@ -23,8 +23,12 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Open Class API')
-    .setDescription('API da plataforma Open Class — cursos online open source e self-hosted')
-    .setVersion('1.0')
+    .setDescription(
+      'API da plataforma Open Class — cursos online open source e self-hosted.\n\n' +
+      '**Autenticação**: use o cookie `access_token` (setado automaticamente no login) ' +
+      'ou envie o JWT no header `Authorization: Bearer <token>`.',
+    )
+    .setVersion('0.2.0')
     .addCookieAuth('access_token')
     .addBearerAuth()
     .build();

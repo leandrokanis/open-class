@@ -29,3 +29,7 @@ coverage/
 
 # Drizzle generated (keep drizzle/ dir but ignore temp files)
 *.snap
+
+# Spec-driven development (local only)
+specs/
+.specify/

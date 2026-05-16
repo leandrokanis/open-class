@@ -36,4 +36,4 @@ COPY --from=builder /app/packages/db/dist/src ./packages/db/dist/src
 COPY --from=builder /app/packages/db/drizzle ./packages/db/dist/drizzle
 
 EXPOSE 3001
-CMD ["node", "apps/api/dist/main.js"]
+CMD ["node", "apps/api/dist/src/main.js"]
