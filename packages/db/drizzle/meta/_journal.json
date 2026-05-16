@@ -29,6 +29,13 @@
       "when": 1778960034777,
       "tag": "0003_courses_api",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778961984587,
+      "tag": "0004_thick_scourge",
+      "breakpoints": true
     }
   ]
 }
