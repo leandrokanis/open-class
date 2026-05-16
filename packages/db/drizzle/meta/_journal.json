@@ -8,6 +8,13 @@
       "when": 1778911117501,
       "tag": "0000_magenta_flatman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778956791012,
+      "tag": "0001_goofy_madame_hydra",
+      "breakpoints": true
     }
   ]
 }
