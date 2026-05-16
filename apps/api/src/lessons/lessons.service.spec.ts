@@ -58,11 +58,11 @@ describe('LessonsService', () => {
         'module-1',
         { title: 'Aula 1', youtubeUrl: 'https://youtu.be/abc12345678' },
         'user-1',
-        'instructor',
+        'instrutor',
       );
 
       expect(repo.insert).toHaveBeenCalledWith(
-        expect.objectContaining({ youtubeVideoId: 'abc12345678', durationSeconds: 213 }),
+        expect.objectContaining({ youtubeVideoId: 'abc12345678', duration: 213 }),
       );
     });
 
