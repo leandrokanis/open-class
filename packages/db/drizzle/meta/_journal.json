@@ -15,12 +15,19 @@
       "when": 1778956791012,
       "tag": "0001_goofy_madame_hydra",
       "breakpoints": true
-    }
-    ,{
+    },
+    {
       "idx": 2,
       "version": "7",
       "when": 1747440000000,
       "tag": "0002_lessons_module_api",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778960034777,
+      "tag": "0003_courses_api",
       "breakpoints": true
     }
   ]
