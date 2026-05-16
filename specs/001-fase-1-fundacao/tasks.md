@@ -58,12 +58,6 @@
 
 **Independent Test**: `POST /auth/register` com dados válidos retorna 201 com cookie `access_token`; segundo register com mesmo e-mail retorna 409.
 
-### E2E Tests — US-01
-
-> **TDD**: Escrever testes antes da implementação. Garantir que falhem (RED) antes de implementar.
-
-- [ ] T021 [P] [US1] Criar e2e spec `apps/api/test/auth-register.e2e-spec.ts`: cenários happy-path (201 + cookie), e-mail duplicado (409), campos inválidos (400), conta desativada não afeta registro
-
 ### Implementation — US-01
 
 - [ ] T022 [P] [US1] Criar `RegisterDto` em `apps/api/src/auth/dto/register.dto.ts` com validações: `name` (2–255), `email` (IsEmail), `password` (MinLength 8)
@@ -71,7 +65,6 @@
 - [ ] T024 [US1] Criar `AuthService` em `apps/api/src/auth/auth.service.ts` com método `register(dto)`: validar e-mail único → hash bcrypt → inserir user → emitir JWT
 - [ ] T025 [US1] Implementar emissão de JWT httpOnly cookie em `AuthService`: método `issueToken(userId, res)` usando `@nestjs/jwt` e `response.cookie()`
 - [ ] T026 [US1] Criar `AuthController` em `apps/api/src/auth/auth.controller.ts` com `POST /auth/register` usando `@Res({ passthrough: true })`
-- [ ] T027 [US1] Executar testes E2E de registro (GREEN): `pnpm --filter @open-class/api test:e2e -- --testPathPattern=auth-register`
 
 **Checkpoint**: US-01 completa — registro funcional, cookie setado, 409 em duplicata.
 
@@ -82,10 +75,6 @@
 **Goal**: Usuário cadastrado autentica com e-mail+senha, recebe JWT cookie, GET /auth/me retorna dados, logout limpa cookie.
 
 **Independent Test**: `POST /auth/login` retorna 200 + cookie; `GET /auth/me` com cookie retorna user; `POST /auth/logout` limpa cookie; `GET /auth/me` sem cookie retorna 401.
-
-### E2E Tests — US-02
-
-- [ ] T028 [P] [US2] Criar e2e spec `apps/api/test/auth-login.e2e-spec.ts`: login válido (200 + cookie), credenciais erradas (401), conta desativada (403), `GET /auth/me` autenticado (200), não autenticado (401), `POST /auth/logout` (204 + cookie cleared)
 
 ### Implementation — US-02
 
@@ -98,7 +87,6 @@
 - [ ] T035 [US2] Adicionar `POST /auth/login` no `AuthController` com `@UseGuards(LocalAuthGuard)`: chamar `issueToken` e retornar user
 - [ ] T036 [US2] Adicionar `GET /auth/me` no `AuthController` com `@UseGuards(JwtAuthGuard)`: retornar `req.user`
 - [ ] T037 [US2] Adicionar `POST /auth/logout` no `AuthController`: limpar cookie `access_token` (Max-Age=0)
-- [ ] T038 [US2] Executar testes E2E de login (GREEN): `pnpm --filter @open-class/api test:e2e -- --testPathPattern=auth-login`
 
 **Checkpoint**: US-02 completa — login/logout/me funcionais; JWT validado via cookie.
 
@@ -110,10 +98,6 @@
 
 **Independent Test**: `POST /auth/forgot-password` retorna 200 para qualquer e-mail (sem enumerar); banco tem registro em `password_reset_tokens`; `POST /auth/reset-password` com token válido atualiza senha e marca `used_at`; token expirado ou já usado retorna 400.
 
-### E2E Tests — US-04
-
-- [ ] T039 [P] [US4] Criar e2e spec `apps/api/test/auth-password-reset.e2e-spec.ts`: forgot com e-mail existente (200), forgot com e-mail inexistente (200 — sem enumerar), reset com token válido (200), reset com token expirado (400), reset com token já usado (400), token inválido (400)
-
 ### Implementation — US-04
 
 - [ ] T040 [P] [US4] Criar `ForgotPasswordDto` em `apps/api/src/auth/dto/forgot-password.dto.ts`: `email` (IsEmail)
@@ -124,7 +108,6 @@
 - [ ] T045 [US4] Adicionar `forgotPassword(email)` em `AuthService`: buscar user (silencioso se não existir) → gerar token bruto (`crypto.randomBytes(32).toString('hex')`) → hash SHA-256 → persistir com `expires_at = now + 1h` → enviar e-mail com link `${FRONTEND_URL}/reset-password?token=<raw>`
 - [ ] T046 [US4] Adicionar `resetPassword(token, newPassword)` em `AuthService`: hash SHA-256 do token → buscar no banco → validar `used_at IS NULL` e `expires_at > now()` → bcrypt nova senha → `updatePasswordHash` → `markUsed`
 - [ ] T047 [US4] Adicionar `POST /auth/forgot-password` e `POST /auth/reset-password` no `AuthController` com throttle customizado (5 req/15 min por IP)
-- [ ] T048 [US4] Executar testes E2E de password reset (GREEN): `pnpm --filter @open-class/api test:e2e -- --testPathPattern=auth-password-reset`
 
 **Checkpoint**: US-04 completa — reset funcional; token único e expirado tratados corretamente.
 
@@ -136,10 +119,6 @@
 
 **Independent Test**: Com env vars configuradas: `GET /auth/google` redireciona para Google; callback cria/vincula conta e seta cookie. Sem env vars: rotas retornam 404.
 
-### E2E Tests — US-05
-
-- [ ] T049 [P] [US5] Criar e2e spec `apps/api/test/auth-google.e2e-spec.ts`: sem env vars → GET /auth/google retorna 404; com env vars (mock passport) → callback com novo e-mail cria user com `google_id`; callback com e-mail existente vincula `google_id`; callback com e-mail existente+google_id já vinculado autentica normalmente
-
 ### Implementation — US-05
 
 - [ ] T050 [P] [US5] Criar `AuthConfig` interface em `apps/api/src/auth/auth.config.ts`: `jwtSecret`, `jwtExpiresIn`, `googleClientId?`, `googleClientSecret?`, `googleCallbackUrl?`
@@ -148,7 +127,6 @@
 - [ ] T053 [US5] Adicionar `findOrCreateGoogleUser(profile)` em `AuthService`: buscar por `google_id` → buscar por `email` → se existe sem `google_id`: `linkGoogleId` → se não existe: `create` com `password_hash = NULL`
 - [ ] T054 [US5] Atualizar `AuthModule.register(config)` para adicionar `GoogleStrategy` ao array de providers somente se `config.googleClientId && config.googleClientSecret` (conforme `research.md`)
 - [ ] T055 [US5] Adicionar `GET /auth/google` e `GET /auth/google/callback` no `AuthController`; callback: chamar `issueToken` → redirecionar para `FRONTEND_URL`; em erro: redirecionar para `${FRONTEND_URL}/login?error=oauth_failed`
-- [ ] T056 [US5] Executar testes E2E de Google OAuth (GREEN): `pnpm --filter @open-class/api test:e2e -- --testPathPattern=auth-google`
 
 **Checkpoint**: US-05 completa — OAuth condicional; criação/vinculação de conta por Google funcional.
 
@@ -163,8 +141,7 @@
 - [ ] T059 [P] Adicionar `nestjs-pino` ou Logger nativo para logar todas as requisições de auth com nível, método, path e status (sem logar senhas ou tokens)
 - [ ] T060 Rodar `tsc --noEmit` em `apps/api/` e `packages/db/` — zero erros
 - [ ] T061 Rodar ESLint: `pnpm --filter @open-class/api lint` — zero warnings
-- [ ] T062 Executar todos os testes E2E: `pnpm --filter @open-class/api test:e2e` — todos GREEN
-- [ ] T063 Validar quickstart: seguir `specs/001-fase-1-fundacao/quickstart.md` do zero em ambiente limpo
+- [ ] T062 Validar quickstart: seguir `specs/001-fase-1-fundacao/quickstart.md` do zero em ambiente limpo
 - [ ] T064 Commit final e abertura de PR para `main`
 
 ---
@@ -187,7 +164,6 @@
 
 ### Within Each User Story
 
-- Testes E2E escritos primeiro (RED) → implementação (GREEN)
 - DTOs e Repository antes de Service
 - Service antes de Controller
 - Controller antes do teste E2E de integração
@@ -197,10 +173,10 @@
 - T001, T002, T003, T004, T006, T007 — todos em paralelo (Phase 1)
 - T008, T009, T011 — em paralelo (Phase 2, schemas independentes)
 - T015, T016 — em paralelo (Phase 2)
-- T021, T022 — em paralelo (Phase 3)
-- T028, T029 — em paralelo (Phase 4)
-- T039, T040, T041 — em paralelo (Phase 5)
-- T049, T050 — em paralelo (Phase 6)
+- T022 — (Phase 3)
+- T029 — (Phase 4)
+- T040, T041 — em paralelo (Phase 5)
+- T050 — (Phase 6)
 - T057, T058, T059 — em paralelo (Phase 7)
 
 ---
@@ -266,7 +242,6 @@ Task T016: UsersRepository em apps/api/src/users/users.repository.ts
 
 - `[P]` = arquivos diferentes, sem dependência de task anterior incompleta
 - `[USn]` = user story à qual a task pertence (rastreabilidade)
-- TDD: testes E2E escritos antes da implementação (RED → GREEN)
 - Cada phase é um incremento independentemente testável
 - Commit após cada checkpoint de phase
 - `ALLOW_REGISTRATION` e Google OAuth são features opt-in via env vars

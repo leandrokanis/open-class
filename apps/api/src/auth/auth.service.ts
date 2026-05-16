@@ -61,14 +61,15 @@ export class AuthService {
     return { id: user.id, email: user.email, role: user.role };
   }
 
-  issueToken(userId: string, email: string, role: string, res: Response) {
+  issueToken(userId: string, email: string, role: string, res: Response): string {
     const token = this.jwtService.sign({ sub: userId, email, role });
     res.cookie('access_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 100 * 365 * 24 * 60 * 60 * 1000,
     });
+    return token;
   }
 
   async forgotPassword(email: string) {

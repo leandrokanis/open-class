@@ -3,7 +3,7 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import {
-  ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiBody,
+  ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiBearerAuth, ApiBody,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -53,13 +53,14 @@ export class AuthController {
   @ApiResponse({ status: 403, description: 'Conta desativada.' })
   login(@Req() req: Request & { user: User }, @Res({ passthrough: true }) res: Response) {
     const { id, email, role, avatarUrl, name } = req.user;
-    this.authService.issueToken(id, email, role, res);
-    return { data: { id, name, email, role, avatarUrl } };
+    const token = this.authService.issueToken(id, email, role, res);
+    return { data: { id, name, email, role, avatarUrl, access_token: token } };
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
   @ApiCookieAuth('access_token')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Retorna o usuário autenticado' })
   @ApiResponse({ status: 200, description: 'Dados do usuário.' })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
@@ -71,6 +72,7 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiCookieAuth('access_token')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Encerrar sessão' })
   @ApiResponse({ status: 204, description: 'Cookie removido.' })
   logout(@Res({ passthrough: true }) res: Response) {

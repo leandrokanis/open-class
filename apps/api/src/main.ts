@@ -26,6 +26,7 @@ async function bootstrap() {
     .setDescription('API da plataforma Open Class — cursos online open source e self-hosted')
     .setVersion('1.0')
     .addCookieAuth('access_token')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

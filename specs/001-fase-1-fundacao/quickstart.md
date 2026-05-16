@@ -49,11 +49,14 @@ A API estará disponível em `http://localhost:3001`.
 ## Rodar testes
 
 ```bash
-# Unit tests
+# Rodar uma vez
 pnpm --filter @open-class/api test
 
-# E2E (requer banco rodando)
-pnpm --filter @open-class/api test:e2e
+# Watch mode (TDD)
+pnpm --filter @open-class/api test:watch
+
+# Com cobertura
+pnpm --filter @open-class/api test:coverage
 ```
 
 ## Estrutura da API (`apps/api/src/`)

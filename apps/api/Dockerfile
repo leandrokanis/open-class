@@ -33,7 +33,7 @@ RUN pnpm install --frozen-lockfile --prod
 # Copy build artifacts
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/packages/db/dist/src ./packages/db/dist/src
-COPY --from=builder /app/packages/db/drizzle ./packages/db/drizzle
+COPY --from=builder /app/packages/db/drizzle ./packages/db/dist/drizzle
 
 EXPOSE 3001
 CMD ["node", "apps/api/dist/main.js"]

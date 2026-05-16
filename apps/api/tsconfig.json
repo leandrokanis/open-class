@@ -16,8 +16,5 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noFallthroughCasesInSwitch": true,
-    "paths": {
-      "@open-class/db": ["../../packages/db/src/index.ts"]
-    }
   }
 }

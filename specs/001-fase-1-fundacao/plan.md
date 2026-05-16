@@ -4,7 +4,7 @@
 
 ## Summary
 
-Implementar autenticação completa na API NestJS: registro/login com e-mail+senha, JWT stateless via httpOnly cookie, recuperação de senha por e-mail, e login com Google OAuth (condicional). Banco PostgreSQL com Drizzle ORM. Sem UI nesta fase — entregável é a API funcionando com testes E2E cobrindo todos os fluxos de auth.
+Implementar autenticação completa na API NestJS: registro/login com e-mail+senha, JWT stateless via httpOnly cookie, recuperação de senha por e-mail, e login com Google OAuth (condicional). Banco PostgreSQL com Drizzle ORM. Sem UI nesta fase — entregável é a API funcionando.
 
 ## Technical Context
 
@@ -20,7 +20,7 @@ Implementar autenticação completa na API NestJS: registro/login com e-mail+sen
 
 **Storage**: PostgreSQL 16 (Docker local, Railway/Supabase em produção)
 
-**Testing**: Jest (unit) + Supertest (E2E via `@nestjs/testing`)
+**Testing**: Vitest + `@nestjs/testing` (BDD-style unit/integration, describe/it)
 
 **Target Platform**: Linux server (homelab, < 256 MB RAM idle)
 
@@ -38,7 +38,6 @@ Implementar autenticação completa na API NestJS: registro/login com e-mail+sen
 
 | Gate | Status | Notes |
 |------|--------|-------|
-| Test-First (TDD) | PASS | E2E tests escritos antes/junto com implementação |
 | Simplicity (YAGNI) | PASS | MemoryStore throttler, sem Redis, sem DrizzleModule customizado |
 | Zero lint/type errors | PASS | ESLint + tsc --noEmit no CI |
 | No extra projects | PASS | Apenas `apps/api` nesta fase |
@@ -91,8 +90,6 @@ apps/api/
 │   │   └── index.ts                # Pool + drizzle; exportado como provider 'DATABASE'
 │   ├── app.module.ts
 │   └── main.ts
-├── test/
-│   └── auth.e2e-spec.ts
 └── .env.example
 
 packages/db/
