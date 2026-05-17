@@ -28,7 +28,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    restart: on-failure
+    # No restart policy: migrator must run once and exit cleanly.
+    # Restart-on-failure here would mask bugs in an infinite loop and the api
+    # service would wait forever on service_completed_successfully.
 
   api:
     build:
