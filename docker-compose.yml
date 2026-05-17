@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: openclass
       POSTGRES_PASSWORD: openclass
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5433}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -74,7 +74,7 @@ services:
       dockerfile: apps/ui/Dockerfile
       target: runner
     ports:
-      - "${UI_PORT:-3002}:3000"
+      - "${UI_PORT:-3003}:3000"
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
     depends_on:
