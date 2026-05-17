@@ -68,6 +68,20 @@ services:
       retries: 5
       start_period: 10s
 
+  ui:
+    build:
+      context: .
+      dockerfile: apps/ui/Dockerfile
+      target: runner
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   pgdata:
   uploads:
