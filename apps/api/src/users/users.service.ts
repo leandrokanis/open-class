@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import type { Role } from '../common';
 
@@ -22,5 +22,14 @@ export class UsersService {
     const user = await this.usersRepository.findById(userId);
     if (!user) throw new NotFoundException('Usuário não encontrado');
     return this.usersRepository.updateRole(userId, role);
+  }
+
+  async setActiveStatus(userId: string, requestingUserId: string, isActive: boolean) {
+    if (userId === requestingUserId) {
+      throw new BadRequestException('Não é possível alterar o status da própria conta');
+    }
+    const user = await this.usersRepository.findById(userId);
+    if (!user) throw new NotFoundException('Usuário não encontrado');
+    return this.usersRepository.setActiveStatus(userId, isActive);
   }
 }

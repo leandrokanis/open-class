@@ -105,11 +105,15 @@ export class AuthService {
     const avatarUrl = profile.photos?.[0]?.value;
 
     const byGoogleId = await this.usersRepository.findByGoogleId(googleId);
-    if (byGoogleId) return byGoogleId;
+    if (byGoogleId) {
+      if (!byGoogleId.isActive) throw new ForbiddenException('Conta desativada');
+      return byGoogleId;
+    }
 
     if (email) {
       const byEmail = await this.usersRepository.findByEmail(email);
       if (byEmail) {
+        if (!byEmail.isActive) throw new ForbiddenException('Conta desativada');
         return this.usersRepository.linkGoogleId(byEmail.id, googleId, avatarUrl);
       }
 

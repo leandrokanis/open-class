@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, isNull, and, sql, count, asc } from 'drizzle-orm';
+import { eq, isNull, and, sql, count, asc, desc } from 'drizzle-orm';
 import { courses, modules, lessons, type NewCourse } from '@open-class/db';
 import type { Db } from '../db';
 
@@ -13,6 +13,30 @@ export class CoursesRepository {
     return this.db.query.courses.findFirst({
       where: and(eq(courses.id, id), isNull(courses.deletedAt)),
     });
+  }
+
+  async findAll(
+    page: number,
+    limit: number,
+    filters: { status?: 'draft' | 'published'; instructorId?: string } = {},
+  ) {
+    const offset = (page - 1) * limit;
+    const conditions = [isNull(courses.deletedAt)];
+    if (filters.status) conditions.push(eq(courses.status, filters.status));
+    if (filters.instructorId) conditions.push(eq(courses.instructorId, filters.instructorId));
+    const where = and(...conditions);
+
+    const rows = await this.db.query.courses.findMany({
+      where,
+      orderBy: [desc(courses.createdAt)],
+      limit,
+      offset,
+    });
+    const [{ value: total }] = await this.db
+      .select({ value: count() })
+      .from(courses)
+      .where(where);
+    return { rows, total: Number(total) };
   }
 
   async findByInstructorId(instructorId: string, page: number, limit: number) {
