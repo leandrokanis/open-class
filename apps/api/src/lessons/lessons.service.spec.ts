@@ -137,5 +137,86 @@ describe('LessonsService', () => {
     it('lança 404 quando aula não existe', async () => {
       await expect(service.findById('inexistente')).rejects.toThrow(NotFoundException);
     });
+
+    it('retorna aula visível para qualquer role', async () => {
+      const repo = makeRepo({
+        findByIdWithResources: vi.fn().mockResolvedValue({
+          id: 'lesson-1', visibility: 'visible', resources: [],
+        }),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      const result = await service.findById('lesson-1', 'aluno');
+      expect(result.id).toBe('lesson-1');
+    });
+
+    it('lança 404 para aula oculta acessada por aluno', async () => {
+      const repo = makeRepo({
+        findByIdWithResources: vi.fn().mockResolvedValue({
+          id: 'lesson-1', visibility: 'hidden', resources: [],
+        }),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      await expect(service.findById('lesson-1', 'aluno')).rejects.toThrow(NotFoundException);
+    });
+
+    it('retorna aula oculta para instrutor', async () => {
+      const repo = makeRepo({
+        findByIdWithResources: vi.fn().mockResolvedValue({
+          id: 'lesson-1', visibility: 'hidden', resources: [],
+        }),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      const result = await service.findById('lesson-1', 'instrutor');
+      expect(result.id).toBe('lesson-1');
+    });
+  });
+
+  describe('assertLessonOwnership', () => {
+    it('throws NotFoundException when lesson not found', async () => {
+      await expect(service.assertLessonOwnership('missing', 'user-1', 'instructor')).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws NotFoundException when course not found for lesson owner check', async () => {
+      const repo = makeRepo({
+        findById: vi.fn().mockResolvedValue({ id: 'lesson-1', moduleId: 'module-1' }),
+      });
+      const modulesRepo = makeModulesRepo();
+      const coursesRepo = { findById: vi.fn().mockResolvedValue(null) };
+      service = new LessonsService(repo as never, modulesRepo as never, coursesRepo as never, makeYoutube() as never);
+
+      await expect(service.assertLessonOwnership('lesson-1', 'user-1', 'instructor')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findByModule', () => {
+    it('retorna apenas aulas visíveis para aluno', async () => {
+      const repo = makeRepo({
+        findByModule: vi.fn().mockResolvedValue([
+          { id: 'l1', visibility: 'visible' },
+          { id: 'l2', visibility: 'hidden' },
+        ]),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      const result = await service.findByModule('module-1', 'aluno');
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('l1');
+    });
+
+    it('retorna todas as aulas para instrutor', async () => {
+      const repo = makeRepo({
+        findByModule: vi.fn().mockResolvedValue([
+          { id: 'l1', visibility: 'visible' },
+          { id: 'l2', visibility: 'hidden' },
+        ]),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      const result = await service.findByModule('module-1', 'instrutor');
+      expect(result).toHaveLength(2);
+    });
   });
 });

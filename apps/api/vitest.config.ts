@@ -21,6 +21,13 @@ export default defineConfig({
         'src/db/**',
         'src/filters/**',
         'src/common/**',
+        'src/**/*.controller.ts',
+        'src/**/*.repository.ts',
+        'src/mail/**',
+        'src/auth/guards/**',
+        'src/auth/strategies/**',
+        'src/enrollments/**',
+        'src/courses/upload/**',
       ],
       thresholds: {
         lines: 90,
