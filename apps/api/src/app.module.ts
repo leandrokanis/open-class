@@ -14,6 +14,7 @@ import { LessonsModule } from './lessons/lessons.module';
 import { CoursesModule } from './courses/courses.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { CatalogModule } from './catalog/catalog.module';
+import { ProgressModule } from './progress/progress.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { CatalogModule } from './catalog/catalog.module';
     CoursesModule,
     EnrollmentsModule,
     CatalogModule,
+    ProgressModule,
   ],
   controllers: [AppController],
   providers: [
