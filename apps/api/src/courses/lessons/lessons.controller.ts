@@ -8,7 +8,7 @@ import {
 import { LessonDataDto } from '../dto/responses.dto';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { RolesGuard, Roles } from '../guards/roles.guard';
+import { RolesGuard, Roles, Role } from '../../common';
 import { LessonsService } from './lessons.service';
 import { CreateLessonDto } from '../dto/create-lesson.dto';
 import { UpdateLessonDto } from '../dto/update-lesson.dto';
@@ -21,7 +21,7 @@ type AuthRequest = Request & { user: { id: string; email: string; role: string }
 @ApiCookieAuth('access_token')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('instrutor', 'admin')
+@Roles(Role.Instrutor, Role.Admin)
 @Controller('courses/:courseId/modules/:moduleId/lessons')
 export class LessonsController {
   constructor(private readonly lessonsService: LessonsService) {}

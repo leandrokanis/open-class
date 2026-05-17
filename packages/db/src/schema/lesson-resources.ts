@@ -1,6 +1,7 @@
 import { pgTable, uuid, varchar, text, integer, timestamp, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { lessons } from './lessons';
+import { modules } from './modules';
 
 export const lessonResources = pgTable(
   'lesson_resources',
@@ -19,8 +20,9 @@ export const lessonResourcesRelations = relations(lessonResources, ({ one }) => 
   lesson: one(lessons, { fields: [lessonResources.lessonId], references: [lessons.id] }),
 }));
 
-// Defined here (not in lessons.ts) to avoid circular import
-export const lessonsRelations = relations(lessons, ({ many }) => ({
+// Defined here (not in lessons.ts) to avoid circular imports
+export const lessonsRelations = relations(lessons, ({ one, many }) => ({
+  module: one(modules, { fields: [lessons.moduleId], references: [modules.id] }),
   resources: many(lessonResources),
 }));
 

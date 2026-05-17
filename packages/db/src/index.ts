@@ -8,3 +8,4 @@ export * from './schema/lessons';
 export * from './schema/enrollments';
 export * from './schema/lesson-progress';
 export * from './schema/platform-config';
+export * from './schema/relations';
