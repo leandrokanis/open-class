@@ -15,6 +15,7 @@ import { CoursesModule } from './courses/courses.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { ProgressModule } from './progress/progress.module';
+import { PlatformConfigModule } from './platform-config/platform-config.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ProgressModule } from './progress/progress.module';
     EnrollmentsModule,
     CatalogModule,
     ProgressModule,
+    PlatformConfigModule,
   ],
   controllers: [AppController],
   providers: [

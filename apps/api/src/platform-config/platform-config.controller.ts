@@ -1,0 +1,38 @@
+import {
+  Controller, Get, Patch, Body, UseGuards,
+} from '@nestjs/common';
+import {
+  ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiBearerAuth,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard, Roles, Role } from '../common';
+import { PlatformConfigService } from './platform-config.service';
+import { PlatformConfigResponseDto } from './dto/platform-config-response.dto';
+import { UpdatePlatformConfigDto } from './dto/update-platform-config.dto';
+
+@ApiTags('platform-config')
+@Controller('platform-config')
+export class PlatformConfigController {
+  constructor(private readonly service: PlatformConfigService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Obter configurações da plataforma' })
+  @ApiResponse({ status: 200, type: PlatformConfigResponseDto })
+  getConfig(): Promise<PlatformConfigResponseDto> {
+    return this.service.getEffective();
+  }
+
+  @Patch()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @ApiCookieAuth('access_token')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Atualizar configurações da plataforma (admin)' })
+  @ApiResponse({ status: 200, type: PlatformConfigResponseDto })
+  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @ApiResponse({ status: 403, description: 'Sem permissão.' })
+  updateConfig(@Body() dto: UpdatePlatformConfigDto): Promise<PlatformConfigResponseDto> {
+    return this.service.update(dto);
+  }
+}
