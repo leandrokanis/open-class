@@ -3,12 +3,6 @@
   "style": "default",
   "rsc": false,
   "tsx": true,
-  "tailwind": {
-    "config": "",
-    "css": "src/app/globals.css",
-    "baseColor": "slate",
-    "cssVariables": true
-  },
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils",
