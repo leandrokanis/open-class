@@ -4,7 +4,7 @@ WORKDIR /app
 
 # ── Install all deps (workspace context) ────────────────────────────────────
 FROM base AS deps
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
 COPY apps/api/package.json ./apps/api/
 COPY apps/ui/package.json ./apps/ui/
 COPY packages/db/package.json ./packages/db/
@@ -26,7 +26,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Install prod deps only
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
 COPY apps/api/package.json ./apps/api/
 COPY apps/ui/package.json ./apps/ui/
 COPY packages/db/package.json ./packages/db/
