@@ -1,0 +1,48 @@
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { ProgressRepository } from './progress.repository';
+
+@Injectable()
+export class ProgressService {
+  constructor(private readonly repo: ProgressRepository) {}
+
+  async markLesson(studentId: string, lessonId: string, isCompleted: boolean) {
+    const lesson = await this.repo.findLessonWithCourse(lessonId);
+    if (!lesson) throw new NotFoundException('Aula não encontrada.');
+
+    const courseId = lesson.module.courseId;
+    const enrolled = await this.repo.isEnrolled(studentId, courseId);
+    if (!enrolled) throw new ForbiddenException('Aluno não matriculado neste curso.');
+
+    const progress = await this.repo.upsertProgress(studentId, lessonId, isCompleted);
+    return {
+      lessonId:    progress.lessonId,
+      isCompleted: progress.isCompleted,
+      completedAt: progress.completedAt,
+      updatedAt:   progress.updatedAt,
+    };
+  }
+
+  async getCourseProgress(studentId: string, courseId: string) {
+    const course = await this.repo.findCourseById(courseId);
+    if (!course) throw new NotFoundException('Curso não encontrado.');
+
+    const enrolled = await this.repo.isEnrolled(studentId, courseId);
+    if (!enrolled) throw new ForbiddenException('Aluno não matriculado neste curso.');
+
+    const { completed, total } = await this.repo.getCompletionStats(studentId, courseId);
+    const percentage = total === 0 ? 0 : Math.round((completed / total) * 1000) / 10;
+
+    return { courseId, completedLessons: completed, totalLessons: total, percentage };
+  }
+
+  async getLastAccessed(studentId: string, courseId: string) {
+    const course = await this.repo.findCourseById(courseId);
+    if (!course) throw new NotFoundException('Curso não encontrado.');
+
+    const enrolled = await this.repo.isEnrolled(studentId, courseId);
+    if (!enrolled) throw new ForbiddenException('Aluno não matriculado neste curso.');
+
+    const lesson = await this.repo.getLastAccessedLesson(studentId, courseId);
+    return { lastAccessedLesson: lesson };
+  }
+}
