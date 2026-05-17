@@ -33,5 +33,6 @@ coverage/
 # Spec-driven development (local only)
 specs/
 .specify/
+.current-plan.md
 uploads/thumbnails/*
 !uploads/thumbnails/.gitkeep

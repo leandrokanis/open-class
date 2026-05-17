@@ -1,10 +1,8 @@
 <!-- SPECKIT START -->
 
-For additional context about technologies to be used, project structure,
-
-shell commands, and other important information, read the current plan:
-
-`specs/004-catalog-api/plan.md`
+For the active feature context (tech stack, structure, current plan paths),
+read `.current-plan.md` in the project root. This file is local-only (gitignored)
+and is updated by `/oc-specify`, `/oc-plan`, and `/oc-tasks` as work progresses.
 
 <!-- SPECKIT END -->
 
@@ -18,12 +16,44 @@ Monorepo structure:
 
 ## Workflow
 
-Use speckit skills to drive spec-driven development:
+Use as skills `oc-*` para desenvolvimento orientado a spec neste projeto:
 
-1. `/speckit-constitution` - Set project principles
-2. `/speckit-specify` - Write spec/PRD
-3. `/speckit-plan` - Plan implementation
-4. `/speckit-tasks` - Generate tasks
-5. `/speckit-implement` - Execute
+| Skill | O que faz |
+|-------|-----------|
+| `/oc-specify` | Cria `specs/<issue>-<name>/spec.md`; atualiza C4 se novos atores/sistemas |
+| `/oc-plan` | Cria `plan.md` com data model, contratos e cenários BDD; cria ADRs se houver decisão arquitetural |
+| `/oc-tasks` | Gera `tasks.md` com tarefas ordenadas e caminhos de arquivo exatos |
+| `/oc-implement` | Executa tasks com TDD (red → green → refactor); atualiza Swagger ao fim |
+| `/oc-pr` | Abre PR com título conventional commits e `Closes #<issue>` |
+| `/oc-ship` | Executa todo o fluxo acima de ponta a ponta sem interrupção |
 
-For PRD generation, use `/prd-generator`.
+### Fluxo individual
+
+```
+/oc-specify <descrição>   →  spec.md
+/oc-plan                  →  plan.md + ADRs + C4
+/oc-tasks                 →  tasks.md
+/oc-implement             →  código + testes + Swagger
+/oc-pr                    →  PR no GitHub
+```
+
+### Fluxo completo
+
+```
+/oc-ship <descrição>      →  faz tudo acima de uma vez
+```
+
+### Contexto ativo
+
+O arquivo `.current-plan.md` (local, não versionado) guarda os caminhos do spec, plan e tasks da feature em andamento. É lido automaticamente por todas as skills `oc-*`.
+
+### Documentação arquitetural
+
+- `docs/decisions/` — ADRs em formato MADR (atualizados pelo `/oc-plan`)
+- `docs/architecture/c4.md` — Diagrama C4 (atualizado pelo `/oc-specify` e `/oc-plan`)
+- `docs/prd.md` — PRD do produto
+
+### Commits
+
+Siga as diretrizes em `docs/contributing/commit-messages.md`.
+Formato: `<tipo>(<escopo>): <descrição imperativa em inglês>` — máximo 72 chars, sem ponto final.
