@@ -6,6 +6,7 @@ WORKDIR /app
 FROM base AS deps
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY apps/api/package.json ./apps/api/
+COPY apps/ui/package.json ./apps/ui/
 COPY packages/db/package.json ./packages/db/
 RUN pnpm install --frozen-lockfile
 
@@ -27,6 +28,7 @@ ENV NODE_ENV=production
 # Install prod deps only
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY apps/api/package.json ./apps/api/
+COPY apps/ui/package.json ./apps/ui/
 COPY packages/db/package.json ./packages/db/
 RUN pnpm install --frozen-lockfile --prod
 
