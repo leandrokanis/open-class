@@ -13,6 +13,7 @@ import { ModulesModule } from './modules/modules.module';
 import { LessonsModule } from './lessons/lessons.module';
 import { CoursesModule } from './courses/courses.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
+import { CatalogModule } from './catalog/catalog.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { EnrollmentsModule } from './enrollments/enrollments.module';
     LessonsModule,
     CoursesModule,
     EnrollmentsModule,
+    CatalogModule,
   ],
   controllers: [AppController],
   providers: [
