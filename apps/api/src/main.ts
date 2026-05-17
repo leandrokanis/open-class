@@ -32,7 +32,8 @@ async function bootstrap() {
       '- `aluno` — pode se matricular e acessar conteúdo próprio\n' +
       '- `instrutor` — pode criar e editar seus cursos\n' +
       '- `admin` — acesso total (usuários, cursos, matrículas)\n\n' +
-      'Rotas protegidas retornam `401` quando não autenticado e `403` quando o papel é insuficiente.',
+      'Rotas protegidas retornam `401` quando não autenticado e `403` quando o papel é insuficiente.\n\n' +
+      '**Esquemas disponíveis**: cursos, módulos, aulas, matrículas, categorias, progresso de aulas, configurações da plataforma.',
     )
     .setVersion('0.3.0')
     .addCookieAuth('access_token')
