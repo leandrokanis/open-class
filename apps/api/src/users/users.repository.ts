@@ -77,6 +77,15 @@ export class UsersRepository {
     return user;
   }
 
+  async setActiveStatus(id: string, isActive: boolean) {
+    const [user] = await this.db
+      .update(users)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning({ id: users.id, name: users.name, email: users.email, role: users.role, isActive: users.isActive, avatarUrl: users.avatarUrl, bio: users.bio, createdAt: users.createdAt, updatedAt: users.updatedAt });
+    return user;
+  }
+
   async markPasswordResetTokenUsed(id: string) {
     await this.db
       .update(passwordResetTokens)
