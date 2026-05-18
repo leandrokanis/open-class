@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: openclass
       POSTGRES_PASSWORD: openclass
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-54170}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -28,7 +28,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    restart: on-failure
+    # No restart policy: migrator must run once and exit cleanly.
+    # Restart-on-failure here would mask bugs in an infinite loop and the api
+    # service would wait forever on service_completed_successfully.
 
   api:
     build:
@@ -37,21 +39,21 @@ services:
       target: runner
     image: open-class-api:local
     ports:
-      - "3001:3001"
+      - "${API_PORT:-41701}:3001"
     environment:
       DATABASE_URL: postgresql://openclass:openclass@db:5432/openclass
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-100y}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:3001/auth/google/callback}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:41701/auth/google/callback}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:41700}
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
-      APP_URL: ${APP_URL:-http://localhost:3001}
+      APP_URL: ${APP_URL:-http://localhost:41701}
       NODE_ENV: production
     volumes:
       - uploads:/app/uploads
@@ -67,6 +69,20 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  ui:
+    build:
+      context: .
+      dockerfile: apps/ui/Dockerfile
+      target: runner
+    ports:
+      - "${UI_PORT:-41700}:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:41701}
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   pgdata:

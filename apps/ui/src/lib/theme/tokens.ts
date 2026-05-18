@@ -1,0 +1,48 @@
+export const tokens = {
+  colors: {
+    primary: "var(--color-primary)",
+    primaryLight: "var(--color-primary-light)",
+    background: "var(--color-background)",
+    surface: "var(--color-surface)",
+    surfaceSecondary: "var(--color-surface-secondary)",
+    surfaceTertiary: "var(--color-surface-tertiary)",
+    border: "var(--color-border)",
+    textPrimary: "var(--color-text-primary)",
+    textSecondary: "var(--color-text-secondary)",
+    textTertiary: "var(--color-text-tertiary)",
+    textOnPrimary: "var(--color-text-on-primary)",
+    textOnDark: "var(--color-text-on-dark)",
+    textFaintOnDark: "var(--color-text-faint-on-dark)",
+    overlaySubtle: "var(--color-overlay-subtle)",
+    overlayMedium: "var(--color-overlay-medium)",
+    star: "var(--color-star)",
+    success: "var(--color-success)",
+    destructive: "var(--color-destructive)",
+  },
+  gradients: {
+    hero: "var(--gradient-hero)",
+    heroAlt: "var(--gradient-hero-alt)",
+    avatar: "var(--gradient-avatar)",
+    cardDevweb: "var(--gradient-card-devweb)",
+  },
+  shadows: {
+    card: "var(--shadow-card)",
+    none: "var(--shadow-none)",
+  },
+  radius: {
+    card: "var(--radius-card)",
+    btn: "var(--radius-btn)",
+    input: "var(--radius-input)",
+    chip: "var(--radius-chip)",
+    badge: "var(--radius-badge)",
+    avatar: "var(--radius-avatar)",
+    progress: "var(--radius-progress)",
+  },
+  spacing: {
+    pageInline: "var(--spacing-page-inline)",
+    navbarHeight: "var(--spacing-navbar-height)",
+  },
+  fonts: {
+    inter: 'var(--font-inter), system-ui, sans-serif',
+  },
+} as const;

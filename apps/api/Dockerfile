@@ -4,8 +4,9 @@ WORKDIR /app
 
 # ── Install all deps (workspace context) ────────────────────────────────────
 FROM base AS deps
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
 COPY apps/api/package.json ./apps/api/
+COPY apps/ui/package.json ./apps/ui/
 COPY packages/db/package.json ./packages/db/
 RUN pnpm install --frozen-lockfile
 
@@ -25,15 +26,18 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Install prod deps only
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
 COPY apps/api/package.json ./apps/api/
+COPY apps/ui/package.json ./apps/ui/
 COPY packages/db/package.json ./packages/db/
 RUN pnpm install --frozen-lockfile --prod
 
 # Copy build artifacts
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/packages/db/dist/src ./packages/db/dist/src
-COPY --from=builder /app/packages/db/drizzle ./packages/db/dist/drizzle
+# Migrations must land at packages/db/drizzle (matches __dirname/../../drizzle
+# resolved from packages/db/dist/src/migrate.js)
+COPY --from=builder /app/packages/db/drizzle ./packages/db/drizzle
 
 EXPOSE 3001
 CMD ["node", "apps/api/dist/src/main.js"]

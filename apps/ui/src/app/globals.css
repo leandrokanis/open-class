@@ -1,0 +1,127 @@
+/* ============================================================
+   Open Class Design System — CSS Custom Properties
+   Source of truth: Open Class v1 Paper design file
+   ============================================================ */
+
+:root {
+  /* --- Colors --- */
+  --color-primary: #1e3a8a;
+  --color-primary-light: #eff6ff;
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f9fafb;
+  --color-surface-tertiary: #f3f4f6;
+  --color-border: #e5e7eb;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-dark: rgba(255, 255, 255, 0.75);
+  --color-text-faint-on-dark: rgba(255, 255, 255, 0.6);
+  --color-overlay-subtle: rgba(0, 0, 0, 0.35);
+  --color-overlay-medium: rgba(0, 0, 0, 0.4);
+  --color-star: #f59e0b;
+  --color-success: #22c55e;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+
+  /* --- Gradients --- */
+  --gradient-hero: linear-gradient(
+    110deg,
+    oklab(20.8% -0.003 -0.04) 0%,
+    oklab(37.9% -0.011 -0.137) 55%,
+    oklab(54.6% -0.027 -0.214) 100%
+  );
+  --gradient-hero-alt: linear-gradient(
+    105deg,
+    oklab(20.8% -0.003 -0.04) 0%,
+    oklab(37.9% -0.011 -0.137) 55%,
+    oklab(48.8% -0.021 -0.216) 100%
+  );
+  --gradient-avatar: linear-gradient(
+    135deg,
+    oklab(37.9% -0.011 -0.137) 0%,
+    oklab(62.3% -0.033 -0.185) 100%
+  );
+  --gradient-card-devweb: linear-gradient(
+    135deg,
+    oklab(37.9% -0.011 -0.137) 0%,
+    oklab(62.3% -0.033 -0.185) 100%
+  );
+
+  /* --- Shadows --- */
+  --shadow-card: 0px 1px 6px rgba(0, 0, 0, 0.05);
+  --shadow-none: none;
+
+  /* --- Border Radius --- */
+  --radius-card: 12px;
+  --radius-btn: 10px;
+  --radius-input: 8px;
+  --radius-chip: 20px;
+  --radius-badge: 4px;
+  --radius-avatar: 50%;
+  --radius-progress: 99px;
+
+  /* --- Spacing --- */
+  --spacing-page-inline: 80px;
+  --spacing-navbar-height: 64px;
+
+  /* --- Typography --- */
+  --font-inter: "Inter";
+
+  /* --- shadcn/ui token mapping --- */
+  --background: #ffffff;
+  --foreground: #111827;
+  --primary: #1e3a8a;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #111827;
+  --muted: #f9fafb;
+  --muted-foreground: #6b7280;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #1e3a8a;
+  --card: #ffffff;
+  --card-foreground: #111827;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --radius: 10px;
+}
+
+[data-theme="dark"] {
+  /* --- Colors (dark overrides) --- */
+  --color-primary: #3b82f6;
+  --color-primary-light: #1e3a5f;
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-secondary: #1e293b;
+  --color-surface-tertiary: #334155;
+  --color-border: #334155;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-tertiary: #64748b;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-dark: rgba(255, 255, 255, 0.85);
+  --color-text-faint-on-dark: rgba(255, 255, 255, 0.6);
+  --color-star: #f59e0b;
+  --color-success: #22c55e;
+  --color-destructive: #f87171;
+  --color-destructive-foreground: #ffffff;
+
+  /* --- shadcn/ui dark mapping --- */
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #334155;
+  --secondary-foreground: #f1f5f9;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --border: #334155;
+  --input: #334155;
+  --ring: #3b82f6;
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+  --destructive: #f87171;
+  --destructive-foreground: #ffffff;
+}
