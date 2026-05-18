@@ -16,6 +16,9 @@ Decisões técnicas significativas do projeto Open Class, documentadas no format
 | [ADR-008](008-rate-limiting-in-memory.md) | Rate limiting in-memory sem Redis | Aceito | 2026-05-16 |
 | [ADR-009](009-google-oauth-condicional.md) | Google OAuth como módulo condicional | Aceito | 2026-05-16 |
 | [ADR-010](010-roles-permissions-guard.md) | Autorização por papel via RolesGuard + @Roles() | Aceito | 2026-05-16 |
+| [ADR-011](011-react-vite-typescript-ui.md) | React + Vite + TypeScript como stack da UI | Aceito | 2026-05-17 |
+| [ADR-012](012-tanstack-query-data-fetching.md) | TanStack Query para data fetching no frontend | Aceito | 2026-05-17 |
+| [ADR-013](013-tailwind-css-styling.md) | Tailwind CSS para estilização da UI | Aceito | 2026-05-17 |
 
 ## Como usar
 

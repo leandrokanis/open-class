@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "db:generate": "pnpm --filter @open-class/db db:generate",
-    "db:migrate": "pnpm --filter @open-class/db db:migrate"
+    "db:migrate": "pnpm --filter @open-class/db db:migrate",
+    "seed": "npx tsx src/db/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
