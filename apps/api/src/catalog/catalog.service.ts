@@ -8,6 +8,7 @@ import type {
 } from './dto/catalog-list-item.dto';
 import type { CatalogDetailDto } from './dto/catalog-detail.dto';
 import type { CategoryItemDto } from './dto/category-item.dto';
+import type { CatalogStatsDto } from './dto/catalog-stats.dto';
 
 interface CursorPayload {
   createdAt: string;
@@ -67,6 +68,10 @@ export class CatalogService {
       shortDescription: r.shortDescription,
       level: r.level,
       thumbnailUrl: r.thumbnailUrl,
+      rating: r.rating,
+      reviewCount: r.reviewCount,
+      lessonCount: r.lessonCount,
+      totalDurationMinutes: r.totalDurationMinutes,
       category: r.category,
       instructor: r.instructor,
       createdAt: r.createdAt,
@@ -108,6 +113,10 @@ export class CatalogService {
     };
 
     return detail;
+  }
+
+  async getStats(): Promise<CatalogStatsDto> {
+    return this.repo.getStats();
   }
 
   async listCategories(): Promise<CategoryItemDto[]> {

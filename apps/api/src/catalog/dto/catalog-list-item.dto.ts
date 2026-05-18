@@ -29,6 +29,18 @@ export class CatalogListItemDto {
   @ApiPropertyOptional()
   thumbnailUrl?: string | null;
 
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 4.8 })
+  rating?: number | null;
+
+  @ApiProperty({ example: 1200 })
+  reviewCount!: number;
+
+  @ApiProperty({ example: 36 })
+  lessonCount!: number;
+
+  @ApiProperty({ example: 120, description: 'Total de duração das aulas em minutos' })
+  totalDurationMinutes!: number;
+
   @ApiPropertyOptional({ type: () => CatalogCategoryRefDto })
   category?: CatalogCategoryRefDto | null;
 

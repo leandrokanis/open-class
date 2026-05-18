@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp, pgEnum, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, pgEnum, index, decimal, integer } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { categories } from './categories';
 
@@ -18,6 +18,8 @@ export const courses = pgTable(
     level:            levelEnum('level'),
     status:           courseStatusEnum('status').notNull().default('draft'),
     thumbnailUrl:     text('thumbnail_url'),
+    rating:           decimal('rating', { precision: 3, scale: 2 }),
+    reviewCount:      integer('review_count').notNull().default(0),
     deletedAt:        timestamp('deleted_at', { withTimezone: true }),
     createdAt:        timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt:        timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
