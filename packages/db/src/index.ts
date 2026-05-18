@@ -1,3 +1,4 @@
+export { runMigrations } from './migrate';
 export * from './schema/users';
 export * from './schema/password-reset-tokens';
 export * from './schema/categories';

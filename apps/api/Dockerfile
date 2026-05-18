@@ -16,8 +16,9 @@ COPY packages/db ./packages/db
 COPY apps/api ./apps/api
 # Build packages/db (produces dist/migrate.js used by migrator service)
 RUN pnpm --filter @open-class/db build
-# Build the API (nest build resolves @open-class/db via tsconfig paths)
-RUN pnpm --filter @open-class/api build
+# Build the API — invoke nest directly from the hoisted root node_modules to avoid
+# the broken apps/api/node_modules/.bin/nest symlink created by shamefully-hoist=true
+RUN cd /app/apps/api && node /app/node_modules/@nestjs/cli/bin/nest.js build
 
 # ── Runtime image ───────────────────────────────────────────────────────────
 FROM node:20-alpine AS runner

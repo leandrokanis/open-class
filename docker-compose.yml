@@ -16,22 +16,6 @@ services:
       timeout: 5s
       retries: 5
 
-  migrator:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-      target: runner
-    image: open-class-api:local
-    environment:
-      DATABASE_URL: postgresql://openclass:openclass@db:5432/openclass
-    command: ["node", "packages/db/dist/src/migrate.js"]
-    depends_on:
-      db:
-        condition: service_healthy
-    # No restart policy: migrator must run once and exit cleanly.
-    # Restart-on-failure here would mask bugs in an infinite loop and the api
-    # service would wait forever on service_completed_successfully.
-
   api:
     build:
       context: .
@@ -57,18 +41,20 @@ services:
       NODE_ENV: production
     volumes:
       - uploads:/app/uploads
+    dns:
+      - 127.0.0.11
+    dns_search:
+      - .
     depends_on:
       db:
         condition: service_healthy
-      migrator:
-        condition: service_completed_successfully
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3001/api/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 45s
 
   ui:
     build:

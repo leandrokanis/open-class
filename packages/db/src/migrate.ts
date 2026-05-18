@@ -49,7 +49,7 @@ function resolveMigrationsFolder(): string {
   );
 }
 
-async function main() {
+export async function runMigrations(): Promise<void> {
   if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL environment variable is required');
   }
@@ -73,7 +73,10 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('[migrate] Migration failed:', err);
-  process.exit(1);
-});
+// Script entry point
+if (require.main === module) {
+  runMigrations().catch((err) => {
+    console.error('[migrate] Migration failed:', err);
+    process.exit(1);
+  });
+}

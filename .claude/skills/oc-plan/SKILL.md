@@ -13,6 +13,23 @@ $ARGUMENTS
 
 ---
 
+## Etapa 0 — Sincronizar com main
+
+Execute antes de qualquer coisa:
+
+```bash
+git fetch origin
+git log HEAD..origin/main --oneline
+```
+
+Se o comando listar commits (main avançou), **pare e avise**:
+
+> ⚠️ A branch `main` tem N commit(s) que você ainda não tem. Rode `git rebase origin/main` antes de continuar para evitar conflitos no PR.
+
+Se o output estiver vazio, prossiga.
+
+---
+
 ## Contexto do projeto
 
 **Estrutura de arquivos** (siga sempre esses padrões):

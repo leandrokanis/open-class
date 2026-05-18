@@ -15,6 +15,23 @@ A descrição da feature vem de `$ARGUMENTS`. Nunca peça para o usuário repeti
 
 ---
 
+## Etapa 0 — Sincronizar com main
+
+Execute antes de iniciar o pipeline:
+
+```bash
+git fetch origin
+git log HEAD..origin/main --oneline
+```
+
+Se o comando listar commits (main avançou), **pare e avise**:
+
+> ⚠️ A branch `main` tem N commit(s) que você ainda não tem. Rode `git rebase origin/main` antes de continuar para evitar conflitos no PR.
+
+Se o output estiver vazio, prossiga para o pipeline.
+
+---
+
 ## Execução
 
 Rode cada skill na sequência abaixo. Não pare entre etapas para pedir aprovação — avance automaticamente assim que cada skill concluir. A única razão válida para parar é um erro irrecuperável (listado ao fim).

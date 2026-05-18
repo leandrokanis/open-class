@@ -26,6 +26,23 @@ O texto após `/oc-specify` é a descrição da feature. Nunca peça para o usu�
 
 ---
 
+## Etapa 0 — Sincronizar com main
+
+Execute antes de qualquer coisa:
+
+```bash
+git fetch origin
+git log HEAD..origin/main --oneline
+```
+
+Se o comando listar commits (main avançou), **pare e avise**:
+
+> ⚠️ A branch `main` tem N commit(s) que você ainda não tem. Rode `git rebase origin/main` antes de continuar para evitar conflitos no PR.
+
+Se o output estiver vazio, a branch está atualizada — prossiga.
+
+---
+
 ## Etapa 1 — Nomear e numerar a feature
 
 1. **Obtenha o número da issue do GitHub a partir da branch atual**:
@@ -148,6 +165,19 @@ Após o spec estar limpo, verifique se ele introduz algo **não presente** em `d
 - Se o novo elemento também aparece nos níveis Container ou Component, atualize lá também
 
 **Se nada mudou**, pule esta etapa silenciosamente.
+
+---
+
+## Etapa 5 — Atualizar a issue no GitHub
+
+Após o spec estar limpo e aprovado, atualize o corpo da issue correspondente com o conteúdo do spec:
+
+```bash
+gh issue edit <ISSUE_NUMBER> --body "$(cat specs/<NNN>-<short-name>/spec.md)"
+```
+
+- Use o número de issue extraído na Etapa 1.
+- Se o comando falhar (ex: `gh` não autenticado, issue não encontrada), avise o usuário mas **não interrompa** — continue para a próxima etapa.
 
 ---
 
