@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import styled from "styled-components";
 import { fetchEnrollmentStatus, type CourseDetail, type CourseModule } from "@/lib/course-detail";
 import { CourseDetailSkeleton } from "./CourseDetailSkeleton";
@@ -88,12 +88,12 @@ interface CourseProgressSectionProps {
 function findNextLesson(
   modules: CourseModule[],
   completedIds: Set<string>,
-): { number: number } | null {
+): { number: number; id: string } | null {
   let n = 0;
   for (const mod of modules) {
     for (const lesson of mod.lessons) {
       n++;
-      if (!completedIds.has(lesson.id)) return { number: n };
+      if (!completedIds.has(lesson.id)) return { number: n, id: lesson.id };
     }
   }
   return null;
@@ -105,6 +105,7 @@ export function CourseProgressSection({
   onCompletedLessonsLoaded,
 }: CourseProgressSectionProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<{
     authenticated: boolean;
@@ -186,7 +187,7 @@ export function CourseProgressSection({
         Você está inscrito
       </EnrolledBadge>
 
-      <CtaButton>
+      <CtaButton onClick={() => router.push("/aprendizado")}>
         {isComplete ? "Rever curso" : nextLesson ? `Continuar — Aula ${nextLesson.number}` : "Ir para o curso"}
       </CtaButton>
     </Wrapper>

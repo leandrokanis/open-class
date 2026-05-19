@@ -7,6 +7,7 @@ import {
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
+import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -25,7 +26,10 @@ import type { User } from '@open-class/db';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('register')
   @ApiOperation({ summary: 'Criar conta com e-mail e senha' })
@@ -155,7 +159,8 @@ export class AuthController {
     const frontendUrl = (process.env.FRONTEND_URL ?? 'http://localhost:3000').split(',')[0].trim();
     try {
       this.authService.issueToken(req.user.id, req.user.email, req.user.role, res);
-      res.redirect(frontendUrl);
+      const destination = req.user.role === 'aluno' ? `${frontendUrl}/aprendizado` : frontendUrl;
+      res.redirect(destination);
     } catch {
       res.redirect(`${frontendUrl}/login?error=oauth_failed`);
     }
