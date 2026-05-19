@@ -35,20 +35,9 @@ export class LoginResponseDto {
   data!: LoginUserDto;
 }
 
-export class MeDataDto {
-  @ApiProperty({ example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
-  id!: string;
-
-  @ApiProperty({ example: 'maria@example.com' })
-  email!: string;
-
-  @ApiProperty({ example: 'aluno', enum: ['aluno', 'instrutor', 'admin'] })
-  role!: string;
-}
-
 export class MeResponseDto {
-  @ApiProperty({ type: MeDataDto })
-  data!: MeDataDto;
+  @ApiProperty({ type: UserDto })
+  data!: Pick<UserDto, 'id' | 'name' | 'email' | 'role' | 'avatarUrl'>;
 }
 
 class MessageDataDto {

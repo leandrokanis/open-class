@@ -65,11 +65,15 @@ export class AuthService {
     const token = this.jwtService.sign({ sub: userId, email, role });
     res.cookie('access_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'lax',
       maxAge: 100 * 365 * 24 * 60 * 60 * 1000,
     });
     return token;
+  }
+
+  async getMe(id: string) {
+    return this.usersRepository.findById(id);
   }
 
   async forgotPassword(email: string) {
