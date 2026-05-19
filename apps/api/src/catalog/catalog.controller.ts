@@ -7,6 +7,7 @@ import { ListCatalogDto } from './dto/list-catalog.dto';
 import { CatalogPageDto } from './dto/catalog-list-item.dto';
 import { CatalogDetailResponseDto } from './dto/catalog-detail.dto';
 import { CategoriesResponseDto } from './dto/category-item.dto';
+import { CatalogStatsDto } from './dto/catalog-stats.dto';
 
 @ApiTags('catalog')
 @Controller('catalog')
@@ -27,7 +28,14 @@ export class CatalogController {
     return this.catalogService.listPublished(dto);
   }
 
-  // IMPORTANT: /categories must be declared before /:slug to avoid route shadowing
+  // IMPORTANT: /stats and /categories must be declared before /:slug to avoid route shadowing
+  @Get('stats')
+  @ApiOperation({ summary: 'Stats do hero: total de cursos, instrutores e percentual gratuito' })
+  @ApiResponse({ status: 200, description: 'Estatísticas da plataforma.', type: CatalogStatsDto })
+  async getStats(): Promise<CatalogStatsDto> {
+    return this.catalogService.getStats();
+  }
+
   @Get('categories')
   @ApiOperation({ summary: 'Listar categorias disponíveis' })
   @ApiResponse({ status: 200, description: 'Lista de categorias.', type: CategoriesResponseDto })

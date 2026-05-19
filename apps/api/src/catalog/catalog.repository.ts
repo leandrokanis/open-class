@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, ilike, isNull, lt, or, sql } from 'drizzle-orm';
+import { and, asc, count, countDistinct, desc, eq, ilike, isNull, lt, or, sql, sum } from 'drizzle-orm';
 import { categories, courses, modules, lessons, users } from '@open-class/db';
 import type { Db } from '../db';
 
@@ -19,11 +19,21 @@ interface FindPublishedResult {
     shortDescription: string | null;
     level: string | null;
     thumbnailUrl: string | null;
+    rating: number | null;
+    reviewCount: number;
+    lessonCount: number;
+    totalDurationMinutes: number;
     createdAt: Date;
     category: { id: string; name: string; slug: string } | null;
     instructor: { name: string };
   }>;
   hasMore: boolean;
+}
+
+export interface CatalogStats {
+  totalCourses: number;
+  totalInstructors: number;
+  percentFree: number;
 }
 
 @Injectable()
@@ -61,6 +71,19 @@ export class CatalogRepository {
         : []),
     ];
 
+    const lessonStats = this.db
+      .select({
+        courseId: courses.id,
+        lessonCount: count(lessons.id).as('lesson_count'),
+        totalDurationSeconds: sum(lessons.duration).as('total_duration_seconds'),
+      })
+      .from(courses)
+      .innerJoin(modules, eq(modules.courseId, courses.id))
+      .innerJoin(lessons, and(eq(lessons.moduleId, modules.id), eq(lessons.visibility, 'visible')))
+      .where(and(eq(modules.visibility, 'visible'), isNull(courses.deletedAt)))
+      .groupBy(courses.id)
+      .as('lesson_stats');
+
     const rows = await this.db
       .select({
         id: courses.id,
@@ -69,15 +92,20 @@ export class CatalogRepository {
         shortDescription: courses.shortDescription,
         level: courses.level,
         thumbnailUrl: courses.thumbnailUrl,
+        rating: courses.rating,
+        reviewCount: courses.reviewCount,
         createdAt: courses.createdAt,
         categoryId: categories.id,
         categoryName: categories.name,
         categorySlug: categories.slug,
         instructorName: users.name,
+        lessonCount: lessonStats.lessonCount,
+        totalDurationSeconds: lessonStats.totalDurationSeconds,
       })
       .from(courses)
       .leftJoin(categories, eq(courses.categoryId, categories.id))
       .innerJoin(users, eq(courses.instructorId, users.id))
+      .leftJoin(lessonStats, eq(lessonStats.courseId, courses.id))
       .where(and(...conditions))
       .orderBy(desc(courses.createdAt), desc(courses.id))
       .limit(limit + 1);
@@ -93,6 +121,10 @@ export class CatalogRepository {
         shortDescription: r.shortDescription ?? null,
         level: r.level ?? null,
         thumbnailUrl: r.thumbnailUrl ?? null,
+        rating: r.rating !== null ? Number(r.rating) : null,
+        reviewCount: r.reviewCount ?? 0,
+        lessonCount: Number(r.lessonCount ?? 0),
+        totalDurationMinutes: Math.round(Number(r.totalDurationSeconds ?? 0) / 60),
         createdAt: r.createdAt,
         category: r.categoryId
           ? { id: r.categoryId, name: r.categoryName!, slug: r.categorySlug! }
@@ -139,5 +171,21 @@ export class CatalogRepository {
       })
       .from(categories)
       .orderBy(asc(categories.position));
+  }
+
+  async getStats(): Promise<CatalogStats> {
+    const [result] = await this.db
+      .select({
+        totalCourses: count(courses.id),
+        totalInstructors: countDistinct(courses.instructorId),
+      })
+      .from(courses)
+      .where(and(eq(courses.status, 'published'), isNull(courses.deletedAt)));
+
+    return {
+      totalCourses: result?.totalCourses ?? 0,
+      totalInstructors: result?.totalInstructors ?? 0,
+      percentFree: 100,
+    };
   }
 }

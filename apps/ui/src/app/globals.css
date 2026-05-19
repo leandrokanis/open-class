@@ -4,6 +4,8 @@
    ============================================================ */
 
 :root {
+  color-scheme: light;
+
   /* --- Colors --- */
   --color-primary: #1e3a8a;
   --color-primary-light: #eff6ff;
@@ -89,6 +91,8 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
+
   /* --- Colors (dark overrides) --- */
   --color-primary: #3b82f6;
   --color-primary-light: #1e3a5f;

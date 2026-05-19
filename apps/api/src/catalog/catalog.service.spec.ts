@@ -9,6 +9,10 @@ const makeRow = (overrides = {}) => ({
   shortDescription: 'Learn React',
   level: 'beginner',
   thumbnailUrl: null,
+  rating: 4.8,
+  reviewCount: 1200,
+  lessonCount: 36,
+  totalDurationMinutes: 120,
   category: null,
   instructor: { name: 'Alice' },
   createdAt: new Date('2026-01-01T00:00:00Z'),
@@ -33,6 +37,7 @@ const makeRepo = (overrides = {}) => ({
   findCategories: vi.fn().mockResolvedValue([
     { id: 'cat-1', name: 'Web', slug: 'web', description: null, iconUrl: null },
   ]),
+  getStats: vi.fn().mockResolvedValue({ totalCourses: 12, totalInstructors: 6, percentFree: 100 }),
   ...overrides,
 });
 
@@ -55,6 +60,21 @@ describe('CatalogService', () => {
       expect(result.data).toHaveLength(1);
       expect(result.meta.hasMore).toBe(false);
       expect(result.meta.nextCursor).toBeNull();
+    });
+
+    it('maps new enrichment fields rating, reviewCount, lessonCount, totalDurationMinutes', async () => {
+      const result = await service.listPublished({ limit: 5 });
+
+      expect(result.data[0].rating).toBe(4.8);
+      expect(result.data[0].reviewCount).toBe(1200);
+      expect(result.data[0].lessonCount).toBe(36);
+      expect(result.data[0].totalDurationMinutes).toBe(120);
+    });
+
+    it('maps null rating correctly', async () => {
+      repo.findPublished.mockResolvedValue({ rows: [makeRow({ rating: null })], hasMore: false });
+      const result = await service.listPublished({ limit: 5 });
+      expect(result.data[0].rating).toBeNull();
     });
 
     it('includes nextCursor when hasMore is true', async () => {
@@ -186,6 +206,26 @@ describe('CatalogService', () => {
       const result = await service.listCategories();
       expect(result).toHaveLength(1);
       expect(result[0].slug).toBe('web');
+    });
+  });
+
+  describe('getStats', () => {
+    it('returns totalCourses, totalInstructors, percentFree from repo', async () => {
+      const result = await service.getStats();
+      expect(result.totalCourses).toBe(12);
+      expect(result.totalInstructors).toBe(6);
+      expect(result.percentFree).toBe(100);
+    });
+
+    it('delegates entirely to repo.getStats()', async () => {
+      await service.getStats();
+      expect(repo.getStats).toHaveBeenCalledOnce();
+    });
+
+    it('percentFree is always 100', async () => {
+      repo.getStats.mockResolvedValue({ totalCourses: 0, totalInstructors: 0, percentFree: 100 });
+      const result = await service.getStats();
+      expect(result.percentFree).toBe(100);
     });
   });
 });
