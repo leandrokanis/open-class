@@ -10,7 +10,7 @@ const Nav = styled.nav`
   left: 0;
   right: 0;
   height: 64px;
-  background: #ffffff;
+  background: var(--color-surface);
   border-top: 1px solid var(--color-border);
   display: flex;
   align-items: center;

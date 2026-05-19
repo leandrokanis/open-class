@@ -6,10 +6,17 @@ import { useRef } from "react";
 const Form = styled.form`
   display: flex;
   gap: 0;
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: var(--radius-input);
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  border: 2px solid transparent;
+  transition: border-color 0.15s ease;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
+  }
 
   @media (min-width: 768px) {
     max-width: 640px;
@@ -25,9 +32,15 @@ const Input = styled.input`
   font-size: 15px;
   color: var(--color-text-primary);
   background: transparent;
+  caret-color: var(--color-primary);
 
   &::placeholder {
     color: var(--color-text-tertiary);
+    transition: opacity 0.15s ease;
+  }
+
+  &:focus::placeholder {
+    opacity: 0;
   }
 
   @media (min-width: 768px) {

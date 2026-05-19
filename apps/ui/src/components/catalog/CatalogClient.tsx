@@ -12,7 +12,7 @@ import type { CategoryItem, CatalogPage, CourseListItem } from "@/lib/catalog";
 
 const FiltersBar = styled.div`
   padding: 16px 20px;
-  background: #ffffff;
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
 
   @media (min-width: 768px) {
@@ -21,11 +21,11 @@ const FiltersBar = styled.div`
 `;
 
 const SearchBarWrapper = styled.div`
-  padding: 20px 20px 0;
+  padding: 20px;
   background: var(--gradient-hero-alt);
 
   @media (min-width: 768px) {
-    padding: 0 48px 32px;
+    padding: 32px 48px;
   }
 `;
 
@@ -34,7 +34,8 @@ const FilterRow = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 12px;
+  max-width: 1440px;
+  margin: 0 auto;
 `;
 
 const FilterLeft = styled.div`
@@ -63,6 +64,7 @@ const Main = styled.main`
   padding: 20px;
   max-width: 1440px;
   margin: 0 auto;
+  background: var(--color-background);
 
   @media (min-width: 768px) {
     padding: 32px;
@@ -99,10 +101,12 @@ export function CatalogClient({ categories, initialPage }: CatalogClientProps) {
     }) => {
       setLoading(true);
       try {
+        const resolvedCatId = "catId" in params ? params.catId : categoryId;
+        const resolvedLvl = "lvl" in params ? params.lvl : level;
         const page = await fetchCatalog({
-          q: params.q ?? searchQ,
-          categoryId: (params.catId ?? categoryId) ?? undefined,
-          level: (params.lvl ?? level) ?? undefined,
+          q: params.q !== undefined ? params.q : searchQ,
+          categoryId: resolvedCatId ?? undefined,
+          level: resolvedLvl ?? undefined,
           limit: 12,
         });
         setCourses(page.data);

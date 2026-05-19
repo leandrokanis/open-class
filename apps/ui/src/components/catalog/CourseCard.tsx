@@ -30,7 +30,7 @@ const Card = styled(Link)`
   flex-direction: column;
   border-radius: var(--radius-card);
   overflow: hidden;
-  background: #ffffff;
+  background: var(--color-surface);
   box-shadow: var(--shadow-card);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 

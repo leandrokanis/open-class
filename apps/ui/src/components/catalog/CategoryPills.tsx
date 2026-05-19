@@ -24,14 +24,14 @@ const Pill = styled.button<{ $active: boolean }>`
   font-weight: ${({ $active }) => ($active ? 600 : 400)};
   cursor: pointer;
   border: 1.5px solid ${({ $active }) => ($active ? "var(--color-primary)" : "var(--color-border)")};
-  background: ${({ $active }) => ($active ? "var(--color-primary)" : "#ffffff")};
-  color: ${({ $active }) => ($active ? "#ffffff" : "var(--color-text-primary)")};
+  background: ${({ $active }) => ($active ? "var(--color-primary)" : "var(--color-surface)")};
+  color: ${({ $active }) => ($active ? "var(--color-text-on-primary)" : "var(--color-text-primary)")};
   transition: all 0.15s ease;
   white-space: nowrap;
 
   &:hover {
     border-color: var(--color-primary);
-    color: ${({ $active }) => ($active ? "#ffffff" : "var(--color-primary)")};
+    color: ${({ $active }) => ($active ? "var(--color-text-on-primary)" : "var(--color-primary)")};
   }
 `;
 

@@ -8,7 +8,7 @@ const Select = styled.select`
   border-radius: var(--radius-chip);
   font-size: 14px;
   color: var(--color-text-primary);
-  background: #ffffff;
+  background: var(--color-surface);
   cursor: pointer;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");

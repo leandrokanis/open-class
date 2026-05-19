@@ -2,15 +2,19 @@
 
 import styled from "styled-components";
 import Link from "next/link";
+import { useState, useContext } from "react";
+import { ThemeContext } from "@/lib/theme/ThemeProvider";
+import { Sidebar } from "./Sidebar";
 
 const HeaderMobile = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  background: transparent;
-  position: relative;
-  z-index: 10;
+  background: var(--gradient-hero);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 
   @media (min-width: 768px) {
     display: none;
@@ -25,7 +29,7 @@ const HeaderDesktop = styled.header`
     align-items: center;
     padding: 0 32px;
     height: 60px;
-    background: #ffffff;
+    background: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
     position: sticky;
     top: 0;
@@ -51,30 +55,6 @@ const LogoDesktop = styled.div`
   align-items: center;
   gap: 8px;
   margin-right: 32px;
-`;
-
-const MenuIcon = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 4px;
-
-  span {
-    display: block;
-    width: 22px;
-    height: 2px;
-    background: #ffffff;
-    border-radius: 2px;
-  }
-
-  @media (min-width: 768px) {
-    span {
-      background: var(--color-text-primary);
-    }
-  }
 `;
 
 const Avatar = styled.div`
@@ -130,7 +110,7 @@ const DesktopSearch = styled.div`
 
     &:focus {
       border-color: var(--color-primary);
-      background: #fff;
+      background: var(--color-surface);
     }
 
     &::placeholder {
@@ -139,30 +119,80 @@ const DesktopSearch = styled.div`
   }
 `;
 
-const HamburgerIcon = () => (
-  <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
-    <line x1="0" y1="1" x2="22" y2="1" stroke="white" strokeWidth="2" strokeLinecap="round" />
-    <line x1="0" y1="8" x2="22" y2="8" stroke="white" strokeWidth="2" strokeLinecap="round" />
-    <line x1="0" y1="15" x2="22" y2="15" stroke="white" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
+const IconBtn = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 6px;
+  color: var(--color-text-secondary);
 
-const GridIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-    <rect x="1" y="1" width="7" height="7" rx="1" fill="currentColor" />
-    <rect x="12" y="1" width="7" height="7" rx="1" fill="currentColor" />
-    <rect x="1" y="12" width="7" height="7" rx="1" fill="currentColor" />
-    <rect x="12" y="12" width="7" height="7" rx="1" fill="currentColor" />
-  </svg>
-);
+  &:hover {
+    background: var(--color-surface-secondary);
+    color: var(--color-text-primary);
+  }
+`;
+
+const ThemeToggle = styled.button<{ $dark: boolean }>`
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  border: none;
+  cursor: pointer;
+  background: ${({ $dark }) => ($dark ? "var(--color-primary)" : "var(--color-border)")};
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+  margin-right: 16px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: ${({ $dark }) => ($dark ? "20px" : "2px")};
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: left 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+function HamburgerIcon() {
+  return (
+    <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
+      <line x1="0" y1="1" x2="22" y2="1" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <line x1="0" y1="8" x2="22" y2="8" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <line x1="0" y1="15" x2="22" y2="15" stroke="white" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function GridIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="1" y="1" width="7" height="7" rx="1" fill="currentColor" />
+      <rect x="12" y="1" width="7" height="7" rx="1" fill="currentColor" />
+      <rect x="1" y="12" width="7" height="7" rx="1" fill="currentColor" />
+      <rect x="12" y="12" width="7" height="7" rx="1" fill="currentColor" />
+    </svg>
+  );
+}
 
 export function AppHeader() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const ctx = useContext(ThemeContext);
+
   return (
     <>
       <HeaderMobile>
-        <button style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+        <IconBtn onClick={() => setSidebarOpen(true)} aria-label="Abrir menu">
           <HamburgerIcon />
-        </button>
+        </IconBtn>
         <LogoText>Open Class</LogoText>
         <Avatar>B</Avatar>
       </HeaderMobile>
@@ -181,8 +211,15 @@ export function AppHeader() {
         <DesktopSearch>
           <input placeholder="Buscar cursos..." />
         </DesktopSearch>
+        <ThemeToggle
+          $dark={ctx?.theme === "dark"}
+          onClick={ctx?.toggleTheme}
+          aria-label="Alternar tema"
+        />
         <Avatar>B</Avatar>
       </HeaderDesktop>
+
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
     </>
   );
 }

@@ -57,6 +57,20 @@ const LEVEL_LABELS: Record<string, string> = {
   advanced: "Avançado",
 };
 
+const CATEGORY_GRADIENTS: Record<string, string> = {
+  "desenvolvimento-web": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+  "design": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+  "dados": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+  "devops": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+  "mobile": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+};
+
+function getCategoryGradient(slug?: string | null): string {
+  return slug && CATEGORY_GRADIENTS[slug]
+    ? CATEGORY_GRADIENTS[slug]
+    : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+}
+
 export default async function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const course = await fetchCourse(slug);
@@ -69,85 +83,161 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
     0,
   );
 
+  const thumbnailGradient = getCategoryGradient(course.category?.slug);
+
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-background)" }}>
-      {/* Header */}
+      {/* Header — light */}
       <div style={{
-        background: "var(--gradient-hero)",
-        padding: "16px 20px",
+        background: "var(--color-surface)",
+        borderBottom: "1px solid var(--color-border)",
+        padding: "14px 20px",
         display: "flex",
         alignItems: "center",
         gap: "12px",
+        position: "sticky",
+        top: 0,
+        zIndex: 10,
       }}>
         <Link href="/" style={{
-          color: "rgba(255,255,255,0.8)",
+          color: "var(--color-text-primary)",
           textDecoration: "none",
           fontSize: "14px",
           display: "flex",
           alignItems: "center",
           gap: "6px",
+          fontWeight: 500,
         }}>
           ← Catálogo
         </Link>
       </div>
 
-      {/* Hero */}
+      {/* Thumbnail block — gradient only here */}
       <div style={{
-        background: "var(--gradient-hero-alt)",
-        padding: "24px 20px 32px",
+        background: thumbnailGradient,
+        aspectRatio: "16/9",
+        maxHeight: "240px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        overflow: "hidden",
       }}>
-        {course.category && (
+        <div style={{
+          width: "56px",
+          height: "56px",
+          background: "rgba(255,255,255,0.25)",
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backdropFilter: "blur(4px)",
+        }}>
+          <span style={{ fontSize: "24px", color: "#ffffff", marginLeft: "4px" }}>▶</span>
+        </div>
+        {totalSeconds > 0 && (
           <span style={{
-            fontSize: "11px",
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "rgba(255,255,255,0.7)",
-            display: "block",
-            marginBottom: "8px",
+            position: "absolute",
+            bottom: "12px",
+            right: "12px",
+            background: "rgba(0,0,0,0.55)",
+            color: "#ffffff",
+            fontSize: "12px",
+            fontWeight: 600,
+            padding: "3px 8px",
+            borderRadius: "4px",
           }}>
-            {course.category.name}
+            {formatDuration(totalSeconds)}
           </span>
         )}
+      </div>
+
+      {/* Course info — light background */}
+      <div style={{ padding: "20px 20px 0", maxWidth: "720px", margin: "0 auto" }}>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
+          {course.category && (
+            <span style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "var(--color-primary)",
+              background: "var(--color-primary-light, #ede9fe)",
+              padding: "3px 8px",
+              borderRadius: "4px",
+            }}>
+              {course.category.name}
+            </span>
+          )}
+          {course.level && (
+            <span style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "var(--color-text-secondary)",
+              background: "var(--color-surface-secondary)",
+              padding: "3px 8px",
+              borderRadius: "4px",
+            }}>
+              {LEVEL_LABELS[course.level] ?? course.level}
+            </span>
+          )}
+        </div>
+
         <h1 style={{
-          fontSize: "22px",
+          fontSize: "20px",
           fontWeight: 800,
-          color: "#ffffff",
-          lineHeight: 1.25,
+          color: "var(--color-text-primary)",
+          lineHeight: 1.3,
           marginBottom: "8px",
         }}>
           {course.title}
         </h1>
+
         {course.shortDescription && (
-          <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.75)", marginBottom: "16px" }}>
+          <p style={{
+            fontSize: "14px",
+            color: "var(--color-text-secondary)",
+            lineHeight: 1.6,
+            marginBottom: "12px",
+          }}>
             {course.shortDescription}
           </p>
         )}
-        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>
-            por {course.instructor.name}
+
+        <div style={{
+          display: "flex",
+          gap: "16px",
+          flexWrap: "wrap",
+          paddingBottom: "16px",
+          borderBottom: "1px solid var(--color-border)",
+          marginBottom: "24px",
+        }}>
+          <span style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>
+            por <strong style={{ color: "var(--color-text-primary)" }}>{course.instructor.name}</strong>
           </span>
-          {course.level && (
-            <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>
-              {LEVEL_LABELS[course.level] ?? course.level}
-            </span>
-          )}
           {totalLessons > 0 && (
-            <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>
-              {totalLessons} aulas · {formatDuration(totalSeconds)}
+            <span style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>
+              {totalLessons} aulas
             </span>
           )}
         </div>
-      </div>
 
-      {/* Content */}
-      <div style={{ padding: "24px 20px", maxWidth: "720px", margin: "0 auto" }}>
+        {/* Description */}
         {course.description && (
-          <div style={{ marginBottom: "32px" }}>
-            <h2 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "8px", color: "var(--color-text-primary)" }}>
+          <div style={{ marginBottom: "28px" }}>
+            <h2 style={{
+              fontSize: "15px",
+              fontWeight: 700,
+              marginBottom: "8px",
+              color: "var(--color-text-primary)",
+            }}>
               Sobre o curso
             </h2>
-            <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", lineHeight: 1.6 }}>
+            <p style={{
+              fontSize: "14px",
+              color: "var(--color-text-secondary)",
+              lineHeight: 1.7,
+            }}>
               {course.description}
             </p>
           </div>
@@ -155,16 +245,22 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
         {/* Modules */}
         {course.modules.length > 0 && (
-          <div>
-            <h2 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "16px", color: "var(--color-text-primary)" }}>
+          <div style={{ marginBottom: "24px" }}>
+            <h2 style={{
+              fontSize: "15px",
+              fontWeight: 700,
+              marginBottom: "14px",
+              color: "var(--color-text-primary)",
+            }}>
               Conteúdo do curso
             </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {course.modules.map((mod) => (
                 <div key={mod.id} style={{
                   border: "1px solid var(--color-border)",
                   borderRadius: "var(--radius-card)",
                   overflow: "hidden",
+                  background: "var(--color-surface)",
                 }}>
                   <div style={{
                     padding: "12px 16px",
@@ -173,10 +269,13 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                     fontSize: "14px",
                     color: "var(--color-text-primary)",
                     borderBottom: "1px solid var(--color-border)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                   }}>
-                    {mod.title}
-                    <span style={{ fontWeight: 400, color: "var(--color-text-secondary)", marginLeft: "8px" }}>
-                      · {mod.lessons.length} aulas
+                    <span>{mod.title}</span>
+                    <span style={{ fontWeight: 400, fontSize: "12px", color: "var(--color-text-secondary)" }}>
+                      {mod.lessons.length} aulas
                     </span>
                   </div>
                   <div>
@@ -187,8 +286,9 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                         alignItems: "center",
                         gap: "10px",
                         borderBottom: idx < mod.lessons.length - 1 ? "1px solid var(--color-border)" : "none",
+                        background: "var(--color-surface)",
                       }}>
-                        <span style={{ fontSize: "13px", color: "var(--color-text-tertiary)", width: "20px", flexShrink: 0 }}>
+                        <span style={{ fontSize: "12px", color: "var(--color-text-tertiary)", width: "18px", flexShrink: 0 }}>
                           ▷
                         </span>
                         <span style={{ fontSize: "14px", color: "var(--color-text-primary)", flex: 1 }}>
@@ -209,17 +309,18 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
         )}
 
         {/* CTA */}
-        <div style={{ marginTop: "32px", paddingBottom: "40px" }}>
+        <div style={{ paddingBottom: "48px" }}>
           <button style={{
             width: "100%",
-            padding: "16px",
+            padding: "15px",
             background: "var(--color-primary)",
             color: "#ffffff",
             border: "none",
             borderRadius: "var(--radius-btn)",
-            fontSize: "16px",
+            fontSize: "15px",
             fontWeight: 700,
             cursor: "pointer",
+            letterSpacing: "0.01em",
           }}>
             Começar curso — GRÁTIS
           </button>
