@@ -94,8 +94,8 @@ export function RegisterForm() {
       </Subtext>
 
       <SocialSection>
-        <GoogleButton />
-        <AuthDivider />
+        <GoogleButton label="Registrar com Google" />
+        <AuthDivider label="ou registre com e-mail" />
       </SocialSection>
 
       <FieldGroup>

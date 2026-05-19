@@ -59,12 +59,16 @@ const GoogleIcon = () => (
 
 const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_OAUTH === 'true';
 
-export function GoogleButton() {
+interface GoogleButtonProps {
+  label?: string;
+}
+
+export function GoogleButton({ label = "Continuar com Google" }: GoogleButtonProps) {
   if (!GOOGLE_ENABLED) return null;
   return (
     <StyledButton type="button" onClick={loginWithGoogle}>
       <GoogleIcon />
-      Continuar com Google
+      {label}
     </StyledButton>
   );
 }
