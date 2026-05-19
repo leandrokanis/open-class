@@ -16,6 +16,8 @@ COPY apps/ui ./apps/ui
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_API_URL=http://localhost:3001
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_GOOGLE_OAUTH=
+ENV NEXT_PUBLIC_GOOGLE_OAUTH=$NEXT_PUBLIC_GOOGLE_OAUTH
 RUN pnpm --filter ui build
 
 # ── Runtime image ────────────────────────────────────────────────────────────

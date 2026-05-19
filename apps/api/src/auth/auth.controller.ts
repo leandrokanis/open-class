@@ -84,10 +84,19 @@ export class AuthController {
   @ApiOperation({ summary: 'Retorna o usuário autenticado' })
   @ApiResponse({ status: 200, description: 'Dados do usuário.', type: MeResponseDto })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
-  me(
+  async me(
     @Req() req: Request & { user: { id: string; email: string; role: string } },
-  ): MeResponseDto {
-    return { data: req.user };
+  ): Promise<MeResponseDto> {
+    const user = await this.authService.getMe(req.user.id);
+    return {
+      data: {
+        id: user?.id ?? req.user.id,
+        email: user?.email ?? req.user.email,
+        role: user?.role ?? req.user.role,
+        name: user?.name ?? '',
+        avatarUrl: user?.avatarUrl ?? null,
+      },
+    };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -143,7 +152,7 @@ export class AuthController {
     @Req() req: Request & { user: User },
     @Res() res: Response,
   ) {
-    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+    const frontendUrl = (process.env.FRONTEND_URL ?? 'http://localhost:3000').split(',')[0].trim();
     try {
       this.authService.issueToken(req.user.id, req.user.email, req.user.role, res);
       res.redirect(frontendUrl);

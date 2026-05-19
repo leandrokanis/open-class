@@ -41,10 +41,12 @@ services:
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
       APP_URL: ${APP_URL:-http://localhost:41701}
       NODE_ENV: production
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     volumes:
       - uploads:/app/uploads
     dns:
       - 127.0.0.11
+      - 8.8.8.8
     dns_search:
       - .
     depends_on:
@@ -64,6 +66,7 @@ services:
       dockerfile: apps/ui/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:41701}
+        NEXT_PUBLIC_GOOGLE_OAUTH: ${GOOGLE_CLIENT_ID:+true}
       target: runner
     ports:
       - "${UI_PORT:-41700}:3000"

@@ -4,7 +4,9 @@ import styled, { keyframes, css } from "styled-components";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useContext } from "react";
+import { useRouter } from "next/navigation";
 import { ThemeContext } from "@/lib/theme/ThemeProvider";
+import { logout, type UserProfile } from "@/lib/auth";
 
 const slideIn = keyframes`
   from { transform: translateX(-100%); }
@@ -106,6 +108,78 @@ const NavIcon = styled.span`
   display: flex;
   width: 20px;
   flex-shrink: 0;
+`;
+
+const UserBlock = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+`;
+
+const UserAvatar = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--gradient-avatar);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  flex-shrink: 0;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const UserInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const UserName = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const UserEmail = styled.div`
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const LogoutBtn = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--color-error, #dc2626);
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--color-surface-secondary);
+  }
 `;
 
 const Footer = styled.div`
@@ -212,11 +286,22 @@ const NAV_ITEMS = [
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
+  onLogout: () => void;
+  user?: UserProfile | null;
 }
 
-export function Sidebar({ open, onClose }: SidebarProps) {
+export function Sidebar({ open, onClose, onLogout, user }: SidebarProps) {
   const pathname = usePathname();
   const ctx = useContext(ThemeContext);
+  const router = useRouter();
+
+  async function handleLogout() {
+    await logout();
+    onLogout();
+    onClose();
+    router.push("/");
+    router.refresh();
+  }
 
   if (!open) return null;
 
@@ -230,6 +315,23 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <XIcon />
           </CloseBtn>
         </Header>
+
+        {user && (
+          <>
+            <UserBlock>
+              <UserAvatar>
+                {user.avatarUrl
+                  ? <img src={user.avatarUrl} alt={user.name} />
+                  : user.name.charAt(0).toUpperCase()}
+              </UserAvatar>
+              <UserInfo>
+                <UserName>{user.name}</UserName>
+                <UserEmail>{user.email}</UserEmail>
+              </UserInfo>
+            </UserBlock>
+            <LogoutBtn onClick={handleLogout}>Sair</LogoutBtn>
+          </>
+        )}
 
         <Nav>
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
