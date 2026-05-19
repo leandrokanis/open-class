@@ -83,13 +83,14 @@ const LoadMoreWrapper = styled.div`
 interface CatalogClientProps {
   categories: CategoryItem[];
   initialPage: CatalogPage;
+  initialCategoryId?: string | null;
 }
 
-export function CatalogClient({ categories, initialPage }: CatalogClientProps) {
+export function CatalogClient({ categories, initialPage, initialCategoryId = null }: CatalogClientProps) {
   const [courses, setCourses] = useState<CourseListItem[]>(initialPage.data);
   const [meta, setMeta] = useState(initialPage.meta);
   const [searchQ, setSearchQ] = useState("");
-  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [categoryId, setCategoryId] = useState<string | null>(initialCategoryId);
   const [level, setLevel] = useState<"beginner" | "intermediate" | "advanced" | null>(null);
   const [loading, setLoading] = useState(false);
 
