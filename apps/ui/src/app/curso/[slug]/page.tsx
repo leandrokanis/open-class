@@ -1,55 +1,179 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import styled from "styled-components";
+import { fetchCourseDetail } from "@/lib/course-detail";
+import { AppHeader } from "@/components/catalog/AppHeader";
+import { MobileBottomNav } from "@/components/catalog/MobileBottomNav";
+import { CourseDetailHeader } from "@/components/course-detail/CourseDetailHeader";
+import { CourseHero } from "@/components/course-detail/CourseHero";
+import { CourseMeta } from "@/components/course-detail/CourseMeta";
+import { CourseContent } from "@/components/course-detail/CourseContent";
+import { CourseProgressSection } from "@/components/course-detail/CourseProgressSection";
+import { CourseDetailSidebar } from "@/components/course-detail/CourseDetailSidebar";
 
-const API_URL =
-  process.env.API_INTERNAL_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:3001";
+const MobileLayout = styled.div`
+  min-height: 100vh;
+  background: var(--color-background);
 
-interface Lesson {
-  id: string;
-  title: string;
-  duration: number | null;
-  order: number;
-  contentType: string;
-}
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
 
-interface Module {
-  id: string;
-  title: string;
-  order: number;
-  lessons: Lesson[];
-}
+const DesktopLayout = styled.div`
+  display: none;
+  min-height: 100vh;
+  background: var(--color-background);
 
-interface CourseDetail {
-  id: string;
-  title: string;
-  slug: string;
-  shortDescription: string | null;
-  description: string | null;
-  level: string | null;
-  thumbnailUrl: string | null;
-  category: { id: string; name: string; slug: string } | null;
-  instructor: { name: string };
-  modules: Module[];
-  createdAt: string;
-}
+  @media (min-width: 768px) {
+    display: block;
+  }
+`;
 
-async function fetchCourse(slug: string): Promise<CourseDetail | null> {
-  const res = await fetch(`${API_URL}/api/catalog/${slug}`, { cache: "no-store" });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error("Failed to fetch course");
-  const json = (await res.json()) as { data: CourseDetail };
-  return json.data;
-}
+const DesktopHero = styled.div`
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 60%, #1e40af 100%);
+  padding: 40px 48px 40px;
+`;
 
-function formatDuration(seconds: number): string {
-  const m = Math.round(seconds / 60);
-  if (m < 60) return `${m}min`;
-  const h = Math.floor(m / 60);
-  const rem = m % 60;
-  return rem > 0 ? `${h}h ${rem}min` : `${h}h`;
-}
+const HeroInner = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 40px;
+  align-items: start;
+`;
+
+const HeroLeft = styled.div`
+  color: var(--color-text-on-dark, #ffffff);
+`;
+
+const HeroTitle = styled.h1`
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1.2;
+  color: #ffffff;
+  margin: 16px 0 14px;
+  font-family: var(--font-inter), system-ui, sans-serif;
+`;
+
+const HeroDesc = styled.p`
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin-bottom: 16px;
+  max-width: 560px;
+`;
+
+const HeroStats = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+`;
+
+const HeroRating = styled.span`
+  font-weight: 700;
+  color: #fbbf24;
+`;
+
+const HeroInstructor = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+`;
+
+const HeroAvatar = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  flex-shrink: 0;
+`;
+
+const PreviewCard = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-card);
+  backdrop-filter: blur(8px);
+  aspect-ratio: 16 / 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+`;
+
+const PlayBtn = styled.div`
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 22px;
+    height: 22px;
+    fill: #ffffff;
+    margin-left: 3px;
+  }
+`;
+
+const PreviewLabel = styled.span`
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+`;
+
+const DesktopMain = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 48px;
+  display: flex;
+  gap: 48px;
+  align-items: flex-start;
+`;
+
+const MainContent = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const AboutSection = styled.section`
+  margin-bottom: 32px;
+`;
+
+const SectionHeading = styled.h2`
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+  font-family: var(--font-inter), system-ui, sans-serif;
+`;
+
+const AboutText = styled.p`
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+`;
+
+const MobileBottomPad = styled.div`
+  height: 80px;
+`;
 
 const LEVEL_LABELS: Record<string, string> = {
   beginner: "Iniciante",
@@ -57,275 +181,133 @@ const LEVEL_LABELS: Record<string, string> = {
   advanced: "Avançado",
 };
 
-const CATEGORY_GRADIENTS: Record<string, string> = {
-  "desenvolvimento-web": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  "design": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-  "dados": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-  "devops": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-  "mobile": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-};
-
-function getCategoryGradient(slug?: string | null): string {
-  return slug && CATEGORY_GRADIENTS[slug]
-    ? CATEGORY_GRADIENTS[slug]
-    : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
-}
-
-export default async function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function CoursePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
-  const course = await fetchCourse(slug);
+  const course = await fetchCourseDetail(slug);
 
   if (!course) notFound();
 
   const totalLessons = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
-  const totalSeconds = course.modules.reduce(
-    (acc, m) => acc + m.lessons.reduce((a, l) => a + (l.duration ?? 0), 0),
+  const totalDurationMinutes = course.modules.reduce(
+    (acc, m) => acc + m.lessons.reduce((a, l) => a + Math.round((l.duration ?? 0) / 60), 0),
     0,
   );
 
-  const thumbnailGradient = getCategoryGradient(course.category?.slug);
+  const instructorInitial = course.instructor.name.charAt(0).toUpperCase();
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-background)" }}>
-      {/* Header — light */}
-      <div style={{
-        background: "var(--color-surface)",
-        borderBottom: "1px solid var(--color-border)",
-        padding: "14px 20px",
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        position: "sticky",
-        top: 0,
-        zIndex: 10,
-      }}>
-        <Link href="/" style={{
-          color: "var(--color-text-primary)",
-          textDecoration: "none",
-          fontSize: "14px",
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          fontWeight: 500,
-        }}>
-          ← Catálogo
-        </Link>
-      </div>
+    <>
+      {/* ─── MOBILE LAYOUT ─── */}
+      <MobileLayout>
+        <CourseDetailHeader />
 
-      {/* Thumbnail block — gradient only here */}
-      <div style={{
-        background: thumbnailGradient,
-        aspectRatio: "16/9",
-        maxHeight: "240px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        position: "relative",
-        overflow: "hidden",
-      }}>
-        <div style={{
-          width: "56px",
-          height: "56px",
-          background: "rgba(255,255,255,0.25)",
-          borderRadius: "50%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backdropFilter: "blur(4px)",
-        }}>
-          <span style={{ fontSize: "24px", color: "#ffffff", marginLeft: "4px" }}>▶</span>
-        </div>
-        {totalSeconds > 0 && (
-          <span style={{
-            position: "absolute",
-            bottom: "12px",
-            right: "12px",
-            background: "rgba(0,0,0,0.55)",
-            color: "#ffffff",
-            fontSize: "12px",
-            fontWeight: 600,
-            padding: "3px 8px",
-            borderRadius: "4px",
-          }}>
-            {formatDuration(totalSeconds)}
-          </span>
-        )}
-      </div>
+        <CourseHero
+          categorySlug={course.category?.slug}
+          totalDurationMinutes={totalDurationMinutes}
+        />
 
-      {/* Course info — light background */}
-      <div style={{ padding: "20px 20px 0", maxWidth: "720px", margin: "0 auto" }}>
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
-          {course.category && (
-            <span style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "var(--color-primary)",
-              background: "var(--color-primary-light, #ede9fe)",
-              padding: "3px 8px",
-              borderRadius: "4px",
-            }}>
-              {course.category.name}
-            </span>
-          )}
-          {course.level && (
-            <span style={{
-              fontSize: "11px",
-              fontWeight: 600,
-              color: "var(--color-text-secondary)",
-              background: "var(--color-surface-secondary)",
-              padding: "3px 8px",
-              borderRadius: "4px",
-            }}>
-              {LEVEL_LABELS[course.level] ?? course.level}
-            </span>
-          )}
-        </div>
+        <CourseMeta course={course} totalLessons={totalLessons} totalDurationMinutes={totalDurationMinutes} />
 
-        <h1 style={{
-          fontSize: "20px",
-          fontWeight: 800,
-          color: "var(--color-text-primary)",
-          lineHeight: 1.3,
-          marginBottom: "8px",
-        }}>
-          {course.title}
-        </h1>
-
-        {course.shortDescription && (
-          <p style={{
-            fontSize: "14px",
-            color: "var(--color-text-secondary)",
-            lineHeight: 1.6,
-            marginBottom: "12px",
-          }}>
-            {course.shortDescription}
-          </p>
-        )}
-
-        <div style={{
-          display: "flex",
-          gap: "16px",
-          flexWrap: "wrap",
-          paddingBottom: "16px",
-          borderBottom: "1px solid var(--color-border)",
-          marginBottom: "24px",
-        }}>
-          <span style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>
-            por <strong style={{ color: "var(--color-text-primary)" }}>{course.instructor.name}</strong>
-          </span>
-          {totalLessons > 0 && (
-            <span style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>
-              {totalLessons} aulas
-            </span>
-          )}
-        </div>
-
-        {/* Description */}
         {course.description && (
-          <div style={{ marginBottom: "28px" }}>
-            <h2 style={{
-              fontSize: "15px",
-              fontWeight: 700,
-              marginBottom: "8px",
-              color: "var(--color-text-primary)",
-            }}>
-              Sobre o curso
-            </h2>
-            <p style={{
-              fontSize: "14px",
-              color: "var(--color-text-secondary)",
-              lineHeight: 1.7,
-            }}>
-              {course.description}
-            </p>
-          </div>
+          <AboutSection style={{ padding: "20px 20px 0" }}>
+            <SectionHeading style={{ fontSize: "15px" }}>Sobre este curso</SectionHeading>
+            <AboutText style={{ fontSize: "14px" }}>{course.description}</AboutText>
+          </AboutSection>
         )}
 
-        {/* Modules */}
-        {course.modules.length > 0 && (
-          <div style={{ marginBottom: "24px" }}>
-            <h2 style={{
-              fontSize: "15px",
-              fontWeight: 700,
-              marginBottom: "14px",
-              color: "var(--color-text-primary)",
-            }}>
-              Conteúdo do curso
-            </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {course.modules.map((mod) => (
-                <div key={mod.id} style={{
-                  border: "1px solid var(--color-border)",
-                  borderRadius: "var(--radius-card)",
-                  overflow: "hidden",
-                  background: "var(--color-surface)",
-                }}>
-                  <div style={{
-                    padding: "12px 16px",
-                    background: "var(--color-surface-secondary)",
-                    fontWeight: 600,
-                    fontSize: "14px",
-                    color: "var(--color-text-primary)",
-                    borderBottom: "1px solid var(--color-border)",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}>
-                    <span>{mod.title}</span>
-                    <span style={{ fontWeight: 400, fontSize: "12px", color: "var(--color-text-secondary)" }}>
-                      {mod.lessons.length} aulas
-                    </span>
-                  </div>
-                  <div>
-                    {mod.lessons.map((lesson, idx) => (
-                      <div key={lesson.id} style={{
-                        padding: "10px 16px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        borderBottom: idx < mod.lessons.length - 1 ? "1px solid var(--color-border)" : "none",
-                        background: "var(--color-surface)",
-                      }}>
-                        <span style={{ fontSize: "12px", color: "var(--color-text-tertiary)", width: "18px", flexShrink: 0 }}>
-                          ▷
-                        </span>
-                        <span style={{ fontSize: "14px", color: "var(--color-text-primary)", flex: 1 }}>
-                          {lesson.title}
-                        </span>
-                        {lesson.duration && (
-                          <span style={{ fontSize: "12px", color: "var(--color-text-tertiary)", flexShrink: 0 }}>
-                            {formatDuration(lesson.duration)}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <CourseProgressSection course={course} modules={course.modules} />
 
-        {/* CTA */}
-        <div style={{ paddingBottom: "48px" }}>
-          <button style={{
-            width: "100%",
-            padding: "15px",
-            background: "var(--color-primary)",
-            color: "#ffffff",
-            border: "none",
-            borderRadius: "var(--radius-btn)",
-            fontSize: "15px",
-            fontWeight: 700,
-            cursor: "pointer",
-            letterSpacing: "0.01em",
-          }}>
-            Começar curso — GRÁTIS
-          </button>
-        </div>
-      </div>
-    </div>
+        <CourseContent modules={course.modules} completedLessonIds={[]} />
+
+        <MobileBottomPad />
+        <MobileBottomNav />
+      </MobileLayout>
+
+      {/* ─── DESKTOP LAYOUT ─── */}
+      <DesktopLayout>
+        <AppHeader />
+
+        <DesktopHero>
+          <HeroInner>
+            <HeroLeft>
+              <CourseDetailHeader
+                variant="desktop"
+                categoryName={course.category?.name}
+                categorySlug={course.category?.slug}
+                courseTitle={course.title}
+              />
+
+              <HeroTitle>{course.title}</HeroTitle>
+
+              {course.shortDescription && (
+                <HeroDesc>{course.shortDescription}</HeroDesc>
+              )}
+
+              <HeroStats>
+                {course.rating != null && (
+                  <span>
+                    <HeroRating>★ {course.rating.toFixed(1)}</HeroRating>
+                    {course.reviewCount > 0 && (
+                      <span style={{ color: "rgba(255,255,255,0.7)" }}>
+                        {" "}({course.reviewCount.toLocaleString("pt-BR")} avaliações)
+                      </span>
+                    )}
+                  </span>
+                )}
+                {totalLessons > 0 && <span>{totalLessons} aulas</span>}
+                {totalDurationMinutes > 0 && (
+                  <span>
+                    {totalDurationMinutes >= 60
+                      ? `${Math.floor(totalDurationMinutes / 60)}h ${totalDurationMinutes % 60 > 0 ? `${totalDurationMinutes % 60}min` : ""}`
+                      : `${totalDurationMinutes}min`}
+                  </span>
+                )}
+                {course.level && (
+                  <span>{LEVEL_LABELS[course.level] ?? course.level}</span>
+                )}
+              </HeroStats>
+
+              <HeroInstructor>
+                <HeroAvatar>{instructorInitial}</HeroAvatar>
+                <span>por {course.instructor.name}</span>
+              </HeroInstructor>
+            </HeroLeft>
+
+            <PreviewCard>
+              <PlayBtn aria-label="Assistir prévia gratuita">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </PlayBtn>
+              <PreviewLabel>Assistir prévia gratuita</PreviewLabel>
+            </PreviewCard>
+          </HeroInner>
+        </DesktopHero>
+
+        <DesktopMain>
+          <MainContent>
+            {course.description && (
+              <AboutSection>
+                <SectionHeading>Sobre este curso</SectionHeading>
+                <AboutText>{course.description}</AboutText>
+              </AboutSection>
+            )}
+
+            <CourseContent modules={course.modules} completedLessonIds={[]} />
+          </MainContent>
+
+          <CourseDetailSidebar
+            course={course}
+            modules={course.modules}
+            totalLessons={totalLessons}
+            totalDurationMinutes={totalDurationMinutes}
+          />
+        </DesktopMain>
+      </DesktopLayout>
+    </>
   );
 }

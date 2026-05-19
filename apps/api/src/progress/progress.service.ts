@@ -35,6 +35,13 @@ export class ProgressService {
     return { courseId, completedLessons: completed, totalLessons: total, percentage };
   }
 
+  async getCompletedLessonIds(studentId: string, courseId: string): Promise<string[]> {
+    const enrolled = await this.repo.isEnrolled(studentId, courseId);
+    if (!enrolled) throw new ForbiddenException('Aluno não matriculado neste curso.');
+
+    return this.repo.getCompletedLessonIds(studentId, courseId);
+  }
+
   async getLastAccessed(studentId: string, courseId: string) {
     const course = await this.repo.findCourseById(courseId);
     if (!course) throw new NotFoundException('Curso não encontrado.');

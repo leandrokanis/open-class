@@ -17,6 +17,7 @@ Decisões técnicas significativas do projeto Open Class, documentadas no format
 | [ADR-009](009-google-oauth-condicional.md) | Google OAuth como módulo condicional | Aceito | 2026-05-16 |
 | [ADR-010](010-roles-permissions-guard.md) | Autorização por papel via RolesGuard + @Roles() | Aceito | 2026-05-16 |
 | [ADR-011](011-shadcn-ui-sem-tailwind.md) | shadcn/ui com styled-components, sem Tailwind CSS | Aceito | 2026-05-17 |
+| [ADR-012](012-ui-hybrid-rendering.md) | Renderização híbrida: Server Components + Client Components com credentials | Aceito | 2026-05-18 |
 
 ## Como usar
 

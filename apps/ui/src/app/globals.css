@@ -1,3 +1,20 @@
+@import '@fontsource-variable/material-symbols-rounded/full.css';
+
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded Variable', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
 /* ============================================================
    Open Class Design System — CSS Custom Properties
    Source of truth: Open Class v1 Paper design file

@@ -110,6 +110,22 @@ export class ProgressRepository {
     return rows[0] ?? null;
   }
 
+  async getCompletedLessonIds(studentId: string, courseId: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ lessonId: lessonProgress.lessonId })
+      .from(lessonProgress)
+      .innerJoin(lessons, eq(lessons.id, lessonProgress.lessonId))
+      .innerJoin(modules, eq(modules.id, lessons.moduleId))
+      .where(
+        and(
+          eq(lessonProgress.studentId, studentId),
+          eq(modules.courseId, courseId),
+          eq(lessonProgress.isCompleted, true),
+        ),
+      );
+    return rows.map((r) => r.lessonId);
+  }
+
   findCourseById(courseId: string) {
     return this.db.query.courses.findFirst({
       where: (c, { eq: eqFn, isNull, and: andFn }) =>

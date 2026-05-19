@@ -62,6 +62,8 @@ services:
     build:
       context: .
       dockerfile: apps/ui/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:41701}
       target: runner
     ports:
       - "${UI_PORT:-41700}:3000"

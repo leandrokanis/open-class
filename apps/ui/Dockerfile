@@ -14,6 +14,8 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS builder
 COPY apps/ui ./apps/ui
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_API_URL=http://localhost:3001
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN pnpm --filter ui build
 
 # ── Runtime image ────────────────────────────────────────────────────────────
