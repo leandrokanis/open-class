@@ -2,8 +2,12 @@
 
 import styled from "styled-components";
 import Link from "next/link";
-import { useState, useContext } from "react";
+import Image from "next/image";
+import { useState, useContext, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ThemeContext } from "@/lib/theme/ThemeProvider";
+import { logout } from "@/lib/auth";
+import { useUser } from "@/hooks/useUser";
 import { Sidebar } from "./Sidebar";
 
 const HeaderMobile = styled.header`
@@ -57,7 +61,7 @@ const LogoDesktop = styled.div`
   margin-right: 32px;
 `;
 
-const Avatar = styled.div`
+const AvatarButton = styled.button`
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -70,6 +74,37 @@ const Avatar = styled.div`
   color: #ffffff;
   cursor: pointer;
   flex-shrink: 0;
+  border: none;
+  padding: 0;
+  overflow: hidden;
+`;
+
+const AvatarImg = styled(Image)`
+  object-fit: cover;
+  border-radius: 50%;
+`;
+
+const EntrarLink = styled(Link)`
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 6px 14px;
+  border: 1.5px solid rgba(255,255,255,0.6);
+  border-radius: 8px;
+
+  @media (min-width: 768px) {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
+  &:hover {
+    background: rgba(255,255,255,0.1);
+
+    @media (min-width: 768px) {
+      background: var(--color-primary-light);
+    }
+  }
 `;
 
 const NavLinks = styled.nav`
@@ -162,6 +197,45 @@ const ThemeToggle = styled.button<{ $dark: boolean }>`
   }
 `;
 
+const AvatarWrapper = styled.div`
+  position: relative;
+`;
+
+const Dropdown = styled.div<{ $open: boolean }>`
+  display: ${({ $open }) => ($open ? "flex" : "none")};
+  flex-direction: column;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  min-width: 160px;
+  overflow: hidden;
+  z-index: 200;
+`;
+
+const DropdownItem = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  text-align: left;
+  width: 100%;
+
+  &:hover {
+    background: var(--color-surface-secondary);
+  }
+`;
+
+const DropdownLogout = styled(DropdownItem)`
+  color: var(--color-error, #dc2626);
+  border-top: 1px solid var(--color-border);
+`;
+
 function HamburgerIcon() {
   return (
     <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
@@ -183,9 +257,37 @@ function GridIcon() {
   );
 }
 
+function AvatarContent({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
+  if (avatarUrl) {
+    return <AvatarImg src={avatarUrl} alt={name} width={36} height={36} />;
+  }
+  return <>{name.charAt(0).toUpperCase()}</>;
+}
+
 export function AppHeader() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const ctx = useContext(ThemeContext);
+  const { user } = useUser();
+  const router = useRouter();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  async function handleLogout() {
+    await logout();
+    setDropdownOpen(false);
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <>
@@ -194,7 +296,13 @@ export function AppHeader() {
           <HamburgerIcon />
         </IconBtn>
         <LogoText>Open Class</LogoText>
-        <Avatar>B</Avatar>
+        {user ? (
+          <AvatarButton onClick={() => setSidebarOpen(true)} aria-label="Abrir menu do usuário">
+            <AvatarContent name={user.name} avatarUrl={user.avatarUrl} />
+          </AvatarButton>
+        ) : (
+          <EntrarLink href="/login">Entrar</EntrarLink>
+        )}
       </HeaderMobile>
 
       <HeaderDesktop>
@@ -216,10 +324,28 @@ export function AppHeader() {
           onClick={ctx?.toggleTheme}
           aria-label="Alternar tema"
         />
-        <Avatar>B</Avatar>
+        {user ? (
+          <AvatarWrapper ref={dropdownRef}>
+            <AvatarButton
+              onClick={() => setDropdownOpen((v) => !v)}
+              aria-label="Menu do usuário"
+              aria-expanded={dropdownOpen}
+            >
+              <AvatarContent name={user.name} avatarUrl={user.avatarUrl} />
+            </AvatarButton>
+            <Dropdown $open={dropdownOpen}>
+              <DropdownItem onClick={() => { setDropdownOpen(false); router.push("/perfil"); }}>
+                Meu perfil
+              </DropdownItem>
+              <DropdownLogout onClick={handleLogout}>Sair</DropdownLogout>
+            </Dropdown>
+          </AvatarWrapper>
+        ) : (
+          <EntrarLink href="/login">Entrar</EntrarLink>
+        )}
       </HeaderDesktop>
 
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
     </>
   );
 }

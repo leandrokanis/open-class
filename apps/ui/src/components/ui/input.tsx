@@ -1,21 +1,40 @@
 "use client";
 
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { forwardRef, type InputHTMLAttributes } from "react";
 
-const StyledInput = styled.input`
+type InputSize = "sm" | "md";
+
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  inputSize?: InputSize;
+}
+
+const sizeStyles: Record<InputSize, ReturnType<typeof css>> = {
+  sm: css`
+    padding: 8px 14px;
+    font-size: 13px;
+    line-height: 16px;
+  `,
+  md: css`
+    padding: 13px 15px;
+    font-size: 15px;
+    line-height: 18px;
+  `,
+};
+
+const StyledInput = styled.input<{ $size: InputSize }>`
   width: 100%;
-  padding: 8px 14px;
   background-color: var(--color-surface-secondary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-input);
   font-family: var(--font-inter), system-ui, sans-serif;
-  font-size: 13px;
   font-weight: 400;
-  line-height: 16px;
   color: var(--color-text-primary);
+  caret-color: var(--color-text-primary);
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  ${({ $size }) => sizeStyles[$size]}
 
   &::placeholder {
     color: var(--color-text-tertiary);
@@ -26,14 +45,19 @@ const StyledInput = styled.input`
     box-shadow: 0 0 0 2px var(--color-primary-light);
   }
 
+  &[aria-invalid="true"] {
+    border-color: var(--color-destructive);
+  }
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
 `;
 
-export const Input = forwardRef<
-  HTMLInputElement,
-  InputHTMLAttributes<HTMLInputElement>
->((props, ref) => <StyledInput ref={ref} {...props} />);
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ inputSize = "sm", ...props }, ref) => (
+    <StyledInput ref={ref} $size={inputSize} {...props} />
+  )
+);
 Input.displayName = "Input";
