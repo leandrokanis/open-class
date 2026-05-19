@@ -17,25 +17,16 @@ const Row = styled.div`
   background: var(--color-surface);
 `;
 
-const StatusIcon = styled.span<{ $completed: boolean }>`
-  width: 20px;
-  height: 20px;
+const PlayIcon = styled.span`
+  width: 16px;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: ${({ $completed }) => ($completed ? "none" : "2px solid var(--color-border)")};
-  background: ${({ $completed }) => ($completed ? "var(--color-success, #22c55e)" : "transparent")};
-  color: #ffffff;
+  color: var(--color-text-tertiary);
   font-size: 11px;
-  font-weight: 700;
 `;
 
-const LessonTitle = styled.span<{ $completed: boolean }>`
+const LessonTitle = styled.span`
   font-size: 14px;
-  color: ${({ $completed }) => ($completed ? "var(--color-text-tertiary)" : "var(--color-text-primary)")};
-  text-decoration: ${({ $completed }) => ($completed ? "line-through" : "none")};
+  color: var(--color-text-primary);
   flex: 1;
   line-height: 1.4;
 `;
@@ -48,16 +39,14 @@ const Duration = styled.span`
 
 interface LessonRowProps {
   lesson: CourseLesson;
-  isCompleted: boolean;
+  isCompleted?: boolean;
 }
 
-export function LessonRow({ lesson, isCompleted }: LessonRowProps) {
+export function LessonRow({ lesson }: LessonRowProps) {
   return (
     <Row>
-      <StatusIcon $completed={isCompleted} aria-label={isCompleted ? "Concluída" : "Não concluída"}>
-        {isCompleted ? "✓" : null}
-      </StatusIcon>
-      <LessonTitle $completed={isCompleted}>{lesson.title}</LessonTitle>
+      <PlayIcon>▷</PlayIcon>
+      <LessonTitle>{lesson.title}</LessonTitle>
       {lesson.duration != null && lesson.duration > 0 && (
         <Duration>{formatDuration(lesson.duration)}</Duration>
       )}

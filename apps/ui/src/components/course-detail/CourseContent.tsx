@@ -33,9 +33,29 @@ const SectionTitle = styled.h2`
   font-family: var(--font-inter), system-ui, sans-serif;
 `;
 
+const HeaderRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
 const ModuleCount = styled.span`
   font-size: 13px;
   color: var(--color-text-secondary);
+`;
+
+const ToggleAll = styled.button`
+  font-size: 13px;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 
 const ModuleList = styled.div`
@@ -67,20 +87,6 @@ const ModuleHeader = styled.button`
   }
 `;
 
-const ModuleNumber = styled.span`
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  background: var(--color-primary);
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-`;
-
 const ModuleInfo = styled.div`
   flex: 1;
 `;
@@ -97,12 +103,13 @@ const ModuleMeta = styled.span`
   color: var(--color-text-secondary);
 `;
 
-const Chevron = styled.span<{ $open: boolean }>`
-  font-size: 12px;
+const ChevronIcon = styled.svg<{ $open: boolean }>`
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
   color: var(--color-text-tertiary);
   transform: rotate(${({ $open }) => ($open ? "180deg" : "0deg")});
   transition: transform 0.2s;
-  flex-shrink: 0;
 `;
 
 const LessonList = styled.div`
@@ -118,29 +125,37 @@ interface CourseContentProps {
   completedLessonIds: string[];
 }
 
-export function CourseContent({ modules, completedLessonIds }: CourseContentProps) {
-  const completedSet = new Set(completedLessonIds);
+export function CourseContent({ modules }: CourseContentProps) {
+  const allIds = modules.map((m) => m.id);
   const [openModules, setOpenModules] = useState<Set<string>>(
     () => new Set(modules[0] ? [modules[0].id] : []),
   );
 
+  const allOpen = openModules.size === modules.length;
+
   function toggle(moduleId: string) {
     setOpenModules((prev) => {
       const next = new Set(prev);
-      if (next.has(moduleId)) {
-        next.delete(moduleId);
-      } else {
-        next.add(moduleId);
-      }
+      if (next.has(moduleId)) next.delete(moduleId);
+      else next.add(moduleId);
       return next;
     });
+  }
+
+  function toggleAll() {
+    setOpenModules(allOpen ? new Set() : new Set(allIds));
   }
 
   return (
     <Section>
       <SectionHeader>
         <SectionTitle>Conteúdo do curso</SectionTitle>
-        <ModuleCount>{modules.length} módulos</ModuleCount>
+        <HeaderRight>
+          <ModuleCount>{modules.length} módulos</ModuleCount>
+          <ToggleAll onClick={toggleAll}>
+            {allOpen ? "Colapsar todos" : "Expandir todos"}
+          </ToggleAll>
+        </HeaderRight>
       </SectionHeader>
 
       <ModuleList>
@@ -151,24 +166,21 @@ export function CourseContent({ modules, completedLessonIds }: CourseContentProp
           return (
             <ModuleCard key={mod.id}>
               <ModuleHeader onClick={() => toggle(mod.id)} aria-expanded={isOpen}>
-                <ModuleNumber>{mod.order}</ModuleNumber>
                 <ModuleInfo>
                   <ModuleTitle>{mod.title}</ModuleTitle>
                   <ModuleMeta>
                     {mod.lessons.length} aulas{duration ? ` · ${duration}` : ""}
                   </ModuleMeta>
                 </ModuleInfo>
-                <Chevron $open={isOpen}>▼</Chevron>
+                <ChevronIcon $open={isOpen} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </ChevronIcon>
               </ModuleHeader>
 
               {isOpen && (
                 <LessonList>
                   {mod.lessons.map((lesson) => (
-                    <LessonRow
-                      key={lesson.id}
-                      lesson={lesson}
-                      isCompleted={completedSet.has(lesson.id)}
-                    />
+                    <LessonRow key={lesson.id} lesson={lesson} />
                   ))}
                 </LessonList>
               )}
