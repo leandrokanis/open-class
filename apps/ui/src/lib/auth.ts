@@ -77,7 +77,8 @@ export async function getMe(): Promise<UserProfile | null> {
   try {
     const res = await fetch(`${API_URL}/auth/me`, { credentials: 'include' });
     if (!res.ok) return null;
-    return res.json();
+    const json = await res.json();
+    return json.data ?? null;
   } catch {
     return null;
   }
