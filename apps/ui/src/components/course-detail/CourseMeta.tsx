@@ -1,6 +1,13 @@
 import styled from "styled-components";
 import type { CourseDetail } from "@/lib/course-detail";
 
+function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes}min`;
+  const h = Math.floor(minutes / 60);
+  const rem = minutes % 60;
+  return rem > 0 ? `${h}h ${rem}min` : `${h}h`;
+}
+
 const LEVEL_LABELS: Record<string, string> = {
   beginner: "Iniciante",
   intermediate: "Intermediário",
@@ -128,10 +135,11 @@ const InstructorName = styled.span`
 interface CourseMetaProps {
   course: CourseDetail;
   totalLessons: number;
+  totalDurationMinutes?: number;
   showDescription?: boolean;
 }
 
-export function CourseMeta({ course, totalLessons, showDescription = false }: CourseMetaProps) {
+export function CourseMeta({ course, totalLessons, totalDurationMinutes, showDescription = false }: CourseMetaProps) {
   const initial = course.instructor.name.charAt(0).toUpperCase();
 
   return (
@@ -164,7 +172,7 @@ export function CourseMeta({ course, totalLessons, showDescription = false }: Co
         {totalLessons > 0 && (
           <StatItem>
             <span>🕐</span>
-            {totalLessons} aulas
+            {totalLessons} aulas{totalDurationMinutes && totalDurationMinutes > 0 ? ` · ${formatDuration(totalDurationMinutes)}` : ""}
           </StatItem>
         )}
       </StatsRow>

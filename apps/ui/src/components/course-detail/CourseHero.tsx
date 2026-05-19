@@ -104,9 +104,6 @@ export function CourseHero({ categorySlug, totalDurationMinutes, previewUrl }: C
         </svg>
       </PlayButton>
       <PreviewLabel>Prévia disponível</PreviewLabel>
-      {totalDurationMinutes != null && totalDurationMinutes > 0 && (
-        <DurationBadge>{formatDuration(totalDurationMinutes)}</DurationBadge>
-      )}
     </HeroWrapper>
   );
 }

@@ -210,7 +210,7 @@ export default async function CoursePage({
           totalDurationMinutes={totalDurationMinutes}
         />
 
-        <CourseMeta course={course} totalLessons={totalLessons} />
+        <CourseMeta course={course} totalLessons={totalLessons} totalDurationMinutes={totalDurationMinutes} />
 
         {course.description && (
           <AboutSection style={{ padding: "20px 20px 0" }}>
