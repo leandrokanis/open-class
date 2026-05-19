@@ -212,6 +212,13 @@ export default async function CoursePage({
 
         <CourseMeta course={course} totalLessons={totalLessons} />
 
+        {course.description && (
+          <AboutSection style={{ padding: "20px 20px 0" }}>
+            <SectionHeading style={{ fontSize: "15px" }}>Sobre este curso</SectionHeading>
+            <AboutText style={{ fontSize: "14px" }}>{course.description}</AboutText>
+          </AboutSection>
+        )}
+
         <CourseProgressSection courseId={course.id} modules={course.modules} />
 
         <CourseContent modules={course.modules} completedLessonIds={[]} />
