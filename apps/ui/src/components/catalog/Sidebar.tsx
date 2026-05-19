@@ -297,7 +297,7 @@ export function Sidebar({ open, onClose, user }: SidebarProps) {
   async function handleLogout() {
     await logout();
     onClose();
-    router.push("/login");
+    router.push("/");
     router.refresh();
   }
 

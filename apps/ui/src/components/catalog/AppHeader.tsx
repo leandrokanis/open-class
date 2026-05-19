@@ -285,7 +285,7 @@ export function AppHeader() {
   async function handleLogout() {
     await logout();
     setDropdownOpen(false);
-    router.push("/login");
+    router.push("/");
     router.refresh();
   }
 
