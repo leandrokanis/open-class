@@ -286,16 +286,18 @@ const NAV_ITEMS = [
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
+  onLogout: () => void;
   user?: UserProfile | null;
 }
 
-export function Sidebar({ open, onClose, user }: SidebarProps) {
+export function Sidebar({ open, onClose, onLogout, user }: SidebarProps) {
   const pathname = usePathname();
   const ctx = useContext(ThemeContext);
   const router = useRouter();
 
   async function handleLogout() {
     await logout();
+    onLogout();
     onClose();
     router.push("/");
     router.refresh();

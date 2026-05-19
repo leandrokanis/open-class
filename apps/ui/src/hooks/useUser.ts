@@ -7,6 +7,7 @@ interface UseUserResult {
   user: UserProfile | null;
   loading: boolean;
   refetch: () => void;
+  clear: () => void;
 }
 
 export function useUser(): UseUserResult {
@@ -21,7 +22,12 @@ export function useUser(): UseUserResult {
     });
   }
 
+  function clear() {
+    setUser(null);
+    setLoading(false);
+  }
+
   useEffect(() => { fetch(); }, []);
 
-  return { user, loading, refetch: fetch };
+  return { user, loading, refetch: fetch, clear };
 }

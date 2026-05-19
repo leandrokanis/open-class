@@ -268,7 +268,7 @@ export function AppHeader() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const ctx = useContext(ThemeContext);
-  const { user } = useUser();
+  const { user, clear } = useUser();
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -284,6 +284,7 @@ export function AppHeader() {
 
   async function handleLogout() {
     await logout();
+    clear();
     setDropdownOpen(false);
     router.push("/");
     router.refresh();
@@ -345,7 +346,7 @@ export function AppHeader() {
         )}
       </HeaderDesktop>
 
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} onLogout={clear} user={user} />
     </>
   );
 }
