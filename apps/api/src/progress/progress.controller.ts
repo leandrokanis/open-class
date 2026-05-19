@@ -10,7 +10,7 @@ import { MarkLessonDto } from './dto/mark-lesson.dto';
 import { RecentActivityItemDto } from './dto/recent-activity.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard, Roles, Role } from '../common';
-import type { JwtPayload } from '../auth/strategies/jwt.strategy';
+interface AuthUser { id: string; email: string; role: string; }
 
 @ApiTags('progress')
 @ApiCookieAuth('access_token')
@@ -29,11 +29,11 @@ export class ProgressController {
   @ApiResponse({ status: 403, description: 'Não matriculado no curso.' })
   @ApiResponse({ status: 404, description: 'Aula não encontrada.' })
   markLesson(
-    @Req() req: Request & { user: JwtPayload },
+    @Req() req: Request & { user: AuthUser },
     @Param('lessonId') lessonId: string,
     @Body() body: MarkLessonDto,
   ) {
-    return this.progressService.markLesson(req.user.sub, lessonId, body.isCompleted);
+    return this.progressService.markLesson(req.user.id, lessonId, body.isCompleted);
   }
 
   @Get('courses/:courseId')
@@ -45,10 +45,10 @@ export class ProgressController {
   @ApiResponse({ status: 403, description: 'Não matriculado no curso.' })
   @ApiResponse({ status: 404, description: 'Curso não encontrado.' })
   getCourseProgress(
-    @Req() req: Request & { user: JwtPayload },
+    @Req() req: Request & { user: AuthUser },
     @Param('courseId') courseId: string,
   ) {
-    return this.progressService.getCourseProgress(req.user.sub, courseId);
+    return this.progressService.getCourseProgress(req.user.id, courseId);
   }
 
   @Get('courses/:courseId/lessons')
@@ -59,10 +59,10 @@ export class ProgressController {
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
   @ApiResponse({ status: 403, description: 'Não matriculado no curso.' })
   getCompletedLessons(
-    @Req() req: Request & { user: JwtPayload },
+    @Req() req: Request & { user: AuthUser },
     @Param('courseId') courseId: string,
   ) {
-    return this.progressService.getCompletedLessonIds(req.user.sub, courseId).then(
+    return this.progressService.getCompletedLessonIds(req.user.id, courseId).then(
       (completedLessonIds) => ({ completedLessonIds }),
     );
   }
@@ -76,10 +76,10 @@ export class ProgressController {
   @ApiResponse({ status: 403, description: 'Não matriculado no curso.' })
   @ApiResponse({ status: 404, description: 'Curso não encontrado.' })
   getLastAccessed(
-    @Req() req: Request & { user: JwtPayload },
+    @Req() req: Request & { user: AuthUser },
     @Param('courseId') courseId: string,
   ) {
-    return this.progressService.getLastAccessed(req.user.sub, courseId);
+    return this.progressService.getLastAccessed(req.user.id, courseId);
   }
 
   @Get('recent')
@@ -91,10 +91,10 @@ export class ProgressController {
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
   @ApiResponse({ status: 403, description: 'Papel insuficiente.' })
   getRecentActivity(
-    @Req() req: Request & { user: JwtPayload },
+    @Req() req: Request & { user: AuthUser },
     @Query('limit') limit?: string,
   ) {
     const parsedLimit = Math.min(Number(limit ?? 5), 20);
-    return this.progressService.getRecentActivity(req.user.sub, parsedLimit);
+    return this.progressService.getRecentActivity(req.user.id, parsedLimit);
   }
 }

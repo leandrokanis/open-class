@@ -86,7 +86,10 @@ export function LoginForm() {
     const result = await login(email, password);
     setLoading(false);
     if (result.error) setError(result.error.message);
-    else router.push("/");
+    else {
+      const role = result.data?.data?.role;
+      router.push(role === "aluno" ? "/aprendizado" : "/");
+    }
   }
 
   return (

@@ -10,7 +10,7 @@ import type { Request } from 'express';
 import { EnrollmentsService } from './enrollments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard, Roles, Role } from '../common';
-import type { JwtPayload } from '../auth/strategies/jwt.strategy';
+interface AuthUser { id: string; email: string; role: string; }
 
 class EnrollDto {
   @ApiProperty({ description: 'UUID do curso a se matricular', format: 'uuid' })
@@ -33,10 +33,10 @@ export class EnrollmentsController {
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
   @ApiResponse({ status: 403, description: 'Papel insuficiente — somente alunos podem se matricular.' })
   enroll(
-    @Req() req: Request & { user: JwtPayload },
+    @Req() req: Request & { user: AuthUser },
     @Body() body: EnrollDto,
   ) {
-    return this.enrollmentsService.enroll(req.user.sub, body.courseId);
+    return this.enrollmentsService.enroll(req.user.id, body.courseId);
   }
 
   @Get('me')
@@ -46,8 +46,8 @@ export class EnrollmentsController {
   @ApiResponse({ status: 200, description: 'Lista de matrículas do aluno com progresso.', type: [EnrollmentWithProgressDto] })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
   @ApiResponse({ status: 403, description: 'Papel insuficiente.' })
-  findMine(@Req() req: Request & { user: JwtPayload }) {
-    return this.enrollmentsService.findByStudent(req.user.sub);
+  findMine(@Req() req: Request & { user: AuthUser }) {
+    return this.enrollmentsService.findByStudent(req.user.id);
   }
 
   @Get()

@@ -2,79 +2,73 @@
 
 import styled from "styled-components";
 import Link from "next/link";
+import Image from "next/image";
 import type { EnrollmentWithProgress } from "@/lib/dashboard";
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
   "dev-web": "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
-  design: "linear-gradient(135deg, #6d28d9 0%, #a855f7 100%)",
-  dados: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
-  devops: "linear-gradient(135deg, #0f4c75 0%, #1a7abf 100%)",
-  mobile: "linear-gradient(135deg, #155e75 0%, #06b6d4 100%)",
+  design:    "linear-gradient(135deg, #6d28d9 0%, #a855f7 100%)",
+  dados:     "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
+  devops:    "linear-gradient(135deg, #0f4c75 0%, #1a7abf 100%)",
+  mobile:    "linear-gradient(135deg, #155e75 0%, #06b6d4 100%)",
 };
 const DEFAULT_GRADIENT = "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)";
 
 const LEVEL_LABELS: Record<string, string> = {
-  beginner: "Iniciante",
+  beginner:     "Iniciante",
   intermediate: "Intermediário",
-  advanced: "Avançado",
+  advanced:     "Avançado",
 };
 
 const LEVEL_COLORS: Record<string, string> = {
-  beginner: "#065f46",
+  beginner:     "#065f46",
   intermediate: "#1e40af",
-  advanced: "#7c2d12",
+  advanced:     "#7c2d12",
 };
 
 const Card = styled.article<{ $featured?: boolean }>`
   display: flex;
-  gap: 0;
+  flex-direction: column;
   border-radius: var(--radius-card);
   overflow: hidden;
   background: var(--color-surface);
   box-shadow: var(--shadow-card);
   ${({ $featured }) => $featured && "border: 1.5px solid var(--color-primary);"}
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+  }
 `;
 
 const Thumbnail = styled.div<{ $gradient: string; $featured?: boolean }>`
   flex-shrink: 0;
-  width: ${({ $featured }) => ($featured ? "248px" : "160px")};
+  width: 100%;
+  aspect-ratio: 16 / 9;
   background: ${({ $gradient }) => $gradient};
-  display: flex;
-  align-items: center;
-  justify-content: center;
   position: relative;
+  overflow: hidden;
 
-  @media (max-width: 767px) {
-    width: 80px;
+  @media (min-width: 768px) {
+    width: ${({ $featured }) => ($featured ? "248px" : "180px")};
+    aspect-ratio: unset;
   }
 `;
 
-const DurationBadge = styled.span`
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
+const ThumbImg = styled(Image)`
+  object-fit: cover;
 `;
-
-const PlayIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="16" fill="rgba(255,255,255,0.15)" />
-    <polygon points="13,10 24,16 13,22" fill="white" />
-  </svg>
-);
 
 const Body = styled.div`
   flex: 1;
-  padding: 20px 24px;
+  padding: 16px 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
+
+  @media (min-width: 768px) {
+    padding: 20px 24px;
+  }
 `;
 
 const MetaRow = styled.div`
@@ -195,12 +189,6 @@ const ContinueBtn = styled(Link)`
   }
 `;
 
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m > 0 ? `${h}h ${m}min` : `${h}h`;
-}
-
 interface EnrolledCourseCardProps {
   enrollment: EnrollmentWithProgress;
   featured?: boolean;
@@ -216,17 +204,14 @@ export function EnrolledCourseCard({ enrollment, featured }: EnrolledCourseCardP
   const levelColor = course.level ? (LEVEL_COLORS[course.level] ?? "#1e40af") : "#1e40af";
   const levelLabel = course.level ? (LEVEL_LABELS[course.level] ?? course.level) : null;
 
-  const continueHref = lastLesson
-    ? `/curso/${course.slug}`
-    : `/curso/${course.slug}`;
+  const continueHref = `/curso/${course.slug}`;
 
   return (
     <Card $featured={featured}>
       <Thumbnail $gradient={gradient} $featured={featured}>
-        <PlayIcon />
-        {course.totalDurationMinutes > 0 && (
-          <DurationBadge>{formatDuration(course.totalDurationMinutes)}</DurationBadge>
-        )}
+        {course.thumbnailUrl ? (
+          <ThumbImg src={course.thumbnailUrl} alt={course.title} fill />
+        ) : null}
       </Thumbnail>
 
       <Body>

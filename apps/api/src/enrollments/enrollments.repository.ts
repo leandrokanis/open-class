@@ -36,7 +36,7 @@ export class EnrollmentsRepository {
       .select({
         courseId: courses.id,
         lessonCount: count(lessons.id),
-        totalDurationSeconds: sum(lessons.duration),
+        totalDurationSeconds: sum(lessons.duration).as('totalDurationSeconds'),
       })
       .from(courses)
       .innerJoin(modules, eq(modules.courseId, courses.id))
@@ -88,5 +88,14 @@ export class EnrollmentsRepository {
         instructor: { name: r.instructorName },
       },
     }));
+  }
+
+  async create(studentId: string, courseId: string) {
+    const [row] = await this.db
+      .insert(enrollments)
+      .values({ studentId, courseId })
+      .onConflictDoNothing()
+      .returning();
+    return row ?? null;
   }
 }

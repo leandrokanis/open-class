@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { EnrollmentsRepository } from './enrollments.repository';
 import { ProgressRepository } from '../progress/progress.repository';
 
@@ -9,8 +9,10 @@ export class EnrollmentsService {
     private readonly progressRepo: ProgressRepository,
   ) {}
 
-  async enroll(_studentId: string, _courseId: string) {
-    throw new Error('Not implemented');
+  async enroll(studentId: string, courseId: string) {
+    const enrollment = await this.repo.create(studentId, courseId);
+    if (!enrollment) throw new ConflictException('Aluno já matriculado neste curso.');
+    return enrollment;
   }
 
   async findByStudent(studentId: string) {
