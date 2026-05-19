@@ -46,6 +46,7 @@ services:
       - uploads:/app/uploads
     dns:
       - 127.0.0.11
+      - 8.8.8.8
     dns_search:
       - .
     depends_on:
