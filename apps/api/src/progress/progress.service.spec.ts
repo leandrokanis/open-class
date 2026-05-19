@@ -19,6 +19,7 @@ const makeRepo = (overrides: Record<string, unknown> = {}) => ({
     updatedAt:   now,
   }),
   getCompletionStats: vi.fn().mockResolvedValue({ completed: 2, total: 4 }),
+  getCompletedLessonIds: vi.fn().mockResolvedValue(['lesson-1', 'lesson-2']),
   getLastAccessedLesson: vi.fn().mockResolvedValue({
     id:        'lesson-1',
     title:     'Aula 1',
@@ -137,6 +138,29 @@ describe('ProgressService', () => {
       expect(result.lastAccessedLesson).not.toBeNull();
       expect(result.lastAccessedLesson?.id).toBe('lesson-1');
       expect(result.lastAccessedLesson?.updatedAt).toEqual(now);
+    });
+  });
+
+  // ── getCompletedLessonIds ──────────────────────────────────────────────
+
+  describe('getCompletedLessonIds', () => {
+    it('retorna array com IDs das aulas concluídas', async () => {
+      repo.getCompletedLessonIds.mockResolvedValue(['lesson-1', 'lesson-2']);
+      const result = await service.getCompletedLessonIds('student-1', 'course-1');
+      expect(result).toEqual(['lesson-1', 'lesson-2']);
+      expect(repo.getCompletedLessonIds).toHaveBeenCalledWith('student-1', 'course-1');
+    });
+
+    it('retorna array vazio quando aluno não concluiu nenhuma aula', async () => {
+      repo.getCompletedLessonIds.mockResolvedValue([]);
+      const result = await service.getCompletedLessonIds('student-1', 'course-1');
+      expect(result).toEqual([]);
+    });
+
+    it('lança ForbiddenException quando aluno não está matriculado', async () => {
+      repo.isEnrolled.mockResolvedValue(false);
+      await expect(service.getCompletedLessonIds('student-1', 'course-1'))
+        .rejects.toThrow(ForbiddenException);
     });
   });
 });

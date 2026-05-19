@@ -50,6 +50,22 @@ export class ProgressController {
     return this.progressService.getCourseProgress(req.user.sub, courseId);
   }
 
+  @Get('courses/:courseId/lessons')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Aluno)
+  @ApiOperation({ summary: 'IDs das aulas concluídas no curso (aluno)' })
+  @ApiResponse({ status: 200, description: 'Lista de IDs de aulas concluídas.' })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @ApiResponse({ status: 403, description: 'Não matriculado no curso.' })
+  getCompletedLessons(
+    @Req() req: Request & { user: JwtPayload },
+    @Param('courseId') courseId: string,
+  ) {
+    return this.progressService.getCompletedLessonIds(req.user.sub, courseId).then(
+      (completedLessonIds) => ({ completedLessonIds }),
+    );
+  }
+
   @Get('courses/:courseId/last-accessed')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Aluno)
