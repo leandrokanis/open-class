@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import styled from "styled-components";
-import { fetchCourseProgress, fetchCompletedLessons, type CourseModule } from "@/lib/course-detail";
+import { fetchEnrollmentStatus, type CourseDetail, type CourseModule } from "@/lib/course-detail";
 import { CourseDetailSkeleton } from "./CourseDetailSkeleton";
+import { EnrollmentModal } from "./EnrollmentModal";
+import { Icon } from "@/components/ui/Icon";
 
 const Wrapper = styled.div`
   padding: 20px;
@@ -50,6 +53,15 @@ const ProgressSubtext = styled.p`
   margin-bottom: 16px;
 `;
 
+const EnrolledBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
+`;
+
 const CtaButton = styled.button`
   width: 100%;
   padding: 15px;
@@ -61,10 +73,6 @@ const CtaButton = styled.button`
   font-weight: 700;
   cursor: pointer;
   font-family: var(--font-inter), system-ui, sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
 
   &:hover {
     opacity: 0.92;
@@ -72,7 +80,7 @@ const CtaButton = styled.button`
 `;
 
 interface CourseProgressSectionProps {
-  courseId: string;
+  course: CourseDetail;
   modules: CourseModule[];
   onCompletedLessonsLoaded?: (ids: string[]) => void;
 }
@@ -80,81 +88,106 @@ interface CourseProgressSectionProps {
 function findNextLesson(
   modules: CourseModule[],
   completedIds: Set<string>,
-): { title: string; number: number } | null {
-  let lessonNumber = 0;
+): { number: number } | null {
+  let n = 0;
   for (const mod of modules) {
     for (const lesson of mod.lessons) {
-      lessonNumber++;
-      if (!completedIds.has(lesson.id)) {
-        return { title: lesson.title, number: lessonNumber };
-      }
+      n++;
+      if (!completedIds.has(lesson.id)) return { number: n };
     }
   }
   return null;
 }
 
 export function CourseProgressSection({
-  courseId,
+  course,
   modules,
   onCompletedLessonsLoaded,
 }: CourseProgressSectionProps) {
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState<{
-    percentage: number;
-    completedLessons: number;
-    totalLessons: number;
-  } | null>(null);
-  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [status, setStatus] = useState<{
+    authenticated: boolean;
+    enrolled: boolean;
+    progress: { percentage: number; completedLessons: number; totalLessons: number } | null;
+    completedIds: Set<string>;
+  }>({ authenticated: false, enrolled: false, progress: null, completedIds: new Set() });
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
-      const [prog, lessonIds] = await Promise.all([
-        fetchCourseProgress(courseId),
-        fetchCompletedLessons(courseId),
-      ]);
-      setProgress(prog);
-      const idSet = new Set(lessonIds);
-      setCompletedIds(idSet);
-      onCompletedLessonsLoaded?.(lessonIds);
+      const result = await fetchEnrollmentStatus(course.id);
+      setStatus({
+        authenticated: result.authenticated,
+        enrolled: result.enrolled,
+        progress: result.progress,
+        completedIds: new Set(result.completedLessonIds),
+      });
+      onCompletedLessonsLoaded?.(result.completedLessonIds);
       setLoading(false);
     }
     void load();
-  }, [courseId, onCompletedLessonsLoaded]);
+  }, [course.id, onCompletedLessonsLoaded]);
 
   if (loading) return <CourseDetailSkeleton />;
 
-  if (!progress) {
+  if (!status.enrolled) {
+    const loginUrl = `/login?return=${encodeURIComponent(pathname)}`;
+
+    function handleEnroll() {
+      if (!status.authenticated) {
+        window.location.href = loginUrl;
+        return;
+      }
+      setModalOpen(true);
+    }
+
     return (
-      <Wrapper>
-        <CtaButton>▶ Começar curso — GRÁTIS</CtaButton>
-      </Wrapper>
+      <>
+        <Wrapper>
+          <CtaButton onClick={handleEnroll}>Inscrever-se (GRÁTIS)</CtaButton>
+        </Wrapper>
+        {modalOpen && (
+          <EnrollmentModal
+            course={course}
+            modules={modules}
+            onClose={() => setModalOpen(false)}
+          />
+        )}
+      </>
     );
   }
 
-  const nextLesson = findNextLesson(modules, completedIds);
-  const isComplete = progress.percentage >= 100;
+  const { progress, completedIds } = status;
+  const nextLesson = progress ? findNextLesson(modules, completedIds) : null;
+  const isComplete = (progress?.percentage ?? 0) >= 100;
 
   return (
     <Wrapper>
-      <ProgressLabel>
-        <ProgressText>Seu progresso</ProgressText>
-        <ProgressPercent>{Math.round(progress.percentage)}%</ProgressPercent>
-      </ProgressLabel>
+      {progress && (
+        <>
+          <ProgressLabel>
+            <ProgressText>Seu progresso</ProgressText>
+            <ProgressPercent>{Math.round(progress.percentage)}%</ProgressPercent>
+          </ProgressLabel>
 
-      <ProgressTrack>
-        <ProgressFill $pct={progress.percentage} />
-      </ProgressTrack>
+          <ProgressTrack>
+            <ProgressFill $pct={progress.percentage} />
+          </ProgressTrack>
 
-      <ProgressSubtext>
-        {progress.completedLessons} de {progress.totalLessons} aulas concluídas
-      </ProgressSubtext>
+          <ProgressSubtext>
+            {progress.completedLessons} de {progress.totalLessons} aulas concluídas
+          </ProgressSubtext>
+        </>
+      )}
+
+      <EnrolledBadge>
+        <Icon name="info" size={16} style={{ color: "var(--color-text-tertiary)" }} />
+        Você está inscrito
+      </EnrolledBadge>
 
       <CtaButton>
-        {isComplete
-          ? "↺ Rever curso"
-          : nextLesson
-            ? `▶ Continuar — Aula ${nextLesson.number}`
-            : "▶ Começar curso"}
+        {isComplete ? "Rever curso" : nextLesson ? `Continuar — Aula ${nextLesson.number}` : "Ir para o curso"}
       </CtaButton>
     </Wrapper>
   );

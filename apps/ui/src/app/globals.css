@@ -1,4 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+@import '@fontsource-variable/material-symbols-rounded/full.css';
+
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded Variable', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
 
 /* ============================================================
    Open Class Design System — CSS Custom Properties

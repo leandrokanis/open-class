@@ -74,7 +74,8 @@ const InstructorName = styled.span`
 const MetaList = styled.dl`
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 6px 16px;
+  align-items: center;
+  gap: 10px 16px;
   margin: 0;
   padding: 0 16px 16px;
 `;
@@ -82,6 +83,7 @@ const MetaList = styled.dl`
 const MetaTerm = styled.dt`
   font-size: 13px;
   color: var(--color-text-secondary);
+  align-self: center;
 `;
 
 const MetaValue = styled.dd`
@@ -90,6 +92,7 @@ const MetaValue = styled.dd`
   color: var(--color-text-primary);
   margin: 0;
   text-align: right;
+  align-self: center;
 `;
 
 const MetaLink = styled(Link)`
@@ -131,7 +134,7 @@ export function CourseDetailSidebar({
     <Sidebar>
       <Card>
         <CourseProgressSection
-          courseId={course.id}
+          course={course}
           modules={modules}
           onCompletedLessonsLoaded={onCompletedLessonsLoaded}
         />

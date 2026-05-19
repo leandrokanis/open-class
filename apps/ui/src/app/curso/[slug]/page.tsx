@@ -219,7 +219,7 @@ export default async function CoursePage({
           </AboutSection>
         )}
 
-        <CourseProgressSection courseId={course.id} modules={course.modules} />
+        <CourseProgressSection course={course} modules={course.modules} />
 
         <CourseContent modules={course.modules} completedLessonIds={[]} />
 

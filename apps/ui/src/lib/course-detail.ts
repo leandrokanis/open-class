@@ -74,3 +74,58 @@ export async function fetchCompletedLessons(courseId: string): Promise<string[]>
     return [];
   }
 }
+
+export interface EnrollmentStatus {
+  authenticated: boolean;
+  enrolled: boolean;
+  progress: CourseProgress | null;
+  completedLessonIds: string[];
+}
+
+export async function fetchEnrollmentStatus(courseId: string): Promise<EnrollmentStatus> {
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+  try {
+    const progressRes = await fetch(`${base}/api/progress/courses/${courseId}`, {
+      credentials: "include",
+    });
+
+    if (progressRes.status === 401) {
+      return { authenticated: false, enrolled: false, progress: null, completedLessonIds: [] };
+    }
+    if (progressRes.status === 403) {
+      return { authenticated: true, enrolled: false, progress: null, completedLessonIds: [] };
+    }
+    if (!progressRes.ok) {
+      return { authenticated: false, enrolled: false, progress: null, completedLessonIds: [] };
+    }
+
+    const progress = (await progressRes.json()) as CourseProgress;
+
+    const lessonsRes = await fetch(`${base}/api/progress/courses/${courseId}/lessons`, {
+      credentials: "include",
+    });
+    const completedLessonIds = lessonsRes.ok
+      ? ((await lessonsRes.json()) as { completedLessonIds: string[] }).completedLessonIds
+      : [];
+
+    return { authenticated: true, enrolled: true, progress, completedLessonIds };
+  } catch {
+    return { authenticated: false, enrolled: false, progress: null, completedLessonIds: [] };
+  }
+}
+
+export async function enrollInCourse(courseId: string): Promise<void> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/api/enrollments`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ courseId }),
+    },
+  );
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new Error(body.message ?? "Erro ao realizar inscrição. Tente novamente.");
+  }
+}
