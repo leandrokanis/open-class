@@ -57,7 +57,10 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_OAUTH === 'true';
+
 export function GoogleButton() {
+  if (!GOOGLE_ENABLED) return null;
   return (
     <StyledButton type="button" onClick={loginWithGoogle}>
       <GoogleIcon />
