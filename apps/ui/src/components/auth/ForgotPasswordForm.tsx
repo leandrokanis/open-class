@@ -106,7 +106,7 @@ export function ForgotPasswordForm() {
           id="forgot-email"
           type="email"
           inputSize="md"
-          placeholder="seu@email.com"
+          placeholder="Digite seu e-mail"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"

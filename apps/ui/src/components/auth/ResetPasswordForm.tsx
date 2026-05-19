@@ -89,7 +89,7 @@ export function ResetPasswordForm({ token, onSuccess }: ResetPasswordFormProps) 
         <Label htmlFor="reset-confirm">Confirmar senha</Label>
         <PasswordInput
           id="reset-confirm"
-          placeholder="Repita a nova senha"
+          placeholder="Digite a senha novamente"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           autoComplete="new-password"

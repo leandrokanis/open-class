@@ -107,7 +107,7 @@ export function LoginForm() {
           id="login-email"
           type="email"
           inputSize="md"
-          placeholder="seu@email.com"
+          placeholder="Digite seu e-mail"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
@@ -121,7 +121,7 @@ export function LoginForm() {
         <Label htmlFor="login-password">Senha</Label>
         <PasswordInput
           id="login-password"
-          placeholder="••••••••"
+          placeholder="Digite sua senha"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
