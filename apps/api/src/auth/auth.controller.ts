@@ -152,7 +152,7 @@ export class AuthController {
     @Req() req: Request & { user: User },
     @Res() res: Response,
   ) {
-    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+    const frontendUrl = (process.env.FRONTEND_URL ?? 'http://localhost:3000').split(',')[0].trim();
     try {
       this.authService.issueToken(req.user.id, req.user.email, req.user.role, res);
       res.redirect(frontendUrl);
