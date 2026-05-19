@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import type { CourseLesson } from "@/lib/course-detail";
+import { Icon } from "@/components/ui/Icon";
 
 function formatDuration(seconds: number): string {
   const m = Math.round(seconds / 60);
@@ -17,13 +18,6 @@ const Row = styled.div`
   background: var(--color-surface);
 `;
 
-const PlayIcon = styled.span`
-  width: 16px;
-  flex-shrink: 0;
-  color: var(--color-text-tertiary);
-  font-size: 11px;
-`;
-
 const LessonTitle = styled.span`
   font-size: 14px;
   color: var(--color-text-primary);
@@ -39,13 +33,12 @@ const Duration = styled.span`
 
 interface LessonRowProps {
   lesson: CourseLesson;
-  isCompleted?: boolean;
 }
 
 export function LessonRow({ lesson }: LessonRowProps) {
   return (
     <Row>
-      <PlayIcon>▷</PlayIcon>
+      <Icon name="videocam" size={18} style={{ color: "var(--color-text-tertiary)", flexShrink: 0 }} />
       <LessonTitle>{lesson.title}</LessonTitle>
       {lesson.duration != null && lesson.duration > 0 && (
         <Duration>{formatDuration(lesson.duration)}</Duration>
