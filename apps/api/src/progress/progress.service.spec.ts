@@ -5,6 +5,7 @@ import { ProgressService } from './progress.service';
 const now = new Date('2026-05-17T10:00:00Z');
 
 const makeRepo = (overrides: Record<string, unknown> = {}) => ({
+  getRecentActivity: vi.fn().mockResolvedValue([]),
   findLessonWithCourse: vi.fn().mockResolvedValue({
     id:       'lesson-1',
     title:    'Aula 1',
@@ -161,6 +162,35 @@ describe('ProgressService', () => {
       repo.isEnrolled.mockResolvedValue(false);
       await expect(service.getCompletedLessonIds('student-1', 'course-1'))
         .rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  // ── getRecentActivity ──────────────────────────────────────────────────
+
+  describe('getRecentActivity', () => {
+    const recentItems = [
+      { lessonId: 'l1', lessonTitle: 'Aula 1', courseId: 'c1', courseTitle: 'Curso A', courseSlug: 'curso-a', isCompleted: true, updatedAt: new Date('2026-05-18T10:00:00Z') },
+      { lessonId: 'l2', lessonTitle: 'Aula 2', courseId: 'c1', courseTitle: 'Curso A', courseSlug: 'curso-a', isCompleted: true, updatedAt: new Date('2026-05-17T20:00:00Z') },
+    ];
+
+    it('retorna array vazio quando não há atividade', async () => {
+      repo.getRecentActivity.mockResolvedValue([]);
+      const result = await service.getRecentActivity('student-1', 5);
+      expect(result).toEqual([]);
+    });
+
+    it('retorna itens de atividade recente do repository', async () => {
+      repo.getRecentActivity.mockResolvedValue(recentItems);
+      const result = await service.getRecentActivity('student-1', 5);
+      expect(result).toHaveLength(2);
+      expect(result[0].lessonId).toBe('l1');
+      expect(result[0].courseSlug).toBe('curso-a');
+    });
+
+    it('passa o limit correto para o repository', async () => {
+      repo.getRecentActivity.mockResolvedValue([]);
+      await service.getRecentActivity('student-1', 3);
+      expect(repo.getRecentActivity).toHaveBeenCalledWith('student-1', 3);
     });
   });
 });

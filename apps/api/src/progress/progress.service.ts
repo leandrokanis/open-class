@@ -42,6 +42,10 @@ export class ProgressService {
     return this.repo.getCompletedLessonIds(studentId, courseId);
   }
 
+  async getRecentActivity(studentId: string, limit: number) {
+    return this.repo.getRecentActivity(studentId, limit);
+  }
+
   async getLastAccessed(studentId: string, courseId: string) {
     const course = await this.repo.findCourseById(courseId);
     if (!course) throw new NotFoundException('Curso não encontrado.');

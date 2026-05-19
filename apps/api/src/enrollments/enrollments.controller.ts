@@ -4,6 +4,7 @@ import {
 import {
   ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiBearerAuth, ApiProperty,
 } from '@nestjs/swagger';
+import { EnrollmentWithProgressDto } from './dto/enrollment-with-progress.dto';
 import { IsUUID } from 'class-validator';
 import type { Request } from 'express';
 import { EnrollmentsService } from './enrollments.service';
@@ -41,8 +42,8 @@ export class EnrollmentsController {
   @Get('me')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Aluno, Role.Admin)
-  @ApiOperation({ summary: 'Listar matrículas do aluno autenticado' })
-  @ApiResponse({ status: 200, description: 'Lista de matrículas do aluno.' })
+  @ApiOperation({ summary: 'Listar matrículas do aluno autenticado com progresso' })
+  @ApiResponse({ status: 200, description: 'Lista de matrículas do aluno com progresso.', type: [EnrollmentWithProgressDto] })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
   @ApiResponse({ status: 403, description: 'Papel insuficiente.' })
   findMine(@Req() req: Request & { user: JwtPayload }) {

@@ -1,12 +1,13 @@
 import {
-  Controller, Get, Put, Body, Param, Req, UseGuards,
+  Controller, Get, Put, Body, Param, Query, Req, UseGuards,
 } from '@nestjs/common';
 import {
-  ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiBearerAuth,
+  ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiBearerAuth, ApiQuery,
 } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { ProgressService } from './progress.service';
 import { MarkLessonDto } from './dto/mark-lesson.dto';
+import { RecentActivityItemDto } from './dto/recent-activity.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard, Roles, Role } from '../common';
 import type { JwtPayload } from '../auth/strategies/jwt.strategy';
@@ -79,5 +80,21 @@ export class ProgressController {
     @Param('courseId') courseId: string,
   ) {
     return this.progressService.getLastAccessed(req.user.sub, courseId);
+  }
+
+  @Get('recent')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Aluno)
+  @ApiOperation({ summary: 'Atividade recente do aluno — últimas N aulas acessadas' })
+  @ApiQuery({ name: 'limit', required: false, example: 5, description: 'Número de itens (default 5, max 20)' })
+  @ApiResponse({ status: 200, description: 'Lista de atividade recente.', type: [RecentActivityItemDto] })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @ApiResponse({ status: 403, description: 'Papel insuficiente.' })
+  getRecentActivity(
+    @Req() req: Request & { user: JwtPayload },
+    @Query('limit') limit?: string,
+  ) {
+    const parsedLimit = Math.min(Number(limit ?? 5), 20);
+    return this.progressService.getRecentActivity(req.user.sub, parsedLimit);
   }
 }

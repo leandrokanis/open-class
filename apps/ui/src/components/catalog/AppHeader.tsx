@@ -4,7 +4,7 @@ import styled from "styled-components";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useContext, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { ThemeContext } from "@/lib/theme/ThemeProvider";
 import { logout } from "@/lib/auth";
 import { useUser } from "@/hooks/useUser";
@@ -270,6 +270,7 @@ export function AppHeader() {
   const ctx = useContext(ThemeContext);
   const { user, clear } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -314,8 +315,8 @@ export function AppHeader() {
           <LogoText>Open Class</LogoText>
         </LogoDesktop>
         <NavLinks>
-          <NavLink href="/" $active>Catálogo</NavLink>
-          <NavLink href="/aprendizado">Meu Aprendizado</NavLink>
+          <NavLink href="/" $active={pathname === "/"}>Catálogo</NavLink>
+          <NavLink href="/aprendizado" $active={pathname.startsWith("/aprendizado")}>Meu Aprendizado</NavLink>
         </NavLinks>
         <DesktopSearch>
           <input placeholder="Buscar cursos..." />

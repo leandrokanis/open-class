@@ -1,9 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, and, count, sql } from 'drizzle-orm';
+import { eq, and, count, sql, desc } from 'drizzle-orm';
 import {
   lessonProgress,
   lessons,
   modules,
+  courses,
   enrollments,
   type NewLessonProgress,
 } from '@open-class/db';
@@ -131,5 +132,27 @@ export class ProgressRepository {
       where: (c, { eq: eqFn, isNull, and: andFn }) =>
         andFn(eqFn(c.id, courseId), isNull(c.deletedAt)),
     });
+  }
+
+  async getRecentActivity(studentId: string, limit: number) {
+    const rows = await this.db
+      .select({
+        lessonId:    lessonProgress.lessonId,
+        lessonTitle: lessons.title,
+        courseId:    courses.id,
+        courseTitle: courses.title,
+        courseSlug:  courses.slug,
+        isCompleted: lessonProgress.isCompleted,
+        updatedAt:   lessonProgress.updatedAt,
+      })
+      .from(lessonProgress)
+      .innerJoin(lessons, eq(lessons.id, lessonProgress.lessonId))
+      .innerJoin(modules, eq(modules.id, lessons.moduleId))
+      .innerJoin(courses, eq(courses.id, modules.courseId))
+      .where(eq(lessonProgress.studentId, studentId))
+      .orderBy(desc(lessonProgress.updatedAt))
+      .limit(limit);
+
+    return rows;
   }
 }
