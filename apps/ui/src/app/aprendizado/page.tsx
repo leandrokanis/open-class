@@ -19,16 +19,18 @@ const Layout = styled.main`
   margin: 0 auto;
   padding: 40px 48px;
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: 32px;
 
   @media (max-width: 1023px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     padding: 24px 20px;
   }
 `;
 
-const Section = styled.section``;
+const Section = styled.section`
+  min-width: 0;
+`;
 
 const SectionHeader = styled.div`
   display: flex;

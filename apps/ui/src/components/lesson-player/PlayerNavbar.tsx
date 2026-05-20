@@ -24,11 +24,6 @@ const Bar = styled.header`
   }
 `;
 
-const LogoText = styled.span`
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-`;
 
 const LessonInfo = styled.div`
   flex: 1;
@@ -79,10 +74,9 @@ export function PlayerNavbar({
 }: PlayerNavbarProps) {
   return (
     <Bar>
-      <Button variant="ghost" size="sm" asChild style={{ flexShrink: 0 }}>
-        <Link href="/aprendizado">
-          <Icon name="arrow_back" size={16} />
-          <LogoText>Open Class</LogoText>
+      <Button variant="ghost" size="sm" asChild style={{ flexShrink: 0, color: "var(--color-text-primary)" }}>
+        <Link href="/aprendizado" aria-label="Voltar">
+          <Icon name="arrow_back" size={18} style={{ color: "var(--color-text-primary)" }} />
         </Link>
       </Button>
 

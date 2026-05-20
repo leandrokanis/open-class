@@ -25,8 +25,8 @@ export default async function LessonIndexPage({
         cache: "no-store",
       });
       if (res.ok) {
-        const data = (await res.json()) as { lessonId: string | null };
-        targetLessonId = data.lessonId;
+        const data = (await res.json()) as { lastAccessedLesson: { id: string } | null };
+        targetLessonId = data.lastAccessedLesson?.id ?? null;
       }
     } catch {
       // fall through to first lesson

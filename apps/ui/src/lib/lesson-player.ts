@@ -67,7 +67,8 @@ export async function fetchLastAccessed(courseId: string): Promise<{ lessonId: s
       credentials: "include",
     });
     if (!res.ok) return { lessonId: null };
-    return res.json() as Promise<{ lessonId: string | null }>;
+    const data = (await res.json()) as { lastAccessedLesson: { id: string } | null };
+    return { lessonId: data.lastAccessedLesson?.id ?? null };
   } catch {
     return { lessonId: null };
   }

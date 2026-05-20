@@ -29,6 +29,8 @@ const LEVEL_COLORS: Record<string, string> = {
 const Card = styled.article<{ $featured?: boolean }>`
   display: flex;
   flex-direction: column;
+  width: 100%;
+  min-width: 0;
   border-radius: var(--radius-card);
   overflow: hidden;
   background: var(--color-surface);

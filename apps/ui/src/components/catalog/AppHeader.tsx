@@ -3,9 +3,8 @@
 import styled from "styled-components";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useContext, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ThemeContext } from "@/lib/theme/ThemeProvider";
 import { logout } from "@/lib/auth";
 import { useUser } from "@/hooks/useUser";
 import { Sidebar } from "./Sidebar";
@@ -16,9 +15,19 @@ const HeaderMobile = styled.header`
   justify-content: space-between;
   padding: 12px 20px;
   background: var(--gradient-hero);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 50;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const MobileSpacer = styled.div`
+  height: 60px;
 
   @media (min-width: 768px) {
     display: none;
@@ -171,31 +180,6 @@ const IconBtn = styled.button`
   }
 `;
 
-const ThemeToggle = styled.button<{ $dark: boolean }>`
-  position: relative;
-  width: 40px;
-  height: 22px;
-  border-radius: 11px;
-  border: none;
-  cursor: pointer;
-  background: ${({ $dark }) => ($dark ? "var(--color-primary)" : "var(--color-border)")};
-  transition: background 0.2s ease;
-  flex-shrink: 0;
-  margin-right: 16px;
-
-  &::after {
-    content: "";
-    position: absolute;
-    top: 2px;
-    left: ${({ $dark }) => ($dark ? "20px" : "2px")};
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #ffffff;
-    transition: left 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  }
-`;
 
 const AvatarWrapper = styled.div`
   position: relative;
@@ -267,7 +251,6 @@ function AvatarContent({ name, avatarUrl }: { name: string; avatarUrl?: string |
 export function AppHeader() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const ctx = useContext(ThemeContext);
   const { user, clear } = useUser();
   const router = useRouter();
   const pathname = usePathname();
@@ -306,6 +289,7 @@ export function AppHeader() {
           <EntrarLink href="/login">Entrar</EntrarLink>
         )}
       </HeaderMobile>
+      <MobileSpacer />
 
       <HeaderDesktop>
         <LogoDesktop>
@@ -321,11 +305,6 @@ export function AppHeader() {
         <DesktopSearch>
           <input placeholder="Buscar cursos..." />
         </DesktopSearch>
-        <ThemeToggle
-          $dark={ctx?.theme === "dark"}
-          onClick={ctx?.toggleTheme}
-          aria-label="Alternar tema"
-        />
         {user ? (
           <AvatarWrapper ref={dropdownRef}>
             <AvatarButton

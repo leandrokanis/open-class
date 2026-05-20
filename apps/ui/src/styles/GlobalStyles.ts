@@ -11,6 +11,11 @@ export const GlobalStyles = createGlobalStyle`
     padding: 0;
   }
 
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
   html {
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
