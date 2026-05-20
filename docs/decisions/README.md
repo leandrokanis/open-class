@@ -19,6 +19,7 @@ Decisões técnicas significativas do projeto Open Class, documentadas no format
 | [ADR-011](011-shadcn-ui-sem-tailwind.md) | shadcn/ui com styled-components, sem Tailwind CSS | Aceito | 2026-05-17 |
 | [ADR-012](012-ui-hybrid-rendering.md) | Renderização híbrida: Server Components + Client Components com credentials | Aceito | 2026-05-18 |
 | [ADR-013](013-nextjs-middleware-auth-guard.md) | Proteção de rotas privadas via Next.js middleware | Aceito | 2026-05-18 |
+| [ADR-014](014-dark-theme-by-route.md) | Tema escuro por rota via `data-theme` no layout | Aceito | 2026-05-19 |
 
 ## Como usar
 
