@@ -29,6 +29,8 @@ const LEVEL_COLORS: Record<string, string> = {
 const Card = styled.article<{ $featured?: boolean }>`
   display: flex;
   flex-direction: column;
+  width: 100%;
+  min-width: 0;
   border-radius: var(--radius-card);
   overflow: hidden;
   background: var(--color-surface);
@@ -204,7 +206,9 @@ export function EnrolledCourseCard({ enrollment, featured }: EnrolledCourseCardP
   const levelColor = course.level ? (LEVEL_COLORS[course.level] ?? "#1e40af") : "#1e40af";
   const levelLabel = course.level ? (LEVEL_LABELS[course.level] ?? course.level) : null;
 
-  const continueHref = `/curso/${course.slug}`;
+  const continueHref = lastLesson
+    ? `/curso/${course.slug}/aula/${lastLesson.id}`
+    : `/curso/${course.slug}/aula`;
 
   return (
     <Card $featured={featured}>

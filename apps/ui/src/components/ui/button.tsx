@@ -4,7 +4,7 @@ import styled, { css } from "styled-components";
 import { Slot } from "@radix-ui/react-slot";
 import { forwardRef, type ButtonHTMLAttributes } from "react";
 
-type Variant = "default" | "secondary" | "ghost" | "destructive";
+type Variant = "default" | "outline" | "secondary" | "ghost" | "destructive";
 type Size = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -19,6 +19,15 @@ const variantStyles: Record<Variant, ReturnType<typeof css>> = {
     color: var(--color-text-on-primary);
     &:hover:not(:disabled) {
       opacity: 0.9;
+    }
+  `,
+  outline: css`
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    &:hover:not(:disabled) {
+      background-color: var(--color-surface-tertiary);
+      color: var(--color-text-primary);
     }
   `,
   secondary: css`
@@ -73,8 +82,8 @@ const StyledButton = styled.button<{ $variant: Variant; $size: Size }>`
   font-weight: 700;
   letter-spacing: -0.01em;
   cursor: pointer;
-  border: none;
-  transition: opacity 0.15s, background-color 0.15s;
+  border: 1px solid transparent;
+  transition: opacity 0.15s, background-color 0.15s, color 0.15s;
   white-space: nowrap;
 
   &:disabled {

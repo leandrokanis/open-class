@@ -4,8 +4,13 @@ import styled from "styled-components";
 
 const Hero = styled.section`
   background: var(--gradient-hero);
-  padding: 40px 48px;
   color: #ffffff;
+`;
+
+const HeroInner = styled.div`
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 48px;
 
   @media (max-width: 767px) {
     padding: 28px 20px;
@@ -113,27 +118,29 @@ interface DashboardHeroProps {
 export function DashboardHero({ name, inProgress, completed, hoursWatched }: DashboardHeroProps) {
   return (
     <Hero>
-      <WelcomeLabel>Bem-vinda de volta</WelcomeLabel>
-      <HeroLayout>
-        <Left>
-          <Name>{name}</Name>
-          <Subtitle>Continue de onde parou — você está indo muito bem!</Subtitle>
-        </Left>
-        <Stats>
-          <StatItem>
-            <StatValue>{inProgress}</StatValue>
-            <StatLabel>Em andamento</StatLabel>
-          </StatItem>
-          <StatItem>
-            <StatValue>{completed}</StatValue>
-            <StatLabel>Concluído</StatLabel>
-          </StatItem>
-          <StatItem>
-            <StatValue>{hoursWatched}h</StatValue>
-            <StatLabel>Assistidas</StatLabel>
-          </StatItem>
-        </Stats>
-      </HeroLayout>
+      <HeroInner>
+        <WelcomeLabel>Bem-vinda de volta</WelcomeLabel>
+        <HeroLayout>
+          <Left>
+            <Name>{name}</Name>
+            <Subtitle>Continue de onde parou — você está indo muito bem!</Subtitle>
+          </Left>
+          <Stats>
+            <StatItem>
+              <StatValue>{inProgress}</StatValue>
+              <StatLabel>Em andamento</StatLabel>
+            </StatItem>
+            <StatItem>
+              <StatValue>{completed}</StatValue>
+              <StatLabel>Concluído</StatLabel>
+            </StatItem>
+            <StatItem>
+              <StatValue>{hoursWatched}h</StatValue>
+              <StatLabel>Assistidas</StatLabel>
+            </StatItem>
+          </Stats>
+        </HeroLayout>
+      </HeroInner>
     </Hero>
   );
 }
