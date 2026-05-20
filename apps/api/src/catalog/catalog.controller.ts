@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Param, Query, Request, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import {
   ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags,
 } from '@nestjs/swagger';
@@ -8,6 +8,7 @@ import { CatalogPageDto } from './dto/catalog-list-item.dto';
 import { CatalogDetailResponseDto } from './dto/catalog-detail.dto';
 import { CategoriesResponseDto } from './dto/category-item.dto';
 import { CatalogStatsDto } from './dto/catalog-stats.dto';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 
 @ApiTags('catalog')
 @Controller('catalog')
@@ -45,12 +46,13 @@ export class CatalogController {
   }
 
   @Get(':slug')
-  @ApiOperation({ summary: 'Detalhes de um curso publicado com currículo expandido' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Detalhes de um curso com currículo expandido. Instrutores podem ver rascunhos próprios.' })
   @ApiParam({ name: 'slug', description: 'Slug do curso' })
   @ApiResponse({ status: 200, description: 'Dados completos do curso.', type: CatalogDetailResponseDto })
   @ApiResponse({ status: 404, description: 'Curso não encontrado.' })
-  async getCourse(@Param('slug') slug: string): Promise<CatalogDetailResponseDto> {
-    const data = await this.catalogService.getBySlug(slug);
+  async getCourse(@Param('slug') slug: string, @Request() req: any): Promise<CatalogDetailResponseDto> {
+    const data = await this.catalogService.getBySlug(slug, req.user?.id, req.user?.role);
     return { data };
   }
 }

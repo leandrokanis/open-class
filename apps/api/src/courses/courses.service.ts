@@ -23,11 +23,11 @@ export class CoursesService {
     return course.instructorId === user.id || user.role === 'admin';
   }
 
-  private async generateSlug(title: string): Promise<string> {
-    const base = slugify(title, { lower: true, strict: true });
+  private async generateSlug(title: string, excludeId?: string): Promise<string> {
+    const base = slugify(title, { lower: true, strict: true }) || 'curso';
     let slug = base;
     let suffix = 1;
-    while (await this.repo.slugExists(slug)) {
+    while (await this.repo.slugExists(slug, excludeId)) {
       slug = `${base}-${suffix++}`;
     }
     return slug;
@@ -42,6 +42,7 @@ export class CoursesService {
       shortDescription: dto.shortDescription,
       description: dto.description,
       level: dto.level,
+      categoryId: dto.categoryId,
     });
   }
 
@@ -64,11 +65,15 @@ export class CoursesService {
     const update: Record<string, unknown> = {};
     if (dto.title !== undefined) {
       update.title = dto.title;
-      update.slug = await this.generateSlug(dto.title);
+      if (course.status === 'draft') {
+        update.slug = await this.generateSlug(dto.title, id);
+      }
     }
     if (dto.shortDescription !== undefined) update.shortDescription = dto.shortDescription;
     if (dto.description !== undefined) update.description = dto.description;
     if (dto.level !== undefined) update.level = dto.level;
+    if (dto.categoryId !== undefined) update.categoryId = dto.categoryId;
+    if (dto.thumbnailUrl !== undefined) update.thumbnailUrl = dto.thumbnailUrl ?? null;
 
     return this.repo.update(id, update);
   }
@@ -103,6 +108,10 @@ export class CoursesService {
     if (!course) throw new NotFoundException('Curso não encontrado.');
     if (!this.isOwnerOrAdmin(course, user)) throw new ForbiddenException();
     return this.repo.update(id, { status: 'draft' });
+  }
+
+  async getInstructorStats(user: RequestingUser) {
+    return this.repo.getInstructorStats(user.id);
   }
 
   async remove(id: string, user: RequestingUser) {

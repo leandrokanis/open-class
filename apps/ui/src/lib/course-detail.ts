@@ -29,7 +29,7 @@ export interface CourseDetail {
   rating: number | null;
   reviewCount: number;
   category: { id: string; name: string; slug: string } | null;
-  instructor: { name: string };
+  instructor: { name: string; avatarUrl?: string | null };
   modules: CourseModule[];
   createdAt: string;
 }
@@ -40,8 +40,11 @@ export interface CourseProgress {
   totalLessons: number;
 }
 
-export async function fetchCourseDetail(slug: string): Promise<CourseDetail | null> {
-  const res = await fetch(`${API_URL}/api/catalog/${slug}`, { cache: "no-store" });
+export async function fetchCourseDetail(slug: string, cookie?: string): Promise<CourseDetail | null> {
+  const res = await fetch(`${API_URL}/api/catalog/${slug}`, {
+    cache: "no-store",
+    headers: cookie ? { Cookie: cookie } : {},
+  });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error("Failed to fetch course");
   const json = (await res.json()) as { data: CourseDetail };

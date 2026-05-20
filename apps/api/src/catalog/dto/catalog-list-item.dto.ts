@@ -8,6 +8,7 @@ export class CatalogCategoryRefDto {
 
 export class CatalogInstructorDto {
   @ApiProperty() name!: string;
+  @ApiPropertyOptional({ nullable: true }) avatarUrl!: string | null;
 }
 
 export class CatalogListItemDto {

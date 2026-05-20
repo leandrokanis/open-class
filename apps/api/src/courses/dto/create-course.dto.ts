@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, MaxLength, IsOptional, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, IsOptional, IsIn, IsUUID } from 'class-validator';
 
 export class CreateCourseDto {
   @ApiProperty({ example: 'NestJS do Zero', maxLength: 150 })
@@ -23,4 +23,9 @@ export class CreateCourseDto {
   @IsOptional()
   @IsIn(['beginner', 'intermediate', 'advanced'])
   level?: 'beginner' | 'intermediate' | 'advanced';
+
+  @ApiPropertyOptional({ example: 'uuid-da-categoria', description: 'UUID da categoria do curso' })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
 }

@@ -159,7 +159,12 @@ export class AuthController {
     const frontendUrl = (process.env.FRONTEND_URL ?? 'http://localhost:3000').split(',')[0].trim();
     try {
       this.authService.issueToken(req.user.id, req.user.email, req.user.role, res);
-      const destination = req.user.role === 'aluno' ? `${frontendUrl}/aprendizado` : frontendUrl;
+      const destination =
+        req.user.role === 'aluno'
+          ? `${frontendUrl}/aprendizado`
+          : req.user.role === 'instrutor' || req.user.role === 'admin'
+            ? `${frontendUrl}/instructor`
+            : frontendUrl;
       res.redirect(destination);
     } catch {
       res.redirect(`${frontendUrl}/login?error=oauth_failed`);

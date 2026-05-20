@@ -25,7 +25,7 @@ interface FindPublishedResult {
     totalDurationMinutes: number;
     createdAt: Date;
     category: { id: string; name: string; slug: string } | null;
-    instructor: { name: string };
+    instructor: { name: string; avatarUrl: string | null };
   }>;
   hasMore: boolean;
 }
@@ -99,6 +99,7 @@ export class CatalogRepository {
         categoryName: categories.name,
         categorySlug: categories.slug,
         instructorName: users.name,
+        instructorAvatarUrl: users.avatarUrl,
         lessonCount: lessonStats.lessonCount,
         totalDurationSeconds: lessonStats.totalDurationSeconds,
       })
@@ -129,21 +130,19 @@ export class CatalogRepository {
         category: r.categoryId
           ? { id: r.categoryId, name: r.categoryName!, slug: r.categorySlug! }
           : null,
-        instructor: { name: r.instructorName },
+        instructor: { name: r.instructorName, avatarUrl: r.instructorAvatarUrl ?? null },
       })),
       hasMore,
     };
   }
 
-  async findBySlug(slug: string) {
+  async findBySlug(slug: string, allowDraft = false) {
+    const conditions = [eq(courses.slug, slug), isNull(courses.deletedAt)];
+    if (!allowDraft) conditions.push(eq(courses.status, 'published'));
     const row = await this.db.query.courses.findFirst({
-      where: and(
-        eq(courses.slug, slug),
-        eq(courses.status, 'published'),
-        isNull(courses.deletedAt),
-      ),
+      where: and(...conditions),
       with: {
-        instructor: { columns: { name: true } },
+        instructor: { columns: { id: true, name: true, avatarUrl: true } },
         category: { columns: { id: true, name: true, slug: true } },
         modules: {
           where: eq(modules.visibility, 'visible'),

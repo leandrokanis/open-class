@@ -318,6 +318,11 @@ export function AppHeader() {
               <DropdownItem onClick={() => { setDropdownOpen(false); router.push("/perfil"); }}>
                 Meu perfil
               </DropdownItem>
+              {(user.role === "instrutor" || user.role === "admin") && (
+                <DropdownItem onClick={() => { setDropdownOpen(false); router.push("/instructor"); }}>
+                  Painel do instrutor
+                </DropdownItem>
+              )}
               <DropdownLogout onClick={handleLogout}>Sair</DropdownLogout>
             </Dropdown>
           </AvatarWrapper>

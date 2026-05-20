@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, isNull, and, sql, count, asc, desc } from 'drizzle-orm';
-import { courses, modules, lessons, type NewCourse } from '@open-class/db';
+import { eq, isNull, and, not, sql, count, asc, desc, avg } from 'drizzle-orm';
+import { courses, modules, lessons, enrollments, type NewCourse } from '@open-class/db';
 import type { Db } from '../db';
 
 @Injectable()
@@ -104,9 +104,54 @@ export class CoursesRepository {
     return Number(value);
   }
 
-  async slugExists(slug: string): Promise<boolean> {
+  async getInstructorStats(instructorId: string) {
+    const instructorCourses = this.db
+      .select({ id: courses.id })
+      .from(courses)
+      .where(and(eq(courses.instructorId, instructorId), isNull(courses.deletedAt)))
+      .as('instructor_courses');
+
+    const [studentsRow] = await this.db
+      .select({ value: sql<number>`COUNT(DISTINCT ${enrollments.studentId})` })
+      .from(enrollments)
+      .innerJoin(instructorCourses, eq(enrollments.courseId, instructorCourses.id));
+
+    const [publishedRow] = await this.db
+      .select({ value: count() })
+      .from(courses)
+      .where(
+        and(
+          eq(courses.instructorId, instructorId),
+          eq(courses.status, 'published'),
+          isNull(courses.deletedAt),
+        ),
+      );
+
+    const [ratingRow] = await this.db
+      .select({ value: avg(courses.rating) })
+      .from(courses)
+      .where(and(eq(courses.instructorId, instructorId), isNull(courses.deletedAt)));
+
+    const startOfMonth = sql`date_trunc('month', now())`;
+    const [enrollmentsRow] = await this.db
+      .select({ value: count() })
+      .from(enrollments)
+      .innerJoin(instructorCourses, eq(enrollments.courseId, instructorCourses.id))
+      .where(sql`${enrollments.enrolledAt} >= ${startOfMonth}`);
+
+    return {
+      totalStudents: Number(studentsRow.value ?? 0),
+      publishedCount: Number(publishedRow.value ?? 0),
+      avgRating: ratingRow.value !== null ? Number(ratingRow.value) : null,
+      newEnrollmentsThisMonth: Number(enrollmentsRow.value ?? 0),
+    };
+  }
+
+  async slugExists(slug: string, excludeId?: string): Promise<boolean> {
     const row = await this.db.query.courses.findFirst({
-      where: eq(courses.slug, slug),
+      where: excludeId
+        ? and(eq(courses.slug, slug), not(eq(courses.id, excludeId)))
+        : eq(courses.slug, slug),
       columns: { id: true },
     });
     return !!row;

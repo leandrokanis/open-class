@@ -24,6 +24,12 @@ const makeRepo = (overrides = {}) => ({
   slugExists: vi.fn().mockResolvedValue(false),
   countVisibleLessons: vi.fn().mockResolvedValue(1),
   findAll: vi.fn().mockResolvedValue([]),
+  getInstructorStats: vi.fn().mockResolvedValue({
+    totalStudents: 150,
+    publishedCount: 2,
+    avgRating: 4.8,
+    newEnrollmentsThisMonth: 10,
+  }),
   ...overrides,
 });
 
@@ -143,6 +149,49 @@ describe('CoursesService', () => {
     it('throws NotFoundException for missing course', async () => {
       repo.findById.mockResolvedValue(null);
       await expect(service.remove('x', instructor)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getInstructorStats', () => {
+    it('returns aggregated stats for instructor with courses and students', async () => {
+      // Arrange
+      repo.getInstructorStats.mockResolvedValue({
+        totalStudents: 150,
+        publishedCount: 2,
+        avgRating: 4.8,
+        newEnrollmentsThisMonth: 10,
+      });
+
+      // Act
+      const result = await service.getInstructorStats(instructor);
+
+      // Assert
+      expect(repo.getInstructorStats).toHaveBeenCalledWith('user-1');
+      expect(result).toEqual({
+        totalStudents: 150,
+        publishedCount: 2,
+        avgRating: 4.8,
+        newEnrollmentsThisMonth: 10,
+      });
+    });
+
+    it('returns zeroed stats for instructor with no courses', async () => {
+      // Arrange
+      repo.getInstructorStats.mockResolvedValue({
+        totalStudents: 0,
+        publishedCount: 0,
+        avgRating: null,
+        newEnrollmentsThisMonth: 0,
+      });
+
+      // Act
+      const result = await service.getInstructorStats(instructor);
+
+      // Assert
+      expect(result.totalStudents).toBe(0);
+      expect(result.publishedCount).toBe(0);
+      expect(result.avgRating).toBeNull();
+      expect(result.newEnrollmentsThisMonth).toBe(0);
     });
   });
 

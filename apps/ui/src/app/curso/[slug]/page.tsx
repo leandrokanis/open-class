@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import styled from "styled-components";
 import { fetchCourseDetail } from "@/lib/course-detail";
 import { AppHeader } from "@/components/catalog/AppHeader";
@@ -10,6 +11,8 @@ import { CourseContent } from "@/components/course-detail/CourseContent";
 import { CourseProgressSection } from "@/components/course-detail/CourseProgressSection";
 import { CourseDetailSidebar } from "@/components/course-detail/CourseDetailSidebar";
 
+/* ─── Mobile ─────────────────────────────────────────────────────────────── */
+
 const MobileLayout = styled.div`
   min-height: 100vh;
   background: var(--color-background);
@@ -18,6 +21,8 @@ const MobileLayout = styled.div`
     display: none;
   }
 `;
+
+/* ─── Desktop ─────────────────────────────────────────────────────────────── */
 
 const DesktopLayout = styled.div`
   display: none;
@@ -29,22 +34,40 @@ const DesktopLayout = styled.div`
   }
 `;
 
-const DesktopHero = styled.div`
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 60%, #1e40af 100%);
-  padding: 40px 48px 40px;
+/* Hero background is absolute so the sidebar can visually overlap it */
+const DesktopWrapper = styled.div`
+  position: relative;
 `;
 
-const HeroInner = styled.div`
+const HeroBackground = styled.div`
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 60%, #1e40af 100%);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 420px;
+  z-index: 0;
+`;
+
+const DesktopGrid = styled.div`
+  position: relative;
+  z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 40px 48px 60px;
   display: grid;
   grid-template-columns: 1fr 340px;
   gap: 40px;
   align-items: start;
 `;
 
-const HeroLeft = styled.div`
-  color: var(--color-text-on-dark, #ffffff);
+const LeftColumn = styled.div`
+  min-width: 0;
+`;
+
+const HeroText = styled.div`
+  padding-bottom: 40px;
+  color: #ffffff;
 `;
 
 const HeroTitle = styled.h1`
@@ -101,60 +124,16 @@ const HeroAvatar = styled.div`
   flex-shrink: 0;
 `;
 
-const PreviewCard = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--radius-card);
-  backdrop-filter: blur(8px);
-  aspect-ratio: 16 / 9;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  cursor: pointer;
-`;
-
-const PlayBtn = styled.div`
-  width: 56px;
-  height: 56px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  svg {
-    width: 22px;
-    height: 22px;
-    fill: #ffffff;
-    margin-left: 3px;
-  }
-`;
-
-const PreviewLabel = styled.span`
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 500;
-`;
-
-const DesktopMain = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 48px;
-  display: flex;
-  gap: 48px;
-  align-items: flex-start;
-`;
-
 const MainContent = styled.div`
-  flex: 1;
-  min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
 `;
 
 const AboutSection = styled.section`
-  margin-bottom: 32px;
+  padding: 24px;
+  border-bottom: 1px solid var(--color-border);
 `;
 
 const SectionHeading = styled.h2`
@@ -187,7 +166,9 @@ export default async function CoursePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const course = await fetchCourseDetail(slug);
+  const cookieStore = await cookies();
+  const cookie = cookieStore.toString();
+  const course = await fetchCourseDetail(slug, cookie || undefined);
 
   if (!course) notFound();
 
@@ -207,13 +188,13 @@ export default async function CoursePage({
 
         <CourseHero
           categorySlug={course.category?.slug}
-          totalDurationMinutes={totalDurationMinutes}
+          thumbnailUrl={course.thumbnailUrl}
         />
 
         <CourseMeta course={course} totalLessons={totalLessons} totalDurationMinutes={totalDurationMinutes} />
 
         {course.description && (
-          <AboutSection style={{ padding: "20px 20px 0" }}>
+          <AboutSection style={{ padding: "20px 20px 0", border: "none" }}>
             <SectionHeading style={{ fontSize: "15px" }}>Sobre este curso</SectionHeading>
             <AboutText style={{ fontSize: "14px" }}>{course.description}</AboutText>
           </AboutSection>
@@ -231,82 +212,77 @@ export default async function CoursePage({
       <DesktopLayout>
         <AppHeader />
 
-        <DesktopHero>
-          <HeroInner>
-            <HeroLeft>
-              <CourseDetailHeader
-                variant="desktop"
-                categoryName={course.category?.name}
-                categorySlug={course.category?.slug}
-                courseTitle={course.title}
-              />
+        <DesktopWrapper>
+          <HeroBackground />
 
-              <HeroTitle>{course.title}</HeroTitle>
+          <DesktopGrid>
+            {/* Left column: hero text + main content */}
+            <LeftColumn>
+              <HeroText>
+                <CourseDetailHeader
+                  variant="desktop"
+                  categoryName={course.category?.name}
+                  categorySlug={course.category?.slug}
+                  courseTitle={course.title}
+                />
 
-              {course.shortDescription && (
-                <HeroDesc>{course.shortDescription}</HeroDesc>
-              )}
+                <HeroTitle>{course.title}</HeroTitle>
 
-              <HeroStats>
-                {course.rating != null && (
-                  <span>
-                    <HeroRating>★ {course.rating.toFixed(1)}</HeroRating>
-                    {course.reviewCount > 0 && (
-                      <span style={{ color: "rgba(255,255,255,0.7)" }}>
-                        {" "}({course.reviewCount.toLocaleString("pt-BR")} avaliações)
-                      </span>
-                    )}
-                  </span>
+                {course.shortDescription && (
+                  <HeroDesc>{course.shortDescription}</HeroDesc>
                 )}
-                {totalLessons > 0 && <span>{totalLessons} aulas</span>}
-                {totalDurationMinutes > 0 && (
-                  <span>
-                    {totalDurationMinutes >= 60
-                      ? `${Math.floor(totalDurationMinutes / 60)}h ${totalDurationMinutes % 60 > 0 ? `${totalDurationMinutes % 60}min` : ""}`
-                      : `${totalDurationMinutes}min`}
-                  </span>
+
+                <HeroStats>
+                  {course.rating != null && (
+                    <span>
+                      <HeroRating>★ {course.rating.toFixed(1)}</HeroRating>
+                      {course.reviewCount > 0 && (
+                        <span style={{ color: "rgba(255,255,255,0.7)" }}>
+                          {" "}({course.reviewCount.toLocaleString("pt-BR")} avaliações)
+                        </span>
+                      )}
+                    </span>
+                  )}
+                  {totalLessons > 0 && <span>{totalLessons} aulas</span>}
+                  {totalDurationMinutes > 0 && (
+                    <span>
+                      {totalDurationMinutes >= 60
+                        ? `${Math.floor(totalDurationMinutes / 60)}h ${totalDurationMinutes % 60 > 0 ? `${totalDurationMinutes % 60}min` : ""}`
+                        : `${totalDurationMinutes}min`}
+                    </span>
+                  )}
+                  {course.level && (
+                    <span>{LEVEL_LABELS[course.level] ?? course.level}</span>
+                  )}
+                </HeroStats>
+
+                <HeroInstructor>
+                  <HeroAvatar>{instructorInitial}</HeroAvatar>
+                  <span>por {course.instructor.name}</span>
+                </HeroInstructor>
+              </HeroText>
+
+              <MainContent>
+                {course.description && (
+                  <AboutSection>
+                    <SectionHeading>Sobre este curso</SectionHeading>
+                    <AboutText>{course.description}</AboutText>
+                  </AboutSection>
                 )}
-                {course.level && (
-                  <span>{LEVEL_LABELS[course.level] ?? course.level}</span>
-                )}
-              </HeroStats>
 
-              <HeroInstructor>
-                <HeroAvatar>{instructorInitial}</HeroAvatar>
-                <span>por {course.instructor.name}</span>
-              </HeroInstructor>
-            </HeroLeft>
+                <CourseContent modules={course.modules} completedLessonIds={[]} />
+              </MainContent>
+            </LeftColumn>
 
-            <PreviewCard>
-              <PlayBtn aria-label="Assistir prévia gratuita">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </PlayBtn>
-              <PreviewLabel>Assistir prévia gratuita</PreviewLabel>
-            </PreviewCard>
-          </HeroInner>
-        </DesktopHero>
-
-        <DesktopMain>
-          <MainContent>
-            {course.description && (
-              <AboutSection>
-                <SectionHeading>Sobre este curso</SectionHeading>
-                <AboutText>{course.description}</AboutText>
-              </AboutSection>
-            )}
-
-            <CourseContent modules={course.modules} completedLessonIds={[]} />
-          </MainContent>
-
-          <CourseDetailSidebar
-            course={course}
-            modules={course.modules}
-            totalLessons={totalLessons}
-            totalDurationMinutes={totalDurationMinutes}
-          />
-        </DesktopMain>
+            {/* Right column: sidebar with thumbnail at top */}
+            <CourseDetailSidebar
+              course={course}
+              modules={course.modules}
+              totalLessons={totalLessons}
+              totalDurationMinutes={totalDurationMinutes}
+            />
+          </DesktopGrid>
+        </DesktopWrapper>
       </DesktopLayout>
     </>
   );

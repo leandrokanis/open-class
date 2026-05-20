@@ -80,9 +80,17 @@ export class CatalogService {
     return { data, meta };
   }
 
-  async getBySlug(slug: string): Promise<CatalogDetailDto> {
-    const course = await this.repo.findBySlug(slug);
+  async getBySlug(slug: string, requesterId?: string, requesterRole?: string): Promise<CatalogDetailDto> {
+    const allowDraft = !!requesterId;
+    const course = await this.repo.findBySlug(slug, allowDraft);
+
     if (!course) throw new NotFoundException('Curso não encontrado.');
+
+    const isOwner = course.instructor?.id === requesterId;
+    const isAdmin = requesterRole === 'admin';
+    if (course.status !== 'published' && !isOwner && !isAdmin) {
+      throw new NotFoundException('Curso não encontrado.');
+    }
 
     const detail: CatalogDetailDto = {
       id: course.id,
@@ -95,7 +103,7 @@ export class CatalogService {
       category: course.category
         ? { id: course.category.id, name: course.category.name, slug: course.category.slug }
         : null,
-      instructor: { name: course.instructor?.name ?? '' },
+      instructor: { name: course.instructor?.name ?? '', avatarUrl: course.instructor?.avatarUrl ?? null },
       modules: (course.modules ?? []).map((m) => ({
         id: m.id,
         title: m.title,

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Toaster } from "sonner";
 import { StyledComponentsRegistry } from "@/lib/registry";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 import { GlobalStyles } from "@/styles/GlobalStyles";
@@ -28,6 +29,7 @@ export default function RootLayout({
           <ThemeProvider>
             <GlobalStyles />
             {children}
+            <Toaster richColors position="top-right" />
           </ThemeProvider>
         </StyledComponentsRegistry>
       </body>

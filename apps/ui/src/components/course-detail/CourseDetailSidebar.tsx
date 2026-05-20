@@ -17,19 +17,46 @@ const Sidebar = styled.aside`
   @media (min-width: 768px) {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 0;
     position: sticky;
     top: 80px;
-    width: 320px;
+    width: 340px;
     flex-shrink: 0;
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+    border: 1px solid var(--color-border);
   }
 `;
 
 const Card = styled.div`
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
+`;
+
+const ThumbnailWrapper = styled.div`
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #1e293b;
+  position: relative;
   overflow: hidden;
+`;
+
+const ThumbnailImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+`;
+
+const ThumbnailPlaceholder = styled.div`
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+`;
+
+const Divider = styled.div`
+  height: 1px;
+  background: var(--color-border);
 `;
 
 const InstructorCard = styled(Card)`
@@ -55,6 +82,13 @@ const Avatar = styled.div`
   font-weight: 700;
   color: #ffffff;
   flex-shrink: 0;
+  overflow: hidden;
+`;
+
+const AvatarImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const InstructorLabel = styled.span`
@@ -77,7 +111,7 @@ const MetaList = styled.dl`
   align-items: center;
   gap: 10px 16px;
   margin: 0;
-  padding: 0 16px 16px;
+  padding: 16px 16px 16px;
 `;
 
 const MetaTerm = styled.dt`
@@ -132,6 +166,18 @@ export function CourseDetailSidebar({
 
   return (
     <Sidebar>
+      {/* Thumbnail */}
+      <ThumbnailWrapper>
+        {course.thumbnailUrl ? (
+          <ThumbnailImg src={course.thumbnailUrl} alt={course.title} />
+        ) : (
+          <ThumbnailPlaceholder />
+        )}
+      </ThumbnailWrapper>
+
+      <Divider />
+
+      {/* Progress / enroll */}
       <Card>
         <CourseProgressSection
           course={course}
@@ -140,9 +186,16 @@ export function CourseDetailSidebar({
         />
       </Card>
 
+      <Divider />
+
+      {/* Instructor */}
       <InstructorCard>
         <InstructorTop>
-          <Avatar>{initial}</Avatar>
+          <Avatar>
+            {course.instructor.avatarUrl
+              ? <AvatarImg src={course.instructor.avatarUrl} alt={course.instructor.name} />
+              : initial}
+          </Avatar>
           <div>
             <InstructorLabel>Instrutor</InstructorLabel>
             <InstructorName>{course.instructor.name}</InstructorName>
@@ -150,6 +203,9 @@ export function CourseDetailSidebar({
         </InstructorTop>
       </InstructorCard>
 
+      <Divider />
+
+      {/* Meta */}
       <Card>
         <MetaList>
           <MetaTerm>Nível</MetaTerm>

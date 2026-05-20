@@ -79,7 +79,7 @@ const StyledButton = styled.button<{ $variant: Variant; $size: Size }>`
   gap: 8px;
   border-radius: var(--radius-btn);
   font-family: var(--font-inter), system-ui, sans-serif;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.01em;
   cursor: pointer;
   border: 1px solid transparent;

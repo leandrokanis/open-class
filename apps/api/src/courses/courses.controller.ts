@@ -10,6 +10,7 @@ import {
 import {
   CourseDataDto, CourseListItemDto, PaginatedCoursesDto, ThumbnailUploadDto,
 } from './dto/responses.dto';
+import { InstructorStatsResponseDto } from './dto/instructor-stats-response.dto';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard, Roles, Role } from '../common';
@@ -40,6 +41,15 @@ export class CoursesController {
   @ApiResponse({ status: 403, description: 'Sem permissão.' })
   create(@Req() req: AuthRequest, @Body() dto: CreateCourseDto) {
     return this.coursesService.create(req.user, dto).then((data) => ({ data }));
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Métricas do instrutor autenticado' })
+  @ApiResponse({ status: 200, description: 'Stats do instrutor.', type: InstructorStatsResponseDto })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @ApiResponse({ status: 403, description: 'Sem permissão.' })
+  async getStats(@Req() req: AuthRequest) {
+    return { data: await this.coursesService.getInstructorStats(req.user) };
   }
 
   @Get('mine')
