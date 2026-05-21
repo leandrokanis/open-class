@@ -3,6 +3,24 @@
 import { useEffect, useRef, useId } from "react";
 import styled from "styled-components";
 
+declare namespace YT {
+  class Player {
+    constructor(id: string, options: PlayerOptions);
+    destroy(): void;
+  }
+  interface PlayerOptions {
+    videoId?: string | null;
+    playerVars?: Record<string, number | string>;
+    events?: {
+      onStateChange?: (event: OnStateChangeEvent) => void;
+    };
+  }
+  interface OnStateChangeEvent {
+    data: number;
+  }
+  const PlayerState: { ENDED: number };
+}
+
 declare global {
   interface Window {
     YT: typeof YT;
