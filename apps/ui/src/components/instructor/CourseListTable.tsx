@@ -13,8 +13,8 @@ import { publishCourse, unpublishCourse } from "@/lib/instructor";
 import type { CourseListItem } from "@/lib/instructor";
 
 const Wrapper = styled.div`
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   overflow: hidden;
 `;
@@ -24,7 +24,7 @@ const TableHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-border);
   gap: 16px;
   flex-wrap: wrap;
 `;
@@ -32,7 +32,7 @@ const TableHeader = styled.div`
 const Title = styled.h2`
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text-primary);
 `;
 
 const Controls = styled.div`
@@ -51,7 +51,7 @@ const SearchWrapper = styled.div`
     top: 50%;
     transform: translateY(-50%);
     pointer-events: none;
-    color: #94a3b8;
+    color: var(--color-text-secondary);
   }
 
   input {
@@ -62,7 +62,7 @@ const SearchWrapper = styled.div`
 
 const FilterGroup = styled.div`
   display: flex;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   overflow: hidden;
 `;
@@ -74,12 +74,12 @@ const FilterBtn = styled.button<{ $active: boolean }>`
   border: none;
   cursor: pointer;
   background: ${({ $active }) => ($active ? "var(--color-primary)" : "transparent")};
-  color: ${({ $active }) => ($active ? "#ffffff" : "var(--color-text-secondary)")};
+  color: ${({ $active }) => ($active ? "var(--color-text-on-primary)" : "var(--color-text-secondary)")};
   transition: background 0.15s, color 0.15s;
 
   &:hover {
     background: ${({ $active }) => ($active ? "var(--color-primary)" : "var(--color-surface-tertiary)")};
-    color: ${({ $active }) => ($active ? "#ffffff" : "var(--color-text-primary)")};
+    color: ${({ $active }) => ($active ? "var(--color-text-on-primary)" : "var(--color-text-primary)")};
   }
 `;
 
@@ -95,16 +95,16 @@ const Th = styled.th`
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #94a3b8;
-  background: #f8fafc;
-  border-bottom: 1px solid #f1f5f9;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-secondary);
+  border-bottom: 1px solid var(--color-border);
 `;
 
 const Td = styled.td`
   padding: 14px 16px;
   font-size: 14px;
-  color: #334155;
-  border-bottom: 1px solid #f8fafc;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
 `;
 
@@ -127,19 +127,19 @@ const Thumbnail = styled.div<{ $url?: string | null }>`
 
 const CourseLink = styled(Link)`
   font-weight: 600;
-  color: #0f172a;
+  color: var(--color-text-primary);
   text-decoration: none;
   display: block;
   margin-bottom: 2px;
   &:hover {
     text-decoration: underline;
-    color: #3b82f6;
+    color: var(--color-primary);
   }
 `;
 
 const CourseDate = styled.div`
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
 `;
 
 const Rating = styled.div`
@@ -147,11 +147,11 @@ const Rating = styled.div`
   align-items: center;
   gap: 4px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--color-text-primary);
 `;
 
 const Star = styled.span`
-  color: #f59e0b;
+  color: var(--color-warning, #f59e0b);
 `;
 
 const Actions = styled.div`
@@ -167,12 +167,12 @@ const StatusWrap = styled.div`
 const Empty = styled.div`
   padding: 48px;
   text-align: center;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   font-size: 14px;
 `;
 
 const Dash = styled.span`
-  color: #cbd5e1;
+  color: var(--color-text-tertiary);
 `;
 
 type FilterType = "all" | "published" | "draft";

@@ -26,7 +26,7 @@ const EmptyState = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   font-size: 14px;
 `;
 
@@ -142,7 +142,7 @@ export default function LessonEditor({ lesson, onDeleted, onUpdated }: LessonEdi
         <Button size="sm" onClick={handleSave} disabled={saving || !title.trim()}>
           {saving ? 'Salvando...' : 'Salvar aula'}
         </Button>
-        <Button size="sm" variant="outline" onClick={handleDelete} style={{ color: '#dc2626', borderColor: '#fca5a5' }}>
+        <Button size="sm" variant="outline" onClick={handleDelete} style={{ color: 'var(--color-destructive)', borderColor: 'var(--color-destructive)' }}>
           Excluir aula
         </Button>
       </SaveRow>

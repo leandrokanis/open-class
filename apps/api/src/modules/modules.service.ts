@@ -16,7 +16,7 @@ export class ModulesService {
   async create(courseId: string, dto: CreateModuleDto, userId: string, userRole: string) {
     await this.assertCourseOwnership(courseId, userId, userRole);
     const position = await this.repo.nextPosition(courseId);
-    return this.repo.insert({ courseId, position, ...dto });
+    return this.repo.insert({ courseId, position, visibility: 'hidden', ...dto });
   }
 
   async findByCourse(courseId: string) {

@@ -3,12 +3,13 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { fetchMe } from "@/lib/dashboard";
 import { InstructorSidebar } from "@/components/instructor/InstructorSidebar";
+import { SidebarSlotProvider } from "@/components/instructor/SidebarSlotContext";
 import styled from "styled-components";
 
 const Wrapper = styled.div`
   display: flex;
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--color-background);
 `;
 
 const Main = styled.main`
@@ -29,9 +30,11 @@ export default async function InstructorLayout({
   if (me.role !== "instrutor" && me.role !== "admin") redirect("/");
 
   return (
-    <Wrapper>
-      <InstructorSidebar userName={me.name} userRole="Instrutora" />
-      <Main>{children}</Main>
-    </Wrapper>
+    <SidebarSlotProvider>
+      <Wrapper data-theme="dark">
+        <InstructorSidebar userName={me.name} userRole="Instrutor" avatarUrl={me.avatarUrl ?? undefined} />
+        <Main>{children}</Main>
+      </Wrapper>
+    </SidebarSlotProvider>
   );
 }

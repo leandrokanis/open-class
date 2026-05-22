@@ -4,6 +4,7 @@ import { useState } from 'react';
 import styled from 'styled-components';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/Icon';
 import { createResource, deleteResource } from '@/lib/instructor';
 import type { Resource } from '@/lib/instructor';
 
@@ -18,21 +19,21 @@ const Item = styled.div`
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
 `;
 
 const ResourceLabel = styled.span`
   font-size: 13px;
   font-weight: 500;
-  color: #1e293b;
+  color: var(--color-text-primary);
   flex-shrink: 0;
 `;
 
 const ResourceUrl = styled.a`
   font-size: 12px;
-  color: #3b82f6;
+  color: var(--color-primary);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -50,7 +51,7 @@ const AddForm = styled.div`
   flex-direction: column;
   gap: 6px;
   padding: 12px;
-  border: 1px dashed #cbd5e1;
+  border: 1px dashed var(--color-border);
   border-radius: 6px;
 `;
 
@@ -66,7 +67,7 @@ interface ResourceListProps {
 }
 
 export default function ResourceList({ lessonId, initialResources }: ResourceListProps) {
-  const [resources, setResources] = useState<Resource[]>(initialResources);
+  const [resources, setResources] = useState<Resource[]>(initialResources ?? []);
   const [showForm, setShowForm] = useState(false);
   const [label, setLabel] = useState('');
   const [url, setUrl] = useState('');
@@ -98,7 +99,7 @@ export default function ResourceList({ lessonId, initialResources }: ResourceLis
           <ResourceUrl href={r.url} target="_blank" rel="noopener noreferrer">
             {r.url}
           </ResourceUrl>
-          <Button variant="ghost" size="sm" onClick={() => handleRemove(r.id)} title="Remover recurso" style={{ color: '#94a3b8', padding: '2px 6px' }}>✕</Button>
+          <Button variant="ghost" size="sm" onClick={() => handleRemove(r.id)} title="Remover recurso" style={{ color: 'var(--color-text-secondary)', padding: '2px 6px' }}><Icon name="close" size={14} /></Button>
         </Item>
       ))}
       {showForm ? (
@@ -126,7 +127,7 @@ export default function ResourceList({ lessonId, initialResources }: ResourceLis
           </FormRow>
         </AddForm>
       ) : (
-        <Button size="sm" variant="ghost" onClick={() => setShowForm(true)} style={{ paddingLeft: 0 }}>+ Adicionar link</Button>
+        <Button size="sm" variant="ghost" onClick={() => setShowForm(true)} style={{ paddingLeft: 0 }}><Icon name="add" size={14} /> Adicionar link</Button>
       )}
     </Wrapper>
   );

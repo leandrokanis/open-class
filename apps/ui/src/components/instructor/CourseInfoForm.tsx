@@ -26,7 +26,7 @@ const Field = styled.div`
 const FieldLabel = styled(Label)`
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: var(--color-text-primary);
 `;
 
 const UrlRow = styled.div`
@@ -34,15 +34,15 @@ const UrlRow = styled.div`
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   margin-top: 4px;
 `;
 
 const UrlText = styled.span`
   font-size: 12px;
-  color: #64748b;
+  color: var(--color-text-secondary);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;

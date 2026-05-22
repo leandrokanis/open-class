@@ -14,11 +14,11 @@ export class CreateLessonDto {
   @MaxLength(2000)
   description?: string;
 
-  @ApiProperty({ example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' })
+  @ApiPropertyOptional({ example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @IsUrl({}, { message: 'youtubeUrl deve ser uma URL válida.' })
-  youtubeUrl!: string;
+  youtubeUrl?: string;
 
   @ApiPropertyOptional({ example: true, default: true })
   @IsBoolean()

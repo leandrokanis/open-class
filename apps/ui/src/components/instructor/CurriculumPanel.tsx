@@ -1,51 +1,60 @@
 'use client';
 
+import { useState } from 'react';
 import styled from 'styled-components';
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/Icon';
 import { createModule } from '@/lib/instructor';
 import type { ModuleWithLessons } from '@/lib/instructor';
 import SectionRow from './SectionRow';
 
 const Panel = styled.div`
-  width: 260px;
-  flex-shrink: 0;
-  border-right: 1px solid #e2e8f0;
-  overflow-y: auto;
-  height: calc(100vh - 120px);
+  width: 100%;
   display: flex;
   flex-direction: column;
+  height: 100%;
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 12px 8px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 8px 8px 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
 `;
 
 const PanelTitle = styled.span`
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 `;
 
+const AddSectionBtn = styled(Button)`
+  padding: 2px 6px;
+  height: auto;
+  color: var(--color-text-secondary);
 
-const Sections = styled.div`
+  &:hover {
+    color: var(--color-text-primary);
+  }
+`;
+
+const Tree = styled.div`
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 8px 0;
-  gap: 2px;
+  overflow-y: auto;
+  padding: 4px 0;
 `;
 
-const Footer = styled.div`
-  padding: 12px;
-  border-top: 1px solid #f1f5f9;
+const EmptyHint = styled.div`
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
 `;
-
 
 interface CurriculumPanelProps {
   courseId: string;
@@ -64,10 +73,13 @@ export default function CurriculumPanel({
   onAddLesson,
   onSectionsChange,
 }: CurriculumPanelProps) {
+  const [autoEditId, setAutoEditId] = useState<string | null>(null);
+
   async function handleAddSection() {
     const created = await createModule(courseId, 'Nova Seção');
     if (created) {
       onSectionsChange([...sections, created]);
+      setAutoEditId(created.id);
     }
   }
 
@@ -76,8 +88,18 @@ export default function CurriculumPanel({
   }
 
   function handleSectionRenamed(moduleId: string, title: string) {
+    if (autoEditId === moduleId) setAutoEditId(null);
     onSectionsChange(
       sections.map((s) => (s.id === moduleId ? { ...s, title } : s)),
+    );
+  }
+
+  function handleLessonRenamed(lessonId: string, title: string) {
+    onSectionsChange(
+      sections.map((s) => ({
+        ...s,
+        lessons: (s.lessons ?? []).map((l) => (l.id === lessonId ? { ...l, title } : l)),
+      })),
     );
   }
 
@@ -85,25 +107,34 @@ export default function CurriculumPanel({
     <Panel>
       <Header>
         <PanelTitle>Currículo</PanelTitle>
-        <Button size="sm" variant="outline" onClick={handleAddSection}>+ Seção</Button>
+        <AddSectionBtn size="sm" variant="ghost" onClick={handleAddSection} title="Nova seção">
+          <Icon name="add" size={16} />
+        </AddSectionBtn>
       </Header>
-      <Sections>
-        {sections.map((section) => (
-          <SectionRow
-            key={section.id}
-            courseId={courseId}
-            section={section}
-            selectedLessonId={selectedLessonId}
-            onSelectLesson={onSelectLesson}
-            onAddLesson={onAddLesson}
-            onDeleted={handleSectionDeleted}
-            onRenamed={handleSectionRenamed}
-          />
-        ))}
-      </Sections>
-      <Footer>
-        <Button size="sm" variant="outline" onClick={handleAddSection} style={{ width: '100%' }}>+ Adicionar seção</Button>
-      </Footer>
+
+      <Tree>
+        {sections.length === 0 ? (
+          <EmptyHint>
+            Nenhuma seção ainda.<br />
+            Clique em <Icon name="add" size={12} style={{ verticalAlign: 'middle' }} /> para criar.
+          </EmptyHint>
+        ) : (
+          sections.map((section) => (
+            <SectionRow
+              key={section.id}
+              courseId={courseId}
+              section={section}
+              selectedLessonId={selectedLessonId}
+              onSelectLesson={onSelectLesson}
+              onAddLesson={onAddLesson}
+              onDeleted={handleSectionDeleted}
+              onRenamed={handleSectionRenamed}
+              onLessonRenamed={handleLessonRenamed}
+              autoEdit={section.id === autoEditId}
+            />
+          ))
+        )}
+      </Tree>
     </Panel>
   );
 }

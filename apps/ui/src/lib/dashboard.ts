@@ -8,6 +8,7 @@ export interface MeUser {
   name: string;
   email: string;
   role: string;
+  avatarUrl: string | null;
 }
 
 export interface EnrollmentCategory {

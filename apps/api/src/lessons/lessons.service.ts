@@ -19,17 +19,23 @@ export class LessonsService {
 
   async create(moduleId: string, dto: CreateLessonDto, userId: string, userRole: string) {
     await this.assertModuleOwnership(moduleId, userId, userRole);
-    const { videoId, durationSeconds } = await this.youtube.validateAndFetchInfo(dto.youtubeUrl);
+    let videoId: string | null = null;
+    let durationSeconds: number | null = null;
+    if (dto.youtubeUrl) {
+      const info = await this.youtube.validateAndFetchInfo(dto.youtubeUrl);
+      videoId = info.videoId;
+      durationSeconds = info.durationSeconds;
+    }
     const position = await this.repo.nextPosition(moduleId);
     return this.repo.insert({
       moduleId,
       title: dto.title,
       description: dto.description,
-      youtubeUrl: dto.youtubeUrl,
+      youtubeUrl: dto.youtubeUrl ?? null,
       youtubeVideoId: videoId,
       duration: durationSeconds,
       position,
-      visibility: (dto.isVisible ?? true) ? 'visible' : 'hidden',
+      visibility: 'hidden',
     });
   }
 
@@ -72,6 +78,13 @@ export class LessonsService {
         ? { visibility: dto.isVisible ? 'visible' : 'hidden' }
         : {}),
     });
+  }
+
+  async setVisibility(id: string, visibility: 'visible' | 'hidden', userId: string, userRole: string) {
+    const lesson = await this.repo.findById(id);
+    if (!lesson) throw new NotFoundException('Aula não encontrada.');
+    await this.assertModuleOwnership(lesson.moduleId, userId, userRole);
+    return this.repo.update(id, { visibility });
   }
 
   async delete(id: string, userId: string, userRole: string) {

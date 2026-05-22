@@ -1,17 +1,21 @@
 'use client';
 
 import { use, useState, useReducer, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import styled from 'styled-components';
 import { createLesson } from '@/lib/instructor';
 import type { ModuleWithLessons, LessonData } from '@/lib/instructor';
 import CurriculumPanel from '@/components/instructor/CurriculumPanel';
 import LessonEditor, { LessonEditorEmpty } from '@/components/instructor/LessonEditor';
+import { useSidebarSlot } from '@/components/instructor/SidebarSlotContext';
 
-const SplitLayout = styled.div`
+const EditorArea = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  height: calc(100vh - 53px);
   display: flex;
-  height: calc(100vh - 120px);
-  overflow: hidden;
+  flex-direction: column;
 `;
 
 const LoadingState = styled.div`
@@ -19,7 +23,7 @@ const LoadingState = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   font-size: 14px;
 `;
 
@@ -38,18 +42,18 @@ function reducer(state: ModuleWithLessons[], action: Action): ModuleWithLessons[
     case 'ADD_LESSON':
       return state.map((s) =>
         s.id === action.moduleId
-          ? { ...s, lessons: [...s.lessons, action.lesson] }
+          ? { ...s, lessons: [...(s.lessons ?? []), action.lesson] }
           : s,
       );
     case 'UPDATE_LESSON':
       return state.map((s) => ({
         ...s,
-        lessons: s.lessons.map((l) => (l.id === action.lesson.id ? action.lesson : l)),
+        lessons: (s.lessons ?? []).map((l) => (l.id === action.lesson.id ? action.lesson : l)),
       }));
     case 'DELETE_LESSON':
       return state.map((s) => ({
         ...s,
-        lessons: s.lessons.filter((l) => l.id !== action.lessonId),
+        lessons: (s.lessons ?? []).filter((l) => l.id !== action.lessonId),
       }));
     default:
       return state;
@@ -65,12 +69,18 @@ interface AulasPageProps {
 export default function AulasPage({ params }: AulasPageProps) {
   const { id: courseId } = use(params);
   const router = useRouter();
+  const { target, setHasPanel } = useSidebarSlot();
 
   const [sections, dispatch] = useReducer(reducer, []);
   const [loading, setLoading] = useState(true);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
 
   const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+
+  useEffect(() => {
+    setHasPanel(true);
+    return () => setHasPanel(false);
+  }, [setHasPanel]);
 
   useEffect(() => {
     async function load() {
@@ -102,36 +112,45 @@ export default function AulasPage({ params }: AulasPageProps) {
   }, [router]);
 
   const selectedLesson = sections
-    .flatMap((s) => s.lessons)
-    .find((l) => l.id === selectedLessonId) ?? null;
+    .flatMap((s) => s.lessons ?? [])
+    .find((l) => l?.id === selectedLessonId) ?? null;
+
+  const curriculumPanel = (
+    <CurriculumPanel
+      courseId={courseId}
+      sections={sections}
+      selectedLessonId={selectedLessonId}
+      onSelectLesson={setSelectedLessonId}
+      onAddLesson={handleAddLesson}
+      onSectionsChange={(updated) => dispatch({ type: 'SET_SECTIONS', payload: updated })}
+    />
+  );
 
   if (loading) {
     return (
-      <SplitLayout>
-        <LoadingState>Carregando currículo...</LoadingState>
-      </SplitLayout>
+      <>
+        {target && createPortal(curriculumPanel, target)}
+        <EditorArea>
+          <LoadingState>Carregando currículo...</LoadingState>
+        </EditorArea>
+      </>
     );
   }
 
   return (
-    <SplitLayout>
-      <CurriculumPanel
-        courseId={courseId}
-        sections={sections}
-        selectedLessonId={selectedLessonId}
-        onSelectLesson={setSelectedLessonId}
-        onAddLesson={handleAddLesson}
-        onSectionsChange={(updated) => dispatch({ type: 'SET_SECTIONS', payload: updated })}
-      />
-      {selectedLesson ? (
-        <LessonEditor
-          lesson={selectedLesson}
-          onDeleted={handleLessonDeleted}
-          onUpdated={handleLessonUpdated}
-        />
-      ) : (
-        <LessonEditorEmpty />
-      )}
-    </SplitLayout>
+    <>
+      {target && createPortal(curriculumPanel, target)}
+      <EditorArea>
+        {selectedLesson ? (
+          <LessonEditor
+            lesson={selectedLesson}
+            onDeleted={handleLessonDeleted}
+            onUpdated={handleLessonUpdated}
+          />
+        ) : (
+          <LessonEditorEmpty />
+        )}
+      </EditorArea>
+    </>
   );
 }

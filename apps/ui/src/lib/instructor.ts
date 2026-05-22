@@ -228,7 +228,8 @@ export async function createModule(courseId: string, title: string): Promise<Mod
   });
   if (!res.ok) return null;
   const json = await res.json();
-  return json.data;
+  const data = json.data;
+  return { ...data, lessons: data.lessons ?? [] };
 }
 
 export async function updateModule(
@@ -241,6 +242,20 @@ export async function updateModule(
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify(data),
+  });
+  return res.ok;
+}
+
+export async function setModuleVisibility(
+  courseId: string,
+  id: string,
+  visibility: 'visible' | 'hidden',
+): Promise<boolean> {
+  const res = await fetch(`${API_PUBLIC}/api/courses/${courseId}/modules/${id}/visibility`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ visibility }),
   });
   return res.ok;
 }
@@ -281,6 +296,19 @@ export async function updateLesson(
   if (!res.ok) return null;
   const json = await res.json();
   return json.data;
+}
+
+export async function setLessonVisibility(
+  id: string,
+  visibility: 'visible' | 'hidden',
+): Promise<boolean> {
+  const res = await fetch(`${API_PUBLIC}/api/lessons/${id}/visibility`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ visibility }),
+  });
+  return res.ok;
 }
 
 export async function deleteLesson(id: string): Promise<boolean> {

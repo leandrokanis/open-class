@@ -28,8 +28,8 @@ const Panel = styled.div`
 `;
 
 const Card = styled.div`
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -58,12 +58,12 @@ const VisibilityTitleRow = styled.div`
 const VisibilityTitle = styled.div`
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--color-text-primary);
 `;
 
 const VisibilityDesc = styled.div`
   font-size: 12px;
-  color: #64748b;
+  color: var(--color-text-secondary);
   margin-bottom: 12px;
 `;
 
@@ -73,9 +73,9 @@ const StatusBadge = styled.span<{ $published: boolean }>`
   gap: 5px;
   font-size: 12px;
   font-weight: 600;
-  color: ${({ $published }) => ($published ? "#16a34a" : "#64748b")};
-  background: ${({ $published }) => ($published ? "#dcfce7" : "#f1f5f9")};
-  border: 1px solid ${({ $published }) => ($published ? "#bbf7d0" : "#e2e8f0")};
+  color: ${({ $published }) => ($published ? "var(--color-success)" : "var(--color-text-secondary)")};
+  background: ${({ $published }) => ($published ? "rgba(34,197,94,0.12)" : "var(--color-surface-secondary)")};
+  border: 1px solid ${({ $published }) => ($published ? "rgba(34,197,94,0.3)" : "var(--color-border)")};
   border-radius: 20px;
   padding: 3px 10px;
 `;
@@ -95,7 +95,7 @@ const ThumbnailBox = styled.div`
 const ThumbnailLabel = styled.div`
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: var(--color-text-primary);
 `;
 
 const ThumbnailPreview = styled.img`
@@ -137,16 +137,16 @@ const DropZone = styled.div<{ $hasThumbnail: boolean }>`
   justify-content: center;
   flex-direction: column;
   height: 160px;
-  border: 2px dashed #e2e8f0;
+  border: 2px dashed var(--color-border);
   border-radius: 10px;
   cursor: pointer;
-  background: #f8fafc;
+  background: var(--color-surface-secondary);
   overflow: hidden;
   position: relative;
   transition: border-color 0.15s;
 
   &:hover {
-    border-color: #94a3b8;
+    border-color: var(--color-text-secondary);
   }
 
   &:hover ${ThumbnailOverlay} {
@@ -161,13 +161,13 @@ const DropHint = styled.div`
 
 const DropText = styled.div`
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-text-secondary);
   margin-bottom: 4px;
 `;
 
 const DropSub = styled.div`
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--color-text-tertiary);
 `;
 
 const FieldGroup = styled.div`
@@ -179,17 +179,17 @@ const FieldGroup = styled.div`
 const FieldLabel = styled(Label)`
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: var(--color-text-primary);
 `;
 
 const DangerCard = styled.div`
-  border: 1px solid #fecaca;
+  border: 1px solid rgba(239,68,68,0.3);
   border-radius: 12px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: #fff5f5;
+  background: rgba(239,68,68,0.06);
 `;
 
 const DangerHeader = styled.div`
@@ -208,13 +208,14 @@ const DangerInfo = styled.div`
 const DangerTitle = styled.div`
   font-size: 13px;
   font-weight: 600;
-  color: #991b1b;
+  color: var(--color-destructive);
 `;
 
 const DangerDesc = styled.div`
   font-size: 12px;
-  color: #b91c1c;
+  color: var(--color-destructive);
   line-height: 1.5;
+  opacity: 0.8;
 `;
 
 const ModalFooter = styled.div`
@@ -422,7 +423,7 @@ export function CourseSidePanel({ course, categories }: CourseSidePanelProps) {
           <Button
             size="sm"
             variant="outline"
-            style={{ borderColor: '#fca5a5', color: '#991b1b', flexShrink: 0 }}
+            style={{ borderColor: 'var(--color-destructive)', color: 'var(--color-destructive)', flexShrink: 0 }}
             onClick={() => { setDeleteInput(""); setDeleteOpen(true); }}
           >
             Excluir

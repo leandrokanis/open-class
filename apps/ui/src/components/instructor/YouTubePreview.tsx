@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
+import { Icon } from '@/components/ui/Icon';
 
 const Wrapper = styled.div`
   display: flex;
@@ -15,9 +16,9 @@ const BadgeValid = styled.span`
   gap: 4px;
   font-size: 12px;
   font-weight: 500;
-  color: #15803d;
-  background: #dcfce7;
-  border: 1px solid #86efac;
+  color: var(--color-success);
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.3);
   border-radius: 4px;
   padding: 2px 8px;
 `;
@@ -28,9 +29,9 @@ const BadgeInvalid = styled.span`
   gap: 4px;
   font-size: 12px;
   font-weight: 500;
-  color: #b91c1c;
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
+  color: var(--color-destructive);
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
   border-radius: 4px;
   padding: 2px 8px;
 `;
@@ -39,8 +40,8 @@ const Preview = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 12px;
 `;
@@ -63,7 +64,7 @@ const Info = styled.div`
 const VideoTitle = styled.span`
   font-size: 13px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -71,7 +72,7 @@ const VideoTitle = styled.span`
 
 const Channel = styled.span`
   font-size: 12px;
-  color: #64748b;
+  color: var(--color-text-secondary);
 `;
 
 interface OEmbedData {
@@ -126,7 +127,7 @@ export default function YouTubePreview({ url }: YouTubePreviewProps) {
     <Wrapper>
       {data ? (
         <>
-          <BadgeValid>✓ URL válida</BadgeValid>
+          <BadgeValid><Icon name="check_circle" size={14} fill /> URL válida</BadgeValid>
           <Preview>
             <Thumbnail src={data.thumbnailUrl} alt={data.title} />
             <Info>
@@ -136,7 +137,7 @@ export default function YouTubePreview({ url }: YouTubePreviewProps) {
           </Preview>
         </>
       ) : invalid ? (
-        <BadgeInvalid>✕ URL inválida</BadgeInvalid>
+        <BadgeInvalid><Icon name="cancel" size={14} fill /> URL inválida</BadgeInvalid>
       ) : null}
     </Wrapper>
   );
