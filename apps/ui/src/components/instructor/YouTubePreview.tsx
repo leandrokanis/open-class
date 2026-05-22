@@ -36,6 +36,14 @@ const BadgeInvalid = styled.span`
   padding: 2px 8px;
 `;
 
+const BadgeLoading = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+`;
+
 const Preview = styled.div`
   display: flex;
   align-items: center;
@@ -52,6 +60,14 @@ const Thumbnail = styled.img`
   object-fit: cover;
   border-radius: 4px;
   flex-shrink: 0;
+`;
+
+const ThumbnailSkeleton = styled.div`
+  width: 120px;
+  height: 68px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: var(--color-surface-tertiary);
 `;
 
 const Info = styled.div`
@@ -79,14 +95,21 @@ interface OEmbedData {
   title: string;
   thumbnailUrl: string;
   authorName: string;
+  durationSeconds: number | null;
+}
+
+export interface VideoInfo {
+  durationSeconds: number | null;
 }
 
 interface YouTubePreviewProps {
   url: string;
+  onVideoInfo?: (info: VideoInfo) => void;
 }
 
-export default function YouTubePreview({ url }: YouTubePreviewProps) {
+export default function YouTubePreview({ url, onVideoInfo }: YouTubePreviewProps) {
   const [data, setData] = useState<OEmbedData | null>(null);
+  const [loading, setLoading] = useState(false);
   const [invalid, setInvalid] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -96,8 +119,12 @@ export default function YouTubePreview({ url }: YouTubePreviewProps) {
     if (!url.trim()) {
       setData(null);
       setInvalid(false);
+      setLoading(false);
       return;
     }
+
+    setLoading(true);
+    setInvalid(false);
 
     timerRef.current = setTimeout(async () => {
       try {
@@ -105,27 +132,46 @@ export default function YouTubePreview({ url }: YouTubePreviewProps) {
         if (!res.ok) {
           setData(null);
           setInvalid(true);
+          setLoading(false);
           return;
         }
-        const json = await res.json();
+        const json: OEmbedData = await res.json();
         setData(json);
         setInvalid(false);
+        setLoading(false);
+        onVideoInfo?.({ durationSeconds: json.durationSeconds });
       } catch {
         setData(null);
         setInvalid(true);
+        setLoading(false);
       }
     }, 800);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   if (!url.trim()) return null;
 
   return (
     <Wrapper>
-      {data ? (
+      {loading ? (
+        <>
+          <BadgeLoading>
+            <Icon name="sync" size={13} />
+            Carregando...
+          </BadgeLoading>
+          <Preview>
+            <ThumbnailSkeleton />
+            <Info>
+              <ThumbnailSkeleton style={{ width: 160, height: 14, borderRadius: 3 }} />
+              <ThumbnailSkeleton style={{ width: 100, height: 12, borderRadius: 3, marginTop: 4 }} />
+            </Info>
+          </Preview>
+        </>
+      ) : data ? (
         <>
           <BadgeValid><Icon name="check_circle" size={14} fill /> URL válida</BadgeValid>
           <Preview>

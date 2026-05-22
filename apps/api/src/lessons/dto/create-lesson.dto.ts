@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, MaxLength, IsOptional, IsBoolean, IsUrl } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, IsOptional, IsBoolean, IsUrl, IsInt, Min } from 'class-validator';
 
 export class CreateLessonDto {
   @ApiProperty({ example: 'Tipos primitivos' })
@@ -24,4 +24,10 @@ export class CreateLessonDto {
   @IsBoolean()
   @IsOptional()
   isVisible?: boolean;
+
+  @ApiPropertyOptional({ example: 213, description: 'Duração da aula em segundos' })
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  duration?: number;
 }

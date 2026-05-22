@@ -66,7 +66,10 @@ export class LessonsService {
     if (dto.youtubeUrl && dto.youtubeUrl !== lesson.youtubeUrl) {
       const info = await this.youtube.validateAndFetchInfo(dto.youtubeUrl);
       youtubeVideoId = info.videoId;
-      duration = info.durationSeconds;
+      // dto.duration > 0 means client explicitly set it; 0 means not yet loaded → use YouTube
+      duration = (dto.duration !== undefined && dto.duration > 0) ? dto.duration : info.durationSeconds;
+    } else if (dto.duration !== undefined) {
+      duration = dto.duration;
     }
 
     return this.repo.update(id, {

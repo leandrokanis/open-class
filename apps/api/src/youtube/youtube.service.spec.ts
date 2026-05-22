@@ -22,6 +22,14 @@ describe('YouTubeService', () => {
       expect(service.extractVideoId('https://www.youtube.com/embed/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
     });
 
+    it('extrai ID de youtube.com/shorts/', () => {
+      expect(service.extractVideoId('https://www.youtube.com/shorts/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+    });
+
+    it('extrai ID de youtube.com/shorts/ com query params', () => {
+      expect(service.extractVideoId('https://www.youtube.com/shorts/dQw4w9WgXcQ?si=abc')).toBe('dQw4w9WgXcQ');
+    });
+
     it('retorna null para URL não YouTube', () => {
       expect(service.extractVideoId('https://vimeo.com/123456')).toBeNull();
     });

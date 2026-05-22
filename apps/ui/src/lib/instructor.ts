@@ -317,7 +317,7 @@ export async function createLesson(
 
 export async function updateLesson(
   id: string,
-  data: { title?: string; youtubeUrl?: string; description?: string; isVisible?: boolean },
+  data: { title?: string; youtubeUrl?: string; description?: string; isVisible?: boolean; duration?: number },
 ): Promise<LessonData | null> {
   const res = await fetch(`${API_PUBLIC}/api/lessons/${id}`, {
     method: 'PATCH',

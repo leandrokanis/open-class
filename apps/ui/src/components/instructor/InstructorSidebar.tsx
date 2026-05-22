@@ -9,9 +9,9 @@ import { logout } from "@/lib/auth";
 import { Icon } from "@/components/ui/Icon";
 import { useSidebarSlot } from "@/components/instructor/SidebarSlotContext";
 
-const Sidebar = styled.aside<{ $wide: boolean }>`
-  width: ${({ $wide }) => ($wide ? "260px" : "220px")};
-  min-width: ${({ $wide }) => ($wide ? "260px" : "220px")};
+const Sidebar = styled.aside<{ $width: number }>`
+  width: ${({ $width }) => $width}px;
+  min-width: ${({ $width }) => $width}px;
   height: 100vh;
   background: var(--color-surface);
   border-right: 1px solid var(--color-border);
@@ -19,7 +19,32 @@ const Sidebar = styled.aside<{ $wide: boolean }>`
   flex-direction: column;
   position: sticky;
   top: 0;
-  transition: width 0.2s, min-width 0.2s;
+  user-select: none;
+`;
+
+const ResizeHandle = styled.div`
+  position: absolute;
+  right: -3px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 10;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: transparent;
+    transition: background 0.15s;
+  }
+
+  &:hover::after {
+    background: var(--color-primary);
+  }
 `;
 
 const Nav = styled.nav`
@@ -165,12 +190,38 @@ interface InstructorSidebarProps {
   avatarUrl?: string;
 }
 
+const MIN_WIDTH = 180;
+const MAX_WIDTH = 480;
+
 export function InstructorSidebar({ userName = "Instrutor", userRole = "Instrutor", avatarUrl }: InstructorSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [width, setWidth] = useState<number | null>(null);
   const footerRef = useRef<HTMLDivElement>(null);
   const { registerTarget, hasPanel } = useSidebarSlot();
+
+  const defaultWidth = hasPanel ? 260 : 220;
+  const effectiveWidth = width ?? defaultWidth;
+
+  function handleResizeMouseDown(e: React.MouseEvent) {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = effectiveWidth;
+
+    function onMouseMove(ev: MouseEvent) {
+      const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + ev.clientX - startX));
+      setWidth(next);
+    }
+    function onMouseUp() {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = '';
+    }
+    document.body.style.cursor = 'col-resize';
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }
 
   const initial = userName.charAt(0).toUpperCase();
 
@@ -199,7 +250,8 @@ export function InstructorSidebar({ userName = "Instrutor", userRole = "Instruto
   }
 
   return (
-    <Sidebar $wide={hasPanel}>
+    <Sidebar $width={effectiveWidth} style={{ position: 'relative' }}>
+      <ResizeHandle onMouseDown={handleResizeMouseDown} />
       <Nav>
         {navItems.map((item) => (
           <NavLink key={item.href} href={item.href} $active={isActive(item)}>
@@ -234,4 +286,5 @@ export function InstructorSidebar({ userName = "Instrutor", userRole = "Instruto
       </Footer>
     </Sidebar>
   );
+
 }

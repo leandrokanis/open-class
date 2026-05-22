@@ -247,6 +247,58 @@ describe('LessonsService', () => {
     });
   });
 
+  describe('update — lógica de duração', () => {
+    const existingLesson = {
+      id: 'lesson-1',
+      moduleId: 'module-1',
+      youtubeUrl: 'https://youtu.be/OLD00000000',
+      youtubeVideoId: 'OLD00000000',
+      duration: 100,
+      visibility: 'visible',
+    };
+
+    it('URL muda, sem dto.duration → usa duração do YouTube', async () => {
+      const repo = makeRepo({
+        findById: vi.fn().mockResolvedValue(existingLesson),
+        update: vi.fn().mockResolvedValue({ ...existingLesson, duration: 213 }),
+      });
+      const youtube = makeYoutube({ validateAndFetchInfo: vi.fn().mockResolvedValue({ videoId: 'NEW00000000', durationSeconds: 213 }) });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, youtube as never);
+
+      await service.update('lesson-1', { youtubeUrl: 'https://youtu.be/NEW00000000' }, 'user-1', 'instrutor');
+
+      expect(youtube.validateAndFetchInfo).toHaveBeenCalled();
+      expect(repo.update).toHaveBeenCalledWith('lesson-1', expect.objectContaining({ duration: 213 }));
+    });
+
+    it('URL muda, dto.duration presente → usa dto.duration (override manual)', async () => {
+      const repo = makeRepo({
+        findById: vi.fn().mockResolvedValue(existingLesson),
+        update: vi.fn().mockResolvedValue({ ...existingLesson, duration: 300 }),
+      });
+      const youtube = makeYoutube({ validateAndFetchInfo: vi.fn().mockResolvedValue({ videoId: 'NEW00000000', durationSeconds: 213 }) });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, youtube as never);
+
+      await service.update('lesson-1', { youtubeUrl: 'https://youtu.be/NEW00000000', duration: 300 }, 'user-1', 'instrutor');
+
+      expect(repo.update).toHaveBeenCalledWith('lesson-1', expect.objectContaining({ duration: 300 }));
+    });
+
+    it('URL não muda, apenas dto.duration → persiste valor manual sem chamar YouTube', async () => {
+      const repo = makeRepo({
+        findById: vi.fn().mockResolvedValue(existingLesson),
+        update: vi.fn().mockResolvedValue({ ...existingLesson, duration: 180 }),
+      });
+      const youtube = makeYoutube();
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, youtube as never);
+
+      await service.update('lesson-1', { duration: 180 }, 'user-1', 'instrutor');
+
+      expect(youtube.validateAndFetchInfo).not.toHaveBeenCalled();
+      expect(repo.update).toHaveBeenCalledWith('lesson-1', expect.objectContaining({ duration: 180 }));
+    });
+  });
+
   describe('findByModule', () => {
     it('retorna apenas aulas visíveis para aluno', async () => {
       const repo = makeRepo({

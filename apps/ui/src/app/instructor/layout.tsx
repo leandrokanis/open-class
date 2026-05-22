@@ -16,6 +16,17 @@ const Main = styled.main`
   flex: 1;
   min-width: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ContentInner = styled.div`
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 `;
 
 export default async function InstructorLayout({
@@ -33,7 +44,9 @@ export default async function InstructorLayout({
     <SidebarSlotProvider>
       <Wrapper data-theme="dark">
         <InstructorSidebar userName={me.name} userRole="Instrutor" avatarUrl={me.avatarUrl ?? undefined} />
-        <Main>{children}</Main>
+        <Main>
+          <ContentInner>{children}</ContentInner>
+        </Main>
       </Wrapper>
     </SidebarSlotProvider>
   );
