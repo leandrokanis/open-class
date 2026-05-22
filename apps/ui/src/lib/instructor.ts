@@ -219,6 +219,38 @@ export async function uploadCourseThumbnail(id: string, file: File): Promise<Cou
   return json.data;
 }
 
+export async function reorderModules(courseId: string, ids: string[]): Promise<boolean> {
+  const res = await fetch(`${API_PUBLIC}/api/courses/${courseId}/modules/reorder`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ ids }),
+  });
+  return res.ok;
+}
+
+export async function reorderLessons(moduleId: string, ids: string[]): Promise<boolean> {
+  const res = await fetch(`${API_PUBLIC}/api/modules/${moduleId}/lessons/reorder`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ ids }),
+  });
+  return res.ok;
+}
+
+export async function moveLesson(id: string, moduleId: string, position: number): Promise<LessonData | null> {
+  const res = await fetch(`${API_PUBLIC}/api/lessons/${id}/move`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ moduleId, position }),
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.data;
+}
+
 export async function createModule(courseId: string, title: string): Promise<ModuleWithLessons | null> {
   const res = await fetch(`${API_PUBLIC}/api/courses/${courseId}/modules`, {
     method: 'POST',

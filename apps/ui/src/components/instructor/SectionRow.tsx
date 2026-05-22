@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { createPortal } from 'react-dom';
+import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose } from '@/components/ui/dialog';
@@ -13,12 +15,13 @@ import LessonRow from './LessonRow';
 
 const DBLCLICK_DELAY = 220;
 
-const Wrapper = styled.div`
+const Wrapper = styled.div<{ $dragging?: boolean }>`
   display: flex;
   flex-direction: column;
+  opacity: ${({ $dragging }) => ($dragging ? 0.35 : 1)};
 `;
 
-const Header = styled.div`
+const Header = styled.div<{ $dragOver?: boolean }>`
   display: flex;
   align-items: center;
   gap: 3px;
@@ -27,13 +30,20 @@ const Header = styled.div`
   user-select: none;
   height: 26px;
   position: relative;
+  background: ${({ $dragOver }) => ($dragOver ? 'var(--color-primary-light)' : 'transparent')};
+  outline: ${({ $dragOver }) => ($dragOver ? '1px solid var(--color-primary)' : 'none')};
+  outline-offset: -1px;
 
   &:hover {
-    background: var(--color-surface-tertiary);
+    background: ${({ $dragOver }) => ($dragOver ? 'var(--color-primary-light)' : 'var(--color-surface-tertiary)')};
   }
 
   &:hover .menu-btn {
     opacity: 1;
+  }
+
+  &:active {
+    cursor: grabbing;
   }
 `;
 
@@ -187,6 +197,11 @@ interface SectionRowProps {
   onDeleted: (moduleId: string) => void;
   onRenamed: (moduleId: string, title: string) => void;
   onLessonRenamed: (lessonId: string, title: string) => void;
+  onLessonDeleted?: (lessonId: string) => void;
+  onLessonVisibilityChange?: (lessonId: string, visibility: 'visible' | 'hidden') => void;
+  onLessonAutoEditDone?: () => void;
+  autoEditLessonId?: string | null;
+  dragOver?: boolean;
   autoEdit?: boolean;
 }
 
@@ -199,8 +214,27 @@ export default function SectionRow({
   onDeleted,
   onRenamed,
   onLessonRenamed,
+  onLessonDeleted,
+  onLessonVisibilityChange,
+  onLessonAutoEditDone,
+  autoEditLessonId,
+  dragOver,
   autoEdit,
 }: SectionRowProps) {
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: section.id, data: { kind: 'section' } });
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   const [open, setOpen] = useState(true);
   const [editing, setEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(section.title);
@@ -222,6 +256,12 @@ export default function SectionRow({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!dragOver || open) return;
+    const timer = setTimeout(() => setOpen(true), 600);
+    return () => clearTimeout(timer);
+  }, [dragOver, open]);
 
   const closeMenu = useCallback(() => setMenuPos(null), []);
 
@@ -323,12 +363,18 @@ export default function SectionRow({
     setDeleteOpen(false);
   }
 
+  const lessonIds = (section.lessons ?? []).map((l) => l.id);
+
   return (
-    <Wrapper>
+    <Wrapper ref={setNodeRef} style={sortableStyle} $dragging={isDragging}>
       <Header
+        $dragOver={dragOver}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
+        title="Arrastar para reordenar"
+        {...attributes}
+        {...listeners}
       >
         <Chevron $open={open}>
           <Icon name="chevron_right" size={14} />
@@ -450,16 +496,23 @@ export default function SectionRow({
 
       {open && (
         <TreeChildren>
-          {(section.lessons ?? []).map((lesson) => (
-            <LessonRow
-              key={lesson.id}
-              lesson={lesson}
-              selected={lesson.id === selectedLessonId}
-              onClick={() => onSelectLesson(lesson.id)}
-              onRenamed={onLessonRenamed}
-              sectionDraft={visibility === 'hidden'}
-            />
-          ))}
+          <SortableContext items={lessonIds} strategy={verticalListSortingStrategy}>
+            {(section.lessons ?? []).map((lesson) => (
+              <LessonRow
+                key={lesson.id}
+                lesson={lesson}
+                selected={lesson.id === selectedLessonId}
+                onClick={() => onSelectLesson(lesson.id)}
+                onRenamed={onLessonRenamed}
+                onDeleted={onLessonDeleted}
+                onVisibilityChange={onLessonVisibilityChange}
+                onAutoEditDone={onLessonAutoEditDone}
+                autoEdit={lesson.id === autoEditLessonId}
+                sectionDraft={visibility === 'hidden'}
+                sectionId={section.id}
+              />
+            ))}
+          </SortableContext>
         </TreeChildren>
       )}
     </Wrapper>

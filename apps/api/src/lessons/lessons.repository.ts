@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { lessons, lessonResources, type NewLesson } from '@open-class/db';
 import type { Db } from '../db';
 
@@ -62,5 +62,46 @@ export class LessonsRepository {
       .where(eq(lessons.moduleId, moduleId))
       .orderBy(lessons.position);
     return rows.map((r) => r.id);
+  }
+
+  async moveToModule(id: string, sourceModuleId: string, targetModuleId: string, position: number) {
+    return this.db.transaction(async (tx) => {
+      // 1. Move lesson to target module with a temporary high position to avoid constraint conflicts
+      await tx
+        .update(lessons)
+        .set({ moduleId: targetModuleId, position: 999999, updatedAt: new Date() })
+        .where(eq(lessons.id, id));
+
+      // 2. Compact source module (excluding the moved lesson, now in target)
+      const sourceRows = await tx
+        .select({ id: lessons.id })
+        .from(lessons)
+        .where(and(eq(lessons.moduleId, sourceModuleId), ne(lessons.id, id)))
+        .orderBy(lessons.position);
+      await Promise.all(sourceRows.map((r, i) =>
+        tx.update(lessons).set({ position: i + 1 }).where(eq(lessons.id, r.id)),
+      ));
+
+      // 3. Reorder target module: insert moved lesson at requested position
+      const targetOthers = await tx
+        .select({ id: lessons.id })
+        .from(lessons)
+        .where(and(eq(lessons.moduleId, targetModuleId), ne(lessons.id, id)))
+        .orderBy(lessons.position);
+
+      const newOrder = targetOthers.map((r) => r.id);
+      newOrder.splice(Math.max(0, position - 1), 0, id);
+      await Promise.all(newOrder.map((lid, i) =>
+        tx.update(lessons).set({ position: i + 1 }).where(eq(lessons.id, lid)),
+      ));
+
+      // 4. Return updated lesson
+      const [updated] = await tx
+        .update(lessons)
+        .set({ updatedAt: new Date() })
+        .where(eq(lessons.id, id))
+        .returning();
+      return updated;
+    });
   }
 }

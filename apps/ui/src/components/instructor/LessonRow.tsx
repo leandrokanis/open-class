@@ -3,11 +3,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { createPortal } from 'react-dom';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Icon } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose } from '@/components/ui/dialog';
-import { updateLesson, setLessonVisibility } from '@/lib/instructor';
+import { updateLesson, setLessonVisibility, deleteLesson } from '@/lib/instructor';
 import type { LessonData } from '@/lib/instructor';
 
 const DBLCLICK_DELAY = 220;
@@ -29,6 +31,10 @@ const Row = styled.div<{ $selected: boolean }>`
 
   &:hover .lesson-menu-btn {
     opacity: 1;
+  }
+
+  &:active {
+    cursor: grabbing;
   }
 `;
 
@@ -136,6 +142,16 @@ const MenuItem = styled.button`
   }
 `;
 
+const MenuItemDanger = styled(MenuItem)`
+  color: var(--color-destructive);
+`;
+
+const MenuDivider = styled.div`
+  height: 1px;
+  background: var(--color-border);
+  margin: 2px 0;
+`;
+
 const ModalFooter = styled.div`
   display: flex;
   justify-content: flex-end;
@@ -167,19 +183,43 @@ interface LessonRowProps {
   selected: boolean;
   onClick: () => void;
   onRenamed: (lessonId: string, title: string) => void;
+  onDeleted?: (lessonId: string) => void;
+  onVisibilityChange?: (lessonId: string, visibility: 'visible' | 'hidden') => void;
+  onAutoEditDone?: () => void;
+  autoEdit?: boolean;
   sectionDraft?: boolean;
+  sectionId?: string;
 }
 
-export default function LessonRow({ lesson, selected, onClick, onRenamed, sectionDraft }: LessonRowProps) {
+export default function LessonRow({ lesson, selected, onClick, onRenamed, onDeleted, onVisibilityChange, onAutoEditDone, autoEdit, sectionDraft, sectionId }: LessonRowProps) {
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: lesson.id, data: { kind: 'lesson', sectionId } });
   const [editing, setEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(lesson.title);
   const [visibility, setVisibility] = useState(lesson.visibility);
   const [menuPos, setMenuPos] = useState<MenuPos | null>(null);
   const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [togglingVisibility, setTogglingVisibility] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const duration = formatDuration(lesson.duration);
+
+  useEffect(() => {
+    if (autoEdit) {
+      setDraftTitle(lesson.title);
+      setEditing(true);
+      setTimeout(() => inputRef.current?.select(), 0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const dimmed = sectionDraft || visibility === 'hidden';
 
   const closeMenu = useCallback(() => setMenuPos(null), []);
@@ -236,6 +276,7 @@ export default function LessonRow({ lesson, selected, onClick, onRenamed, sectio
 
   async function commitRename() {
     setEditing(false);
+    onAutoEditDone?.();
     const trimmed = draftTitle.trim();
     if (!trimmed || trimmed === lesson.title) return;
     await updateLesson(lesson.id, { title: trimmed });
@@ -258,18 +299,40 @@ export default function LessonRow({ lesson, selected, onClick, onRenamed, sectio
     setTogglingVisibility(true);
     const next: 'visible' | 'hidden' = visibility === 'visible' ? 'hidden' : 'visible';
     const ok = await setLessonVisibility(lesson.id, next);
-    if (ok) setVisibility(next);
+    if (ok) {
+      setVisibility(next);
+      onVisibilityChange?.(lesson.id, next);
+    }
     setTogglingVisibility(false);
     setVisibilityOpen(false);
   }
 
+  async function handleConfirmDelete() {
+    setDeleting(true);
+    const ok = await deleteLesson(lesson.id);
+    if (ok) onDeleted?.(lesson.id);
+    setDeleting(false);
+    setDeleteOpen(false);
+  }
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.35 : 1,
+  };
+
   return (
     <>
       <Row
+        ref={setNodeRef}
+        style={sortableStyle}
         $selected={selected}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
+        title="Arrastar para reordenar"
+        {...attributes}
+        {...listeners}
       >
         <TypeIcon $selected={selected} $dimmed={dimmed}>
           <Icon name={lessonIcon(lesson.contentType)} size={15} />
@@ -328,6 +391,11 @@ export default function LessonRow({ lesson, selected, onClick, onRenamed, sectio
               <Icon name={visibility === 'visible' ? 'visibility_off' : 'publish'} size={13} />
               {visibility === 'visible' ? 'Mover para rascunho' : 'Publicar aula'}
             </MenuItem>
+            <MenuDivider />
+            <MenuItemDanger onClick={() => { closeMenu(); setDeleteOpen(true); }}>
+              <Icon name="delete" size={13} />
+              Excluir aula
+            </MenuItemDanger>
           </ContextMenu>
         </ContextMenuWrap>,
         document.body,
@@ -351,6 +419,22 @@ export default function LessonRow({ lesson, selected, onClick, onRenamed, sectio
             {togglingVisibility
               ? 'Salvando...'
               : visibility === 'visible' ? 'Mover para rascunho' : 'Publicar'}
+          </Button>
+        </ModalFooter>
+      </Dialog>
+
+      <Dialog
+        open={deleteOpen}
+        onOpenChange={(o) => { if (!deleting) setDeleteOpen(o); }}
+        title="Excluir aula"
+        description={`"${lesson.title}" será removida permanentemente.`}
+      >
+        <ModalFooter>
+          <DialogClose asChild>
+            <Button size="sm" variant="outline" disabled={deleting}>Cancelar</Button>
+          </DialogClose>
+          <Button size="sm" variant="destructive" disabled={deleting} onClick={handleConfirmDelete}>
+            {deleting ? 'Excluindo...' : 'Excluir'}
           </Button>
         </ModalFooter>
       </Dialog>

@@ -74,6 +74,7 @@ export default function AulasPage({ params }: AulasPageProps) {
   const [sections, dispatch] = useReducer(reducer, []);
   const [loading, setLoading] = useState(true);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [autoEditLessonId, setAutoEditLessonId] = useState<string | null>(null);
 
   const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -98,6 +99,7 @@ export default function AulasPage({ params }: AulasPageProps) {
     if (lesson) {
       dispatch({ type: 'ADD_LESSON', moduleId, lesson });
       setSelectedLessonId(lesson.id);
+      setAutoEditLessonId(lesson.id);
     }
   }, []);
 
@@ -120,9 +122,12 @@ export default function AulasPage({ params }: AulasPageProps) {
       courseId={courseId}
       sections={sections}
       selectedLessonId={selectedLessonId}
+      autoEditLessonId={autoEditLessonId}
       onSelectLesson={setSelectedLessonId}
       onAddLesson={handleAddLesson}
+      onLessonDeleted={handleLessonDeleted}
       onSectionsChange={(updated) => dispatch({ type: 'SET_SECTIONS', payload: updated })}
+      onLessonAutoEditDone={() => setAutoEditLessonId(null)}
     />
   );
 

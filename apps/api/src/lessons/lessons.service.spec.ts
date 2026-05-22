@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  UnprocessableEntityException, ServiceUnavailableException, NotFoundException,
+  UnprocessableEntityException, ServiceUnavailableException, NotFoundException, ForbiddenException,
 } from '@nestjs/common';
 import { LessonsService } from './lessons.service';
 
@@ -14,6 +14,7 @@ const makeRepo = (overrides = {}) => ({
   nextPosition: vi.fn().mockResolvedValue(1),
   updatePosition: vi.fn().mockResolvedValue(undefined),
   findAllIdsByModule: vi.fn().mockResolvedValue([]),
+  moveToModule: vi.fn().mockResolvedValue({ id: 'lesson-1', moduleId: 'module-2', position: 1 }),
   ...overrides,
 });
 
@@ -188,6 +189,61 @@ describe('LessonsService', () => {
       service = new LessonsService(repo as never, modulesRepo as never, coursesRepo as never, makeYoutube() as never);
 
       await expect(service.assertLessonOwnership('lesson-1', 'user-1', 'instructor')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('move', () => {
+    it('chama moveToModule com os argumentos corretos (cross-module)', async () => {
+      const lesson = { id: 'lesson-1', moduleId: 'module-1' };
+      const repo = makeRepo({ findById: vi.fn().mockResolvedValue(lesson) });
+      const modulesRepo = {
+        findById: vi.fn().mockResolvedValue({ id: 'module-1', courseId: 'course-1' }),
+      };
+      service = new LessonsService(repo as never, modulesRepo as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      await service.move('lesson-1', { moduleId: 'module-2', position: 1 }, 'user-1', 'instrutor');
+
+      expect(repo.moveToModule).toHaveBeenCalledWith('lesson-1', 'module-1', 'module-2', 1);
+    });
+
+    it('lança NotFoundException quando aula não existe', async () => {
+      await expect(
+        service.move('missing', { moduleId: 'module-2', position: 1 }, 'user-1', 'instrutor'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('lança ForbiddenException quando instrutor não tem ownership da aula', async () => {
+      const lesson = { id: 'lesson-1', moduleId: 'module-1' };
+      const repo = makeRepo({ findById: vi.fn().mockResolvedValue(lesson) });
+      const modulesRepo = { findById: vi.fn().mockResolvedValue({ id: 'module-1', courseId: 'course-1' }) };
+      const coursesRepo = { findById: vi.fn().mockResolvedValue({ id: 'course-1', instructorId: 'outro-user' }) };
+      service = new LessonsService(repo as never, modulesRepo as never, coursesRepo as never, makeYoutube() as never);
+
+      await expect(
+        service.move('lesson-1', { moduleId: 'module-2', position: 1 }, 'user-1', 'instrutor'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('lança ForbiddenException quando instrutor não tem ownership do módulo destino', async () => {
+      const lesson = { id: 'lesson-1', moduleId: 'module-1' };
+      const repo = makeRepo({ findById: vi.fn().mockResolvedValue(lesson) });
+      // module-1 → course-1 → user-1 (owner)
+      // module-2 → course-2 → outro-user (not owner)
+      const modulesRepo = {
+        findById: vi.fn()
+          .mockResolvedValueOnce({ id: 'module-1', courseId: 'course-1' })
+          .mockResolvedValueOnce({ id: 'module-2', courseId: 'course-2' }),
+      };
+      const coursesRepo = {
+        findById: vi.fn()
+          .mockResolvedValueOnce({ id: 'course-1', instructorId: 'user-1' })
+          .mockResolvedValueOnce({ id: 'course-2', instructorId: 'outro-user' }),
+      };
+      service = new LessonsService(repo as never, modulesRepo as never, coursesRepo as never, makeYoutube() as never);
+
+      await expect(
+        service.move('lesson-1', { moduleId: 'module-2', position: 1 }, 'user-1', 'instrutor'),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 

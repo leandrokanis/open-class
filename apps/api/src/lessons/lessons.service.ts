@@ -7,6 +7,7 @@ import { CoursesRepository } from '../courses/courses.repository';
 import { YouTubeService } from '../youtube/youtube.service';
 import type { CreateLessonDto } from './dto/create-lesson.dto';
 import type { UpdateLessonDto } from './dto/update-lesson.dto';
+import type { MoveLessonDto } from './dto/move-lesson.dto';
 
 @Injectable()
 export class LessonsService {
@@ -78,6 +79,14 @@ export class LessonsService {
         ? { visibility: dto.isVisible ? 'visible' : 'hidden' }
         : {}),
     });
+  }
+
+  async move(id: string, dto: MoveLessonDto, userId: string, userRole: string) {
+    const lesson = await this.repo.findById(id);
+    if (!lesson) throw new NotFoundException('Aula não encontrada.');
+    await this.assertModuleOwnership(lesson.moduleId, userId, userRole);
+    await this.assertModuleOwnership(dto.moduleId, userId, userRole);
+    return this.repo.moveToModule(id, lesson.moduleId, dto.moduleId, dto.position);
   }
 
   async setVisibility(id: string, visibility: 'visible' | 'hidden', userId: string, userRole: string) {
