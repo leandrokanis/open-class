@@ -21,7 +21,7 @@ export class ProgressController {
 
   @Put('lessons/:lessonId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno)
+  @Roles(Role.Aluno, Role.Instrutor)
   @ApiOperation({ summary: 'Marcar aula como concluída / não concluída (aluno)' })
   @ApiResponse({ status: 200, description: 'Progresso atualizado.' })
   @ApiResponse({ status: 400, description: 'Corpo inválido.' })
@@ -38,7 +38,7 @@ export class ProgressController {
 
   @Get('courses/:courseId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno)
+  @Roles(Role.Aluno, Role.Instrutor)
   @ApiOperation({ summary: 'Percentual de conclusão do curso (aluno)' })
   @ApiResponse({ status: 200, description: 'Estatísticas de progresso do curso.' })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
@@ -53,7 +53,7 @@ export class ProgressController {
 
   @Get('courses/:courseId/lessons')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno)
+  @Roles(Role.Aluno, Role.Instrutor)
   @ApiOperation({ summary: 'IDs das aulas concluídas no curso (aluno)' })
   @ApiResponse({ status: 200, description: 'Lista de IDs de aulas concluídas.' })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
@@ -69,7 +69,7 @@ export class ProgressController {
 
   @Get('courses/:courseId/last-accessed')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno)
+  @Roles(Role.Aluno, Role.Instrutor)
   @ApiOperation({ summary: 'Última aula acessada no curso (aluno)' })
   @ApiResponse({ status: 200, description: 'Última aula acessada ou null.' })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
@@ -84,7 +84,7 @@ export class ProgressController {
 
   @Get('recent')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno)
+  @Roles(Role.Aluno, Role.Instrutor)
   @ApiOperation({ summary: 'Atividade recente do aluno — últimas N aulas acessadas' })
   @ApiQuery({ name: 'limit', required: false, example: 5, description: 'Número de itens (default 5, max 20)' })
   @ApiResponse({ status: 200, description: 'Lista de atividade recente.', type: [RecentActivityItemDto] })
