@@ -8,8 +8,8 @@ const Badge = styled.span<{ $published: boolean }>`
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  background: ${({ $published }) => ($published ? "#e6f7ee" : "#fff8e6")};
-  color: ${({ $published }) => ($published ? "#1a7340" : "#b45309")};
+  background: ${({ $published }) => ($published ? "rgba(34,197,94,0.12)" : "var(--color-surface-secondary)")};
+  color: ${({ $published }) => ($published ? "var(--color-success)" : "var(--color-text-secondary)")};
 `;
 
 interface StatusBadgeProps {

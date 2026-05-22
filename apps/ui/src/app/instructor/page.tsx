@@ -13,7 +13,7 @@ import styled from "styled-components";
 
 const Page = styled.div`
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--color-background);
 `;
 
 const Header = styled.div`
@@ -21,8 +21,8 @@ const Header = styled.div`
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  background: #ffffff;
-  border-bottom: 1px solid #f1f5f9;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 `;
 
 const HeaderLeft = styled.div``;
@@ -30,13 +30,13 @@ const HeaderLeft = styled.div``;
 const PageTitle = styled.h1`
   font-size: 22px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text-primary);
   margin-bottom: 4px;
 `;
 
 const Greeting = styled.p`
   font-size: 14px;
-  color: #64748b;
+  color: var(--color-text-secondary);
 `;
 
 const HeaderRight = styled.div`
@@ -47,9 +47,8 @@ const HeaderRight = styled.div`
 
 const DateLabel = styled.span`
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-text-secondary);
 `;
-
 
 const Content = styled.div`
   padding: 32px 40px;
@@ -78,7 +77,6 @@ function currentMonthLabel(): string {
   return new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 }
 
-
 export default async function InstructorOverviewPage() {
   const cookieHeader = (await headers()).get("cookie") ?? "";
   const [me, stats, coursesData] = await Promise.all([
@@ -96,8 +94,8 @@ export default async function InstructorOverviewPage() {
     <Page>
       <Header>
         <HeaderLeft>
-          <PageTitle>Visão Geral</PageTitle>
-          <Greeting>Bem-vindo(a) de volta, {me.name.split(" ")[0]} 👋</Greeting>
+          <PageTitle>Meus Cursos</PageTitle>
+          <Greeting>Bem-vindo(a) de volta, {me.name.split(" ")[0]}</Greeting>
         </HeaderLeft>
         <HeaderRight>
           <DateLabel>{monthLabel}</DateLabel>
@@ -108,26 +106,22 @@ export default async function InstructorOverviewPage() {
       <Content>
         <MetricsGrid>
           <MetricCard
-            icon="👥"
-            iconBg="#eff6ff"
+            icon="group"
             label="Total de Alunos"
             value={formatNumber(stats.totalStudents)}
           />
           <MetricCard
-            icon="📚"
-            iconBg="#f0fdf4"
+            icon="school"
             label="Cursos Publicados"
             value={String(stats.publishedCount)}
           />
           <MetricCard
-            icon="⭐"
-            iconBg="#fffbeb"
+            icon="star"
             label="Avaliação Média"
             value={formatRating(stats.avgRating)}
           />
           <MetricCard
-            icon="👁"
-            iconBg="#f0fdf4"
+            icon="trending_up"
             label="Novas Matrículas / Mês"
             value={formatNumber(stats.newEnrollmentsThisMonth)}
           />

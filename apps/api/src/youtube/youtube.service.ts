@@ -24,6 +24,10 @@ export class YouTubeService {
       if (parsed.hostname.includes('youtube.com') && parsed.pathname.startsWith('/embed/')) {
         return parsed.pathname.split('/embed/')[1] || null;
       }
+      // https://www.youtube.com/shorts/ID
+      if (parsed.hostname.includes('youtube.com') && parsed.pathname.startsWith('/shorts/')) {
+        return parsed.pathname.split('/shorts/')[1]?.split('?')[0] || null;
+      }
     } catch {
       return null;
     }
@@ -45,6 +49,10 @@ export class YouTubeService {
       throw new UnprocessableEntityException('URL do YouTube inválida ou em formato não reconhecido.');
     }
 
+    if (!this.apiKey) {
+      return { videoId, durationSeconds: null };
+    }
+
     const apiUrl =
       `https://www.googleapis.com/youtube/v3/videos` +
       `?part=contentDetails,status&id=${videoId}&key=${this.apiKey}`;
@@ -54,13 +62,11 @@ export class YouTubeService {
     try {
       const res = await fetch(apiUrl);
       if (!res.ok) {
-        throw new Error(`YouTube API returned ${res.status}`);
+        return { videoId, durationSeconds: null };
       }
       data = await res.json() as typeof data;
     } catch {
-      throw new ServiceUnavailableException(
-        'Não foi possível validar o vídeo do YouTube. Tente novamente em instantes.',
-      );
+      return { videoId, durationSeconds: null };
     }
 
     if (!data.items || data.items.length === 0) {

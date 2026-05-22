@@ -11,12 +11,12 @@ const EditorWrapper = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--color-background);
 `;
 
 const TopBar = styled.div`
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,13 +31,13 @@ const TabLink = styled(Link)<{ $active: boolean }>`
   padding: 16px 20px;
   font-size: 14px;
   font-weight: 500;
-  color: ${({ $active }) => ($active ? "#3b82f6" : "#64748b")};
+  color: ${({ $active }) => ($active ? "var(--color-primary)" : "var(--color-text-secondary)")};
   text-decoration: none;
-  border-bottom: 2px solid ${({ $active }) => ($active ? "#3b82f6" : "transparent")};
+  border-bottom: 2px solid ${({ $active }) => ($active ? "var(--color-primary)" : "transparent")};
   transition: color 0.15s, border-color 0.15s;
 
   &:hover {
-    color: #0f172a;
+    color: var(--color-text-primary);
   }
 `;
 
@@ -57,7 +57,7 @@ const SavedIndicator = styled.div`
   align-items: center;
   gap: 4px;
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-text-secondary);
   animation: ${fadeIn} 0.2s ease;
 `;
 
@@ -114,7 +114,7 @@ export default function CourseEditorLayout({ children }: CourseEditorLayoutProps
           <ActionButtons>
             {savedTime && (
               <SavedIndicator key={savedTime}>
-                <Icon name="check_circle" size={15} style={{ color: "#22c55e" }} />
+                <Icon name="check_circle" size={15} style={{ color: "var(--color-success)" }} />
                 Salvo às {savedTime}
               </SavedIndicator>
             )}

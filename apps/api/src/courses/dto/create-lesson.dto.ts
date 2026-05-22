@@ -28,9 +28,8 @@ export class CreateLessonDto {
   @IsIn(['video', 'text', 'quiz'])
   contentType?: 'video' | 'text' | 'quiz';
 
-  @ApiPropertyOptional({ example: 'https://www.youtube.com/watch?v=abc123' })
-  @ValidateIf((o: CreateLessonDto) => (o.contentType ?? 'video') === 'video')
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: 'https://youtu.be/abc123' })
+  @IsOptional()
   @IsUrl()
   youtubeUrl?: string;
 

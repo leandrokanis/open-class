@@ -1,66 +1,65 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 import styled from "styled-components";
+import { logout } from "@/lib/auth";
+import { Icon } from "@/components/ui/Icon";
+import { useSidebarSlot } from "@/components/instructor/SidebarSlotContext";
 
-const Sidebar = styled.aside`
-  width: 210px;
-  min-width: 210px;
+const Sidebar = styled.aside<{ $width: number }>`
+  width: ${({ $width }) => $width}px;
+  min-width: ${({ $width }) => $width}px;
   height: 100vh;
-  background: #1a1f2e;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
+  user-select: none;
 `;
 
-const Brand = styled.div`
-  padding: 24px 20px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-`;
+const ResizeHandle = styled.div`
+  position: absolute;
+  right: -3px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 10;
 
-const BrandLogo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 2px;
-`;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: transparent;
+    transition: background 0.15s;
+  }
 
-const LogoIcon = styled.div`
-  width: 32px;
-  height: 32px;
-  background: #3b82f6;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  color: white;
-  flex-shrink: 0;
-`;
-
-const BrandName = styled.span`
-  font-size: 15px;
-  font-weight: 700;
-  color: #ffffff;
-`;
-
-const BrandSub = styled.span`
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
-  margin-left: 42px;
+  &:hover::after {
+    background: var(--color-primary);
+  }
 `;
 
 const Nav = styled.nav`
-  flex: 1;
-  padding: 16px 12px;
+  padding: 24px 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex-shrink: 0;
+`;
+
+const PanelSlot = styled.div`
+  flex: 1;
   overflow-y: auto;
+  min-height: 0;
+  border-top: 1px solid var(--color-border);
 `;
 
 const NavLink = styled(Link)<{ $active?: boolean }>`
@@ -72,53 +71,66 @@ const NavLink = styled(Link)<{ $active?: boolean }>`
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
-  transition: background 0.15s;
-  color: ${({ $active }) => ($active ? "#ffffff" : "rgba(255,255,255,0.6)")};
-  background: ${({ $active }) => ($active ? "rgba(59,130,246,0.25)" : "transparent")};
+  transition: background 0.15s, color 0.15s;
+  color: ${({ $active }) => ($active ? "var(--color-text-primary)" : "var(--color-text-secondary)")};
+  background: ${({ $active }) => ($active ? "var(--color-primary-light)" : "transparent")};
 
   &:hover {
-    background: ${({ $active }) => ($active ? "rgba(59,130,246,0.25)" : "rgba(255,255,255,0.07)")};
-    color: #ffffff;
+    background: ${({ $active }) => ($active ? "var(--color-primary-light)" : "var(--color-surface-secondary)")};
+    color: var(--color-text-primary);
   }
 `;
 
-const NavIcon = styled.span`
-  font-size: 16px;
-  width: 18px;
-  text-align: center;
+const Footer = styled.div`
+  padding: 16px 12px;
+  border-top: 1px solid var(--color-border);
+  position: relative;
   flex-shrink: 0;
 `;
 
-const Footer = styled.div`
-  padding: 16px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+const AvatarButton = styled.button`
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--color-surface-secondary);
+  }
 `;
 
 const Avatar = styled.div`
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
-  color: white;
+  color: var(--color-text-on-primary);
   flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
 `;
 
 const UserInfo = styled.div`
   min-width: 0;
+  flex: 1;
+  text-align: left;
 `;
 
 const UserName = styled.div`
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -126,59 +138,153 @@ const UserName = styled.div`
 
 const UserRole = styled.div`
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--color-text-secondary);
+`;
+
+const Dropdown = styled.div<{ $open: boolean }>`
+  display: ${({ $open }) => ($open ? "flex" : "none")};
+  flex-direction: column;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 12px;
+  right: 12px;
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  z-index: 200;
+`;
+
+const DropdownItem = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 11px 16px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  transition: background 0.12s;
+
+  &:hover {
+    background: var(--color-surface-tertiary);
+  }
+`;
+
+const DropdownLogout = styled(DropdownItem)`
+  color: var(--color-destructive);
+  border-top: 1px solid var(--color-border);
 `;
 
 const navItems = [
-  { href: "/instructor", label: "Visão Geral", icon: "⊞" },
-  { href: "/instructor", label: "Meus Cursos", icon: "📚" },
-  { href: "/instructor/alunos", label: "Alunos", icon: "👥" },
-  { href: "/instructor/receitas", label: "Receitas", icon: "$" },
-  { href: "/instructor/configuracoes", label: "Configurações", icon: "⚙" },
+  { href: "/instructor",                label: "Meus Cursos",   icon: "school",   matchPrefix: ["/instructor/cursos"] },
+  { href: "/instructor/alunos",         label: "Alunos",        icon: "group",    matchPrefix: [] },
+  { href: "/instructor/configuracoes",  label: "Configurações", icon: "settings", matchPrefix: [] },
 ];
 
 interface InstructorSidebarProps {
   userName?: string;
   userRole?: string;
+  avatarUrl?: string;
 }
 
-export function InstructorSidebar({ userName = "Instrutor", userRole = "Instrutora" }: InstructorSidebarProps) {
+const MIN_WIDTH = 180;
+const MAX_WIDTH = 480;
+
+export function InstructorSidebar({ userName = "Instrutor", userRole = "Instrutor", avatarUrl }: InstructorSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [width, setWidth] = useState<number | null>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
+  const { registerTarget, hasPanel } = useSidebarSlot();
+
+  const defaultWidth = hasPanel ? 260 : 220;
+  const effectiveWidth = width ?? defaultWidth;
+
+  function handleResizeMouseDown(e: React.MouseEvent) {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = effectiveWidth;
+
+    function onMouseMove(ev: MouseEvent) {
+      const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + ev.clientX - startX));
+      setWidth(next);
+    }
+    function onMouseUp() {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = '';
+    }
+    document.body.style.cursor = 'col-resize';
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }
 
   const initial = userName.charAt(0).toUpperCase();
 
-  return (
-    <Sidebar>
-      <Brand>
-        <BrandLogo>
-          <LogoIcon>OC</LogoIcon>
-          <BrandName>Open Class</BrandName>
-        </BrandLogo>
-        <BrandSub>Painel do Instrutor</BrandSub>
-      </Brand>
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (footerRef.current && !footerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
+  async function handleLogout() {
+    await logout();
+    setOpen(false);
+    router.push("/");
+    router.refresh();
+  }
+
+  function isActive(item: typeof navItems[number]) {
+    if (item.href === "/instructor") {
+      return pathname === "/instructor" || item.matchPrefix.some((p) => pathname.startsWith(p));
+    }
+    return pathname.startsWith(item.href);
+  }
+
+  return (
+    <Sidebar $width={effectiveWidth} style={{ position: 'relative' }}>
+      <ResizeHandle onMouseDown={handleResizeMouseDown} />
       <Nav>
-        {navItems.map((item) => {
-          const isActive =
-            item.href === "/instructor"
-              ? pathname === "/instructor"
-              : pathname.startsWith(item.href);
-          return (
-            <NavLink key={item.label} href={item.href} $active={isActive}>
-              <NavIcon>{item.icon}</NavIcon>
-              {item.label}
-            </NavLink>
-          );
-        })}
+        {navItems.map((item) => (
+          <NavLink key={item.href} href={item.href} $active={isActive(item)}>
+            <Icon name={item.icon} size={18} />
+            {item.label}
+          </NavLink>
+        ))}
       </Nav>
 
-      <Footer>
-        <Avatar>{initial}</Avatar>
-        <UserInfo>
-          <UserName>{userName}</UserName>
-          <UserRole>{userRole}</UserRole>
-        </UserInfo>
+      <PanelSlot ref={registerTarget} />
+
+      <Footer ref={footerRef}>
+        <Dropdown $open={open}>
+          <DropdownItem onClick={() => { setOpen(false); router.push("/perfil"); }}>
+            Meu perfil
+          </DropdownItem>
+          <DropdownLogout onClick={handleLogout}>Sair</DropdownLogout>
+        </Dropdown>
+        <AvatarButton onClick={() => setOpen((v) => !v)} aria-label="Menu do usuário" aria-expanded={open}>
+          <Avatar>
+            {avatarUrl ? (
+              <Image src={avatarUrl} alt={userName} fill sizes="32px" style={{ objectFit: "cover" }} />
+            ) : (
+              initial
+            )}
+          </Avatar>
+          <UserInfo>
+            <UserName>{userName}</UserName>
+            <UserRole>{userRole}</UserRole>
+          </UserInfo>
+        </AvatarButton>
       </Footer>
     </Sidebar>
   );
+
 }

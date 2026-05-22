@@ -10,6 +10,8 @@ import { LessonsService } from './lessons.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { ReorderLessonsDto } from './dto/reorder-lessons.dto';
+import { VisibilityDto } from '../courses/dto/visibility.dto';
+import { MoveLessonDto } from './dto/move-lesson.dto';
 import {
   LessonResponseDto, LessonListResponseDto, LessonWithResourcesResponseDto,
 } from './dto/lesson-response.dto';
@@ -80,6 +82,43 @@ export class LessonsController {
     @Req() req: Request & { user: { id: string; role: string } },
   ) {
     const data = await this.service.update(id, dto, req.user.id, req.user.role);
+    return { data };
+  }
+
+  @Patch('lessons/:id/move')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Instrutor, Role.Admin)
+  @ApiCookieAuth('access_token')
+  @ApiBearerAuth()
+  @ApiParam({ name: 'id', description: 'ID da aula', type: String })
+  @ApiOperation({ summary: 'Mover aula para outro módulo (cross-section)' })
+  @ApiResponse({ status: 200, description: 'Aula movida.', type: LessonResponseDto })
+  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
+  @ApiResponse({ status: 403, description: 'Sem acesso ao curso.' })
+  @ApiResponse({ status: 404, description: 'Aula ou módulo não encontrado.' })
+  async move(
+    @Param('id') id: string,
+    @Body() dto: MoveLessonDto,
+    @Req() req: Request & { user: { id: string; role: string } },
+  ) {
+    const data = await this.service.move(id, dto, req.user.id, req.user.role);
+    return { data };
+  }
+
+  @Patch('lessons/:id/visibility')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Instrutor, Role.Admin)
+  @ApiCookieAuth('access_token')
+  @ApiBearerAuth()
+  @ApiParam({ name: 'id', description: 'ID da aula', type: String })
+  @ApiOperation({ summary: 'Alterar visibilidade da aula' })
+  @ApiResponse({ status: 200, description: 'Visibilidade atualizada.', type: LessonResponseDto })
+  async setVisibility(
+    @Param('id') id: string,
+    @Body() dto: VisibilityDto,
+    @Req() req: Request & { user: { id: string; role: string } },
+  ) {
+    const data = await this.service.setVisibility(id, dto.visibility, req.user.id, req.user.role);
     return { data };
   }
 

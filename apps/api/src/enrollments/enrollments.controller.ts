@@ -27,11 +27,11 @@ export class EnrollmentsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno)
+  @Roles(Role.Aluno, Role.Instrutor)
   @ApiOperation({ summary: 'Matricular-se em um curso (aluno)' })
   @ApiResponse({ status: 201, description: 'Matrícula criada.' })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
-  @ApiResponse({ status: 403, description: 'Papel insuficiente — somente alunos podem se matricular.' })
+  @ApiResponse({ status: 403, description: 'Papel insuficiente.' })
   enroll(
     @Req() req: Request & { user: AuthUser },
     @Body() body: EnrollDto,
@@ -41,7 +41,7 @@ export class EnrollmentsController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno, Role.Admin)
+  @Roles(Role.Aluno, Role.Instrutor, Role.Admin)
   @ApiOperation({ summary: 'Listar matrículas do aluno autenticado com progresso' })
   @ApiResponse({ status: 200, description: 'Lista de matrículas do aluno com progresso.', type: [EnrollmentWithProgressDto] })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })

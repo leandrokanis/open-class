@@ -1,109 +1,376 @@
 'use client';
 
+import { useState, useCallback, useEffect, useRef } from 'react';
 import styled from 'styled-components';
+import { toast } from 'sonner';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  type DragStartEvent,
+  type DragOverEvent,
+  type DragEndEvent,
+  type DragCancelEvent,
+} from '@dnd-kit/core';
+import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
-import { createModule } from '@/lib/instructor';
-import type { ModuleWithLessons } from '@/lib/instructor';
+import { Icon } from '@/components/ui/Icon';
+import { createModule, reorderModules, reorderLessons, moveLesson } from '@/lib/instructor';
+import type { ModuleWithLessons, LessonData } from '@/lib/instructor';
 import SectionRow from './SectionRow';
+import DragGhost from './DragGhost';
 
 const Panel = styled.div`
-  width: 260px;
-  flex-shrink: 0;
-  border-right: 1px solid #e2e8f0;
-  overflow-y: auto;
-  height: calc(100vh - 120px);
+  width: 100%;
   display: flex;
   flex-direction: column;
+  height: 100%;
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 12px 8px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 8px 8px 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
 `;
 
 const PanelTitle = styled.span`
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 `;
 
+const AddSectionBtn = styled(Button)`
+  padding: 2px 6px;
+  height: auto;
+  color: var(--color-text-secondary);
 
-const Sections = styled.div`
+  &:hover {
+    color: var(--color-text-primary);
+  }
+`;
+
+const Tree = styled.div`
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 8px 0;
-  gap: 2px;
+  overflow-y: auto;
+  padding: 4px 0;
 `;
 
-const Footer = styled.div`
-  padding: 12px;
-  border-top: 1px solid #f1f5f9;
+const EmptyHint = styled.div`
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
 `;
 
+type ActiveItem =
+  | { kind: 'section'; data: ModuleWithLessons }
+  | { kind: 'lesson'; data: LessonData };
 
 interface CurriculumPanelProps {
   courseId: string;
   sections: ModuleWithLessons[];
   selectedLessonId: string | null;
+  autoEditLessonId?: string | null;
   onSelectLesson: (id: string) => void;
   onAddLesson: (moduleId: string) => void;
+  onLessonDeleted?: (lessonId: string) => void;
   onSectionsChange: (sections: ModuleWithLessons[]) => void;
+  onLessonAutoEditDone?: () => void;
 }
 
 export default function CurriculumPanel({
   courseId,
-  sections,
+  sections: sectionsProp,
   selectedLessonId,
+  autoEditLessonId,
   onSelectLesson,
   onAddLesson,
+  onLessonDeleted,
   onSectionsChange,
+  onLessonAutoEditDone,
 }: CurriculumPanelProps) {
+  const [autoEditId, setAutoEditId] = useState<string | null>(null);
+  const [sections, setSections] = useState<ModuleWithLessons[]>(sectionsProp);
+  const [activeItem, setActiveItem] = useState<ActiveItem | null>(null);
+  const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(null);
+  const snapshotRef = useRef<ModuleWithLessons[]>([]);
+  // Capture source sectionId at drag start — active.data.current mutates on re-renders
+  const sourceSectionRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setSections(sectionsProp);
+  }, [sectionsProp]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
+
   async function handleAddSection() {
     const created = await createModule(courseId, 'Nova Seção');
     if (created) {
-      onSectionsChange([...sections, created]);
+      const next = [...sections, created];
+      setSections(next);
+      onSectionsChange(next);
+      setAutoEditId(created.id);
     }
   }
 
   function handleSectionDeleted(moduleId: string) {
-    onSectionsChange(sections.filter((s) => s.id !== moduleId));
+    const next = sections.filter((s) => s.id !== moduleId);
+    setSections(next);
+    onSectionsChange(next);
   }
 
   function handleSectionRenamed(moduleId: string, title: string) {
-    onSectionsChange(
-      sections.map((s) => (s.id === moduleId ? { ...s, title } : s)),
-    );
+    if (autoEditId === moduleId) setAutoEditId(null);
+    const next = sections.map((s) => (s.id === moduleId ? { ...s, title } : s));
+    setSections(next);
+    onSectionsChange(next);
   }
+
+  function handleLessonRenamed(lessonId: string, title: string) {
+    const next = sections.map((s) => ({
+      ...s,
+      lessons: (s.lessons ?? []).map((l) => (l.id === lessonId ? { ...l, title } : l)),
+    }));
+    setSections(next);
+    onSectionsChange(next);
+  }
+
+  function handleLessonDeleted(lessonId: string) {
+    const next = sections.map((s) => ({
+      ...s,
+      lessons: (s.lessons ?? []).filter((l) => l.id !== lessonId),
+    }));
+    setSections(next);
+    onSectionsChange(next);
+    onLessonDeleted?.(lessonId);
+  }
+
+  function handleLessonVisibilityChange(lessonId: string, visibility: 'visible' | 'hidden') {
+    const next = sections.map((s) => ({
+      ...s,
+      lessons: (s.lessons ?? []).map((l) => (l.id === lessonId ? { ...l, visibility } : l)),
+    }));
+    setSections(next);
+    onSectionsChange(next);
+  }
+
+  // ── DnD handlers ──────────────────────────────────────────────────────────
+
+  function handleDragStart(event: DragStartEvent) {
+    document.body.style.cursor = 'grabbing';
+    snapshotRef.current = sections;
+
+    const { active } = event;
+    const kind = active.data.current?.kind as 'section' | 'lesson';
+    sourceSectionRef.current = kind === 'lesson' ? (active.data.current?.sectionId ?? null) : null;
+
+    if (kind === 'section') {
+      const data = sections.find((s) => s.id === active.id);
+      if (data) setActiveItem({ kind: 'section', data });
+    } else {
+      const data = sections.flatMap((s) => s.lessons ?? []).find((l) => l.id === active.id);
+      if (data) setActiveItem({ kind: 'lesson', data });
+    }
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { active, over } = event;
+    const kind = active.data.current?.kind;
+
+    if (!over || kind !== 'lesson') {
+      setDragOverSectionId(null);
+      return;
+    }
+
+    const activeSectionId = active.data.current?.sectionId as string;
+    const overKind = over.data.current?.kind;
+    const overSectionId = overKind === 'lesson'
+      ? (over.data.current?.sectionId as string)
+      : (over.id as string);
+
+    setDragOverSectionId(overSectionId ?? null);
+
+    if (!overSectionId) return;
+
+    if (activeSectionId === overSectionId) {
+      // Same section: keep state in sync so handleDragEnd reads correct order
+      if (overKind !== 'lesson' || over.id === active.id) return;
+      setSections((prev) =>
+        prev.map((s) => {
+          if (s.id !== activeSectionId) return s;
+          const lessons = s.lessons ?? [];
+          const oldIdx = lessons.findIndex((l) => l.id === active.id);
+          const newIdx = lessons.findIndex((l) => l.id === over.id);
+          if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return s;
+          return { ...s, lessons: arrayMove(lessons, oldIdx, newIdx) };
+        }),
+      );
+      return;
+    }
+
+    // Cross-section: move lesson to target, inserting at correct position
+    setSections((prev) => {
+      const lesson = prev.flatMap((s) => s.lessons ?? []).find((l) => l.id === active.id);
+      if (!lesson) return prev;
+      return prev.map((s) => {
+        if (s.id === activeSectionId) return { ...s, lessons: (s.lessons ?? []).filter((l) => l.id !== active.id) };
+        if (s.id === overSectionId) {
+          const targetLessons = (s.lessons ?? []).filter((l) => l.id !== active.id);
+          if (overKind === 'lesson') {
+            const overIdx = targetLessons.findIndex((l) => l.id === over.id);
+            if (overIdx >= 0) {
+              const next = [...targetLessons];
+              next.splice(overIdx, 0, lesson);
+              return { ...s, lessons: next };
+            }
+          }
+          return { ...s, lessons: [...targetLessons, lesson] };
+        }
+        return s;
+      });
+    });
+  }
+
+  function handleDragCancel(_event: DragCancelEvent) {
+    document.body.style.cursor = '';
+    setActiveItem(null);
+    setDragOverSectionId(null);
+    setSections(snapshotRef.current);
+    sourceSectionRef.current = null;
+  }
+
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    document.body.style.cursor = '';
+    setDragOverSectionId(null);
+    const { active, over } = event;
+    setActiveItem(null);
+
+    if (!over || active.id === over.id) {
+      sourceSectionRef.current = null;
+      return;
+    }
+
+    const kind = active.data.current?.kind as 'section' | 'lesson';
+
+    if (kind === 'section') {
+      const oldIndex = sections.findIndex((s) => s.id === active.id);
+      // over might be a lesson inside an open section — resolve to its parent section
+      const targetSectionId = over.data.current?.kind === 'lesson'
+        ? (over.data.current?.sectionId as string)
+        : (over.id as string);
+      const newIndex = sections.findIndex((s) => s.id === targetSectionId);
+      if (oldIndex === newIndex || newIndex === -1) return;
+
+      const reordered = arrayMove(sections, oldIndex, newIndex);
+      setSections(reordered);
+      onSectionsChange(reordered);
+
+      const ok = await reorderModules(courseId, reordered.map((s) => s.id));
+      if (!ok) {
+        setSections(snapshotRef.current);
+        onSectionsChange(snapshotRef.current);
+        toast.error('Erro ao salvar ordem das seções. Tente novamente.');
+      }
+      return;
+    }
+
+    // lesson — state already fully updated by handleDragOver (both same & cross section)
+    const sourceSectionId = sourceSectionRef.current as string;
+    sourceSectionRef.current = null;
+
+    // Find which section now holds the lesson (may have changed cross-section)
+    const currentSection = sections.find((s) => (s.lessons ?? []).some((l) => l.id === active.id));
+    if (!currentSection) return;
+
+    const lessons = currentSection.lessons ?? [];
+    const position = lessons.findIndex((l) => l.id === active.id);
+    const finalPosition = position >= 0 ? position + 1 : lessons.length;
+
+    onSectionsChange(sections);
+
+    if (sourceSectionId === currentSection.id) {
+      const ok = await reorderLessons(currentSection.id, lessons.map((l) => l.id));
+      if (!ok) {
+        setSections(snapshotRef.current);
+        onSectionsChange(snapshotRef.current);
+        toast.error('Erro ao salvar ordem das aulas. Tente novamente.');
+      }
+    } else {
+      const result = await moveLesson(active.id as string, currentSection.id, finalPosition);
+      if (!result) {
+        setSections(snapshotRef.current);
+        onSectionsChange(snapshotRef.current);
+        toast.error('Erro ao mover aula. Tente novamente.');
+      }
+    }
+  }, [sections, courseId, onSectionsChange]);
+
+  const sectionIds = sections.map((s) => s.id);
 
   return (
     <Panel>
       <Header>
         <PanelTitle>Currículo</PanelTitle>
-        <Button size="sm" variant="outline" onClick={handleAddSection}>+ Seção</Button>
+        <AddSectionBtn size="sm" variant="ghost" onClick={handleAddSection} title="Nova seção">
+          <Icon name="add" size={16} />
+        </AddSectionBtn>
       </Header>
-      <Sections>
-        {sections.map((section) => (
-          <SectionRow
-            key={section.id}
-            courseId={courseId}
-            section={section}
-            selectedLessonId={selectedLessonId}
-            onSelectLesson={onSelectLesson}
-            onAddLesson={onAddLesson}
-            onDeleted={handleSectionDeleted}
-            onRenamed={handleSectionRenamed}
-          />
-        ))}
-      </Sections>
-      <Footer>
-        <Button size="sm" variant="outline" onClick={handleAddSection} style={{ width: '100%' }}>+ Adicionar seção</Button>
-      </Footer>
+
+      <Tree>
+        {sections.length === 0 ? (
+          <EmptyHint>
+            Nenhuma seção ainda.<br />
+            Clique em <Icon name="add" size={12} style={{ verticalAlign: 'middle' }} /> para criar.
+          </EmptyHint>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
+              {sections.map((section) => (
+                <SectionRow
+                  key={section.id}
+                  courseId={courseId}
+                  section={section}
+                  selectedLessonId={selectedLessonId}
+                  onSelectLesson={onSelectLesson}
+                  onAddLesson={onAddLesson}
+                  onDeleted={handleSectionDeleted}
+                  onRenamed={handleSectionRenamed}
+                  onLessonRenamed={handleLessonRenamed}
+                  onLessonDeleted={handleLessonDeleted}
+                  onLessonVisibilityChange={handleLessonVisibilityChange}
+                  onLessonAutoEditDone={onLessonAutoEditDone}
+                  autoEditLessonId={autoEditLessonId}
+                  dragOver={section.id === dragOverSectionId}
+                  autoEdit={section.id === autoEditId}
+                />
+              ))}
+            </SortableContext>
+            <DragOverlay dropAnimation={null}>
+              {activeItem && (
+                <DragGhost kind={activeItem.kind} data={activeItem.data} />
+              )}
+            </DragOverlay>
+          </DndContext>
+        )}
+      </Tree>
     </Panel>
   );
 }

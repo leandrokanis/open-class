@@ -7,6 +7,7 @@ import { CoursesRepository } from '../courses/courses.repository';
 import { YouTubeService } from '../youtube/youtube.service';
 import type { CreateLessonDto } from './dto/create-lesson.dto';
 import type { UpdateLessonDto } from './dto/update-lesson.dto';
+import type { MoveLessonDto } from './dto/move-lesson.dto';
 
 @Injectable()
 export class LessonsService {
@@ -19,17 +20,23 @@ export class LessonsService {
 
   async create(moduleId: string, dto: CreateLessonDto, userId: string, userRole: string) {
     await this.assertModuleOwnership(moduleId, userId, userRole);
-    const { videoId, durationSeconds } = await this.youtube.validateAndFetchInfo(dto.youtubeUrl);
+    let videoId: string | null = null;
+    let durationSeconds: number | null = null;
+    if (dto.youtubeUrl) {
+      const info = await this.youtube.validateAndFetchInfo(dto.youtubeUrl);
+      videoId = info.videoId;
+      durationSeconds = info.durationSeconds;
+    }
     const position = await this.repo.nextPosition(moduleId);
     return this.repo.insert({
       moduleId,
       title: dto.title,
       description: dto.description,
-      youtubeUrl: dto.youtubeUrl,
+      youtubeUrl: dto.youtubeUrl ?? null,
       youtubeVideoId: videoId,
       duration: durationSeconds,
       position,
-      visibility: (dto.isVisible ?? true) ? 'visible' : 'hidden',
+      visibility: 'hidden',
     });
   }
 
@@ -59,7 +66,10 @@ export class LessonsService {
     if (dto.youtubeUrl && dto.youtubeUrl !== lesson.youtubeUrl) {
       const info = await this.youtube.validateAndFetchInfo(dto.youtubeUrl);
       youtubeVideoId = info.videoId;
-      duration = info.durationSeconds;
+      // dto.duration > 0 means client explicitly set it; 0 means not yet loaded → use YouTube
+      duration = (dto.duration !== undefined && dto.duration > 0) ? dto.duration : info.durationSeconds;
+    } else if (dto.duration !== undefined) {
+      duration = dto.duration;
     }
 
     return this.repo.update(id, {
@@ -72,6 +82,21 @@ export class LessonsService {
         ? { visibility: dto.isVisible ? 'visible' : 'hidden' }
         : {}),
     });
+  }
+
+  async move(id: string, dto: MoveLessonDto, userId: string, userRole: string) {
+    const lesson = await this.repo.findById(id);
+    if (!lesson) throw new NotFoundException('Aula não encontrada.');
+    await this.assertModuleOwnership(lesson.moduleId, userId, userRole);
+    await this.assertModuleOwnership(dto.moduleId, userId, userRole);
+    return this.repo.moveToModule(id, lesson.moduleId, dto.moduleId, dto.position);
+  }
+
+  async setVisibility(id: string, visibility: 'visible' | 'hidden', userId: string, userRole: string) {
+    const lesson = await this.repo.findById(id);
+    if (!lesson) throw new NotFoundException('Aula não encontrada.');
+    await this.assertModuleOwnership(lesson.moduleId, userId, userRole);
+    return this.repo.update(id, { visibility });
   }
 
   async delete(id: string, userId: string, userRole: string) {
