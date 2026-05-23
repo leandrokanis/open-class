@@ -111,40 +111,40 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* --- Colors (dark overrides) --- */
-  --color-primary: #3b82f6;
-  --color-primary-light: #1e3a5f;
-  --color-background: #0f172a;
-  --color-surface: #1e293b;
-  --color-surface-secondary: #1e293b;
-  --color-surface-tertiary: #334155;
-  --color-surface-raised: #475569;
-  --color-border: #334155;
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-text-tertiary: #64748b;
-  --color-text-on-primary: #ffffff;
-  --color-text-on-dark: rgba(255, 255, 255, 0.85);
+  /* --- Colors (nocturnal amber palette) --- */
+  --color-primary:           #E8A045;
+  --color-primary-light:     rgba(232, 160, 69, 0.12);
+  --color-background:        #0A0A0F;
+  --color-surface:           #111118;
+  --color-surface-secondary: #18181F;
+  --color-surface-tertiary:  #1E1E28;
+  --color-surface-raised:    #2A2A38;
+  --color-border:            #2A2A38;
+  --color-text-primary:      #EEEEF4;
+  --color-text-secondary:    #7878A0;
+  --color-text-tertiary:     #484868;
+  --color-text-on-primary:   #0A0A0F;
+  --color-text-on-dark:      rgba(255, 255, 255, 0.85);
   --color-text-faint-on-dark: rgba(255, 255, 255, 0.6);
-  --color-star: #f59e0b;
-  --color-success: #22c55e;
-  --color-destructive: #f87171;
+  --color-star:              #f59e0b;
+  --color-success:           #22c55e;
+  --color-destructive:       #f87171;
   --color-destructive-foreground: #ffffff;
 
   /* --- shadcn/ui dark mapping --- */
-  --background: #0f172a;
-  --foreground: #f1f5f9;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --secondary: #334155;
-  --secondary-foreground: #f1f5f9;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --border: #334155;
-  --input: #334155;
-  --ring: #3b82f6;
-  --card: #1e293b;
-  --card-foreground: #f1f5f9;
-  --destructive: #f87171;
+  --background:          #0A0A0F;
+  --foreground:          #EEEEF4;
+  --primary:             #E8A045;
+  --primary-foreground:  #0A0A0F;
+  --secondary:           #1E1E28;
+  --secondary-foreground: #EEEEF4;
+  --muted:               #18181F;
+  --muted-foreground:    #7878A0;
+  --border:              #2A2A38;
+  --input:               #1E1E28;
+  --ring:                #E8A045;
+  --card:                #111118;
+  --card-foreground:     #EEEEF4;
+  --destructive:         #f87171;
   --destructive-foreground: #ffffff;
 }

@@ -1,12 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { logout } from "@/lib/auth";
-import { Icon } from "@/components/ui/Icon";
 import { useSidebarSlot } from "@/components/instructor/SidebarSlotContext";
 
 const Sidebar = styled.aside<{ $width: number }>`
@@ -47,38 +45,10 @@ const ResizeHandle = styled.div`
   }
 `;
 
-const Nav = styled.nav`
-  padding: 24px 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex-shrink: 0;
-`;
-
 const PanelSlot = styled.div`
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  border-top: 1px solid var(--color-border);
-`;
-
-const NavLink = styled(Link)<{ $active?: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-  transition: background 0.15s, color 0.15s;
-  color: ${({ $active }) => ($active ? "var(--color-text-primary)" : "var(--color-text-secondary)")};
-  background: ${({ $active }) => ($active ? "var(--color-primary-light)" : "transparent")};
-
-  &:hover {
-    background: ${({ $active }) => ($active ? "var(--color-primary-light)" : "var(--color-surface-secondary)")};
-    color: var(--color-text-primary);
-  }
 `;
 
 const Footer = styled.div`
@@ -178,12 +148,6 @@ const DropdownLogout = styled(DropdownItem)`
   border-top: 1px solid var(--color-border);
 `;
 
-const navItems = [
-  { href: "/instructor",                label: "Meus Cursos",   icon: "school",   matchPrefix: ["/instructor/cursos"] },
-  { href: "/instructor/alunos",         label: "Alunos",        icon: "group",    matchPrefix: [] },
-  { href: "/instructor/configuracoes",  label: "Configurações", icon: "settings", matchPrefix: [] },
-];
-
 interface InstructorSidebarProps {
   userName?: string;
   userRole?: string;
@@ -194,15 +158,13 @@ const MIN_WIDTH = 180;
 const MAX_WIDTH = 480;
 
 export function InstructorSidebar({ userName = "Instrutor", userRole = "Instrutor", avatarUrl }: InstructorSidebarProps) {
-  const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [width, setWidth] = useState<number | null>(null);
   const footerRef = useRef<HTMLDivElement>(null);
-  const { registerTarget, hasPanel } = useSidebarSlot();
+  const { registerTarget } = useSidebarSlot();
 
-  const defaultWidth = hasPanel ? 260 : 220;
-  const effectiveWidth = width ?? defaultWidth;
+  const effectiveWidth = width ?? 260;
 
   function handleResizeMouseDown(e: React.MouseEvent) {
     e.preventDefault();
@@ -242,24 +204,9 @@ export function InstructorSidebar({ userName = "Instrutor", userRole = "Instruto
     router.refresh();
   }
 
-  function isActive(item: typeof navItems[number]) {
-    if (item.href === "/instructor") {
-      return pathname === "/instructor" || item.matchPrefix.some((p) => pathname.startsWith(p));
-    }
-    return pathname.startsWith(item.href);
-  }
-
   return (
     <Sidebar $width={effectiveWidth} style={{ position: 'relative' }}>
       <ResizeHandle onMouseDown={handleResizeMouseDown} />
-      <Nav>
-        {navItems.map((item) => (
-          <NavLink key={item.href} href={item.href} $active={isActive(item)}>
-            <Icon name={item.icon} size={18} />
-            {item.label}
-          </NavLink>
-        ))}
-      </Nav>
 
       <PanelSlot ref={registerTarget} />
 
@@ -286,5 +233,4 @@ export function InstructorSidebar({ userName = "Instrutor", userRole = "Instruto
       </Footer>
     </Sidebar>
   );
-
 }

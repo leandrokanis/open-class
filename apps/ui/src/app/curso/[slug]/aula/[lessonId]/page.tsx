@@ -32,9 +32,12 @@ export default async function LessonPage({
 }) {
   const { slug, lessonId } = await params;
 
+  const cookieStore = await cookies();
+  const cookie = cookieStore.toString();
+
   const [course, lesson] = await Promise.all([
-    fetchCourseDetail(slug),
-    fetchLessonDetail(lessonId),
+    fetchCourseDetail(slug, cookie),
+    fetchLessonDetail(lessonId, cookie),
   ]);
 
   if (!course || !lesson) notFound();
