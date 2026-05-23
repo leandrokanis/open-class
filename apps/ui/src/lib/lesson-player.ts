@@ -31,8 +31,11 @@ export interface LessonProgress {
   totalLessons: number;
 }
 
-export async function fetchLessonDetail(lessonId: string): Promise<LessonDetail | null> {
-  const res = await fetch(`${API_URL}/api/lessons/${lessonId}`, { cache: "no-store" });
+export async function fetchLessonDetail(lessonId: string, cookie?: string): Promise<LessonDetail | null> {
+  const res = await fetch(`${API_URL}/api/lessons/${lessonId}`, {
+    cache: "no-store",
+    headers: cookie ? { Cookie: cookie } : {},
+  });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error("Failed to fetch lesson");
   const json = (await res.json()) as { data: LessonDetail };

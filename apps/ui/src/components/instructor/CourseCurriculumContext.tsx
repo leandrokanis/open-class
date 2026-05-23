@@ -14,6 +14,7 @@ import { createLesson } from '@/lib/instructor';
 import type { ModuleWithLessons, LessonData } from '@/lib/instructor';
 import CurriculumPanel from './CurriculumPanel';
 import { useSidebarSlot } from './SidebarSlotContext';
+import { CourseEditorContext } from '@/app/instructor/cursos/[id]/layout';
 
 // ── Reducer ───────────────────────────────────────────────────────────────────
 
@@ -89,6 +90,7 @@ export function CourseCurriculumProvider({ courseId, children }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const { target, setHasPanel } = useSidebarSlot();
+  const editorCtx = useContext(CourseEditorContext);
 
   const [sections, dispatch] = useReducer(reducer, []);
   const [loading, setLoading] = useState(true);
@@ -108,6 +110,7 @@ export function CourseCurriculumProvider({ courseId, children }: Props) {
       if (!res.ok) { setLoading(false); return; }
       const json = await res.json();
       dispatch({ type: 'SET_SECTIONS', payload: json.data.modules ?? [] });
+      if (json.data.slug) editorCtx?.setSlug(json.data.slug);
       setLoading(false);
     }
     load();
