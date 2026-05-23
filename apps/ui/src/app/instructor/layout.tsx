@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { fetchMe } from "@/lib/dashboard";
 import { InstructorSidebar } from "@/components/instructor/InstructorSidebar";
 import { SidebarSlotProvider } from "@/components/instructor/SidebarSlotContext";
+import { ActivityProvider } from "@/components/instructor/ActivityContext";
+import { ActivityBar } from "@/components/instructor/ActivityBar";
 import styled from "styled-components";
 
 const Wrapper = styled.div`
@@ -20,15 +22,6 @@ const Main = styled.main`
   flex-direction: column;
 `;
 
-const ContentInner = styled.div`
-  width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-`;
-
 export default async function InstructorLayout({
   children,
 }: {
@@ -40,14 +33,17 @@ export default async function InstructorLayout({
   if (!me) redirect("/login");
   if (me.role !== "instrutor" && me.role !== "admin") redirect("/");
 
+  const userInitial = (me.name ?? "?").charAt(0).toUpperCase();
+
   return (
-    <SidebarSlotProvider>
-      <Wrapper data-theme="dark">
-        <InstructorSidebar userName={me.name} userRole="Instrutor" avatarUrl={me.avatarUrl ?? undefined} />
-        <Main>
-          <ContentInner>{children}</ContentInner>
-        </Main>
-      </Wrapper>
-    </SidebarSlotProvider>
+    <ActivityProvider>
+      <SidebarSlotProvider>
+        <Wrapper data-theme="dark">
+          <ActivityBar userInitial={userInitial} />
+          <InstructorSidebar userName={me.name} userRole="Instrutor" avatarUrl={me.avatarUrl ?? undefined} />
+          <Main>{children}</Main>
+        </Wrapper>
+      </SidebarSlotProvider>
+    </ActivityProvider>
   );
 }

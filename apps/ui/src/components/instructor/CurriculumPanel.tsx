@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import styled from 'styled-components';
 import { toast } from 'sonner';
 import {
@@ -17,6 +19,7 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Icon } from '@/components/ui/Icon';
 import { createModule, reorderModules, reorderLessons, moveLesson } from '@/lib/instructor';
 import type { ModuleWithLessons, LessonData } from '@/lib/instructor';
@@ -28,6 +31,38 @@ const Panel = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
+`;
+
+const CourseTabs = styled.div`
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+`;
+
+const CourseTab = styled(Link)<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  color: ${({ $active }) => ($active ? 'var(--color-primary)' : 'var(--color-text-secondary)')};
+  background: ${({ $active }) => ($active ? 'var(--color-primary-light)' : 'transparent')};
+  border-left: 2px solid ${({ $active }) => ($active ? 'var(--color-primary)' : 'transparent')};
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: ${({ $active }) => ($active ? 'var(--color-primary-light)' : 'var(--color-surface-tertiary)')};
+    color: ${({ $active }) => ($active ? 'var(--color-primary)' : 'var(--color-text-primary)')};
+  }
+`;
+
+const SearchWrap = styled.div`
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
 `;
 
 const Header = styled.div`
@@ -98,9 +133,11 @@ export default function CurriculumPanel({
   onSectionsChange,
   onLessonAutoEditDone,
 }: CurriculumPanelProps) {
+  const pathname = usePathname();
   const [autoEditId, setAutoEditId] = useState<string | null>(null);
   const [sections, setSections] = useState<ModuleWithLessons[]>(sectionsProp);
   const [activeItem, setActiveItem] = useState<ActiveItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(null);
   const snapshotRef = useRef<ModuleWithLessons[]>([]);
   // Capture source sectionId at drag start — active.data.current mutates on re-renders
@@ -318,8 +355,46 @@ export default function CurriculumPanel({
 
   const sectionIds = sections.map((s) => s.id);
 
+  const q = searchQuery.toLowerCase().trim();
+  const filteredSections = q
+    ? sections.filter(
+        (s) =>
+          s.title.toLowerCase().includes(q) ||
+          (s.lessons ?? []).some((l) => l.title.toLowerCase().includes(q)),
+      )
+    : sections;
+
+  const basePath = `/instructor/cursos/${courseId}`;
+  const courseTabs = [
+    { href: basePath,                       label: 'Curso',          icon: 'info' },
+    { href: `${basePath}/configuracoes`,    label: 'Configurações',  icon: 'tune' },
+    { href: `${basePath}/alunos`,           label: 'Alunos',         icon: 'group' },
+  ];
+
   return (
     <Panel>
+      <CourseTabs>
+        {courseTabs.map((tab) => (
+          <CourseTab
+            key={tab.href}
+            href={tab.href}
+            $active={pathname === tab.href}
+          >
+            <Icon name={tab.icon} size={14} />
+            {tab.label}
+          </CourseTab>
+        ))}
+      </CourseTabs>
+
+      <SearchWrap>
+        <Input
+          placeholder="Buscar aulas..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ height: '32px', fontSize: '12px' }}
+        />
+      </SearchWrap>
+
       <Header>
         <PanelTitle>Currículo</PanelTitle>
         <AddSectionBtn size="sm" variant="ghost" onClick={handleAddSection} title="Nova seção">
@@ -328,10 +403,9 @@ export default function CurriculumPanel({
       </Header>
 
       <Tree>
-        {sections.length === 0 ? (
+        {filteredSections.length === 0 ? (
           <EmptyHint>
-            Nenhuma seção ainda.<br />
-            Clique em <Icon name="add" size={12} style={{ verticalAlign: 'middle' }} /> para criar.
+            {q ? 'Nenhuma aula encontrada.' : (<>Nenhuma seção ainda.<br />Clique em <Icon name="add" size={12} style={{ verticalAlign: 'middle' }} /> para criar.</>)}
           </EmptyHint>
         ) : (
           <DndContext
@@ -343,7 +417,7 @@ export default function CurriculumPanel({
             onDragCancel={handleDragCancel}
           >
             <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
-              {sections.map((section) => (
+              {filteredSections.map((section) => (
                 <SectionRow
                   key={section.id}
                   courseId={courseId}

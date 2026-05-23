@@ -1,29 +1,71 @@
 'use client';
 
 import { useState, useEffect, useRef, useContext } from 'react';
+import { createPortal } from 'react-dom';
 import styled from 'styled-components';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose } from '@/components/ui/dialog';
-import { Icon } from '@/components/ui/Icon';
-import { updateLesson, deleteLesson } from '@/lib/instructor';
+import { Input } from '@/components/ui/input';
+import { updateLesson } from '@/lib/instructor';
 import type { LessonData } from '@/lib/instructor';
 import { CourseEditorContext } from '@/app/instructor/cursos/[id]/layout';
-import YouTubePreview, { type VideoInfo } from './YouTubePreview';
-import ResourceList from './ResourceList';
+import { usePropertiesPanel } from '@/components/instructor/PropertiesPanelContext';
+import { EditorBreadcrumb } from './EditorBreadcrumb';
+import LessonSidePanel from './LessonSidePanel';
+import type { VideoInfo } from './YouTubePreview';
 
 const AUTOSAVE_DELAY = 1000;
 
-const Wrapper = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  padding: 32px;
+const EditorOuter = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  height: calc(100vh - 0px);
+  overflow: hidden;
+`;
+
+const ScrollArea = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 40px 48px;
+`;
+
+const TitleInput = styled(Input)`
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  width: 100%;
+  margin-bottom: 6px;
+
+  &:focus {
+    box-shadow: none;
+    border: none;
+    outline: none;
+  }
+
+  &::placeholder {
+    color: var(--color-text-tertiary);
+  }
+`;
+
+const Subtitle = styled.p`
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  margin-bottom: 32px;
+`;
+
+const DescLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 `;
 
 const EmptyState = styled.div`
@@ -31,54 +73,9 @@ const EmptyState = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   font-size: 14px;
-`;
-
-const Field = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const DurationRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const DurationInput = styled(Input)`
-  width: 80px;
-  text-align: center;
-`;
-
-const DurationLabel = styled.span`
-  font-size: 13px;
-  color: var(--color-text-secondary);
-`;
-
-const VisibilityRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--color-surface-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-`;
-
-const DangerZone = styled.div`
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  justify-content: flex-end;
-`;
-
-const ModalFooter = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 20px;
+  height: calc(100vh - 53px);
 `;
 
 function secondsToMinSec(seconds: number | null): { min: number; sec: number } {
@@ -86,14 +83,21 @@ function secondsToMinSec(seconds: number | null): { min: number; sec: number } {
   return { min: Math.floor(seconds / 60), sec: seconds % 60 };
 }
 
+function formatDuration(min: number, sec: number): string {
+  if (!min && !sec) return '';
+  return `${min} min ${sec.toString().padStart(2, '0')} seg`;
+}
+
 interface LessonEditorProps {
   lesson: LessonData;
+  sectionLabel?: string;
   onDeleted: (lessonId: string) => void;
   onUpdated: (lesson: LessonData) => void;
 }
 
-export default function LessonEditor({ lesson, onDeleted, onUpdated }: LessonEditorProps) {
+export default function LessonEditor({ lesson, sectionLabel = '', onDeleted, onUpdated }: LessonEditorProps) {
   const ctx = useContext(CourseEditorContext);
+  const { target: propertiesTarget, setHasPanel } = usePropertiesPanel();
 
   const initial = secondsToMinSec(lesson.duration);
   const [title, setTitle] = useState(lesson.title);
@@ -101,12 +105,14 @@ export default function LessonEditor({ lesson, onDeleted, onUpdated }: LessonEdi
   const [description, setDescription] = useState(lesson.description ?? '');
   const [durationMin, setDurationMin] = useState(initial.min);
   const [durationSec, setDurationSec] = useState(initial.sec);
-  const [visible, setVisible] = useState(lesson.visibility === 'visible');
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    setHasPanel(true);
+    return () => setHasPanel(false);
+  }, [setHasPanel]);
 
   useEffect(() => {
     isInitialMount.current = true;
@@ -116,7 +122,6 @@ export default function LessonEditor({ lesson, onDeleted, onUpdated }: LessonEdi
     setDescription(lesson.description ?? '');
     setDurationMin(d.min);
     setDurationSec(d.sec);
-    setVisible(lesson.visibility === 'visible');
   }, [lesson.id]);
 
   useEffect(() => {
@@ -158,127 +163,63 @@ export default function LessonEditor({ lesson, onDeleted, onUpdated }: LessonEdi
   }
 
   function handleDurationMinChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const v = Math.max(0, parseInt(e.target.value, 10) || 0);
-    setDurationMin(v);
+    setDurationMin(Math.max(0, parseInt(e.target.value, 10) || 0));
   }
 
   function handleDurationSecChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const v = Math.min(59, Math.max(0, parseInt(e.target.value, 10) || 0));
-    setDurationSec(v);
+    setDurationSec(Math.min(59, Math.max(0, parseInt(e.target.value, 10) || 0)));
   }
 
-  async function handleToggleVisible(checked: boolean) {
-    setVisible(checked);
-    const updated = await updateLesson(lesson.id, { isVisible: checked });
-    if (updated) {
-      onUpdated(updated);
-      ctx?.notifySaved();
-    }
-  }
+  const sidePanel = (
+    <LessonSidePanel
+      lesson={lesson}
+      youtubeUrl={youtubeUrl}
+      onYoutubeUrlChange={setYoutubeUrl}
+      durationMin={durationMin}
+      durationSec={durationSec}
+      onDurationMinChange={handleDurationMinChange}
+      onDurationSecChange={handleDurationSecChange}
+      onVideoInfo={handleVideoInfo}
+      onDeleted={onDeleted}
+      onUpdated={onUpdated}
+    />
+  );
 
-  async function handleConfirmDelete() {
-    setDeleting(true);
-    const ok = await deleteLesson(lesson.id);
-    if (ok) onDeleted(lesson.id);
-    setDeleting(false);
-    setDeleteOpen(false);
-  }
+  const durationStr = formatDuration(durationMin, durationSec);
 
   return (
-    <Wrapper>
-      <Field>
-        <Label htmlFor="lesson-title">Título da aula</Label>
-        <Input
-          id="lesson-title"
+    <EditorOuter>
+      <EditorBreadcrumb
+        sectionLabel={sectionLabel}
+        lessonTitle={title}
+        savedAt={ctx?.savedAt ?? null}
+        previewHref={ctx?.slug ? `/curso/${ctx.slug}/aula/${lesson.id}` : null}
+        visibility={lesson.visibility === 'visible' ? 'visible' : 'draft'}
+      />
+
+      <ScrollArea>
+        <TitleInput
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Título da aula"
         />
-      </Field>
+        {(sectionLabel || durationStr) && (
+          <Subtitle>
+            {[sectionLabel, durationStr].filter(Boolean).join(' · ')}
+          </Subtitle>
+        )}
 
-      <Field>
-        <Label htmlFor="lesson-youtube">Link do YouTube</Label>
-        <Input
-          id="lesson-youtube"
-          value={youtubeUrl}
-          onChange={(e) => setYoutubeUrl(e.target.value)}
-          placeholder="https://www.youtube.com/watch?v=..."
-          type="url"
-        />
-        <YouTubePreview url={youtubeUrl} onVideoInfo={handleVideoInfo} />
-      </Field>
-
-      <Field>
-        <Label>Duração da aula</Label>
-        <DurationRow>
-          <DurationInput
-            id="lesson-duration-min"
-            type="number"
-            min={0}
-            value={durationMin}
-            onChange={handleDurationMinChange}
-          />
-          <DurationLabel>min</DurationLabel>
-          <DurationInput
-            id="lesson-duration-sec"
-            type="number"
-            min={0}
-            max={59}
-            value={durationSec}
-            onChange={handleDurationSecChange}
-          />
-          <DurationLabel>seg</DurationLabel>
-        </DurationRow>
-      </Field>
-
-      <Field>
-        <Label htmlFor="lesson-description">Descrição (opcional)</Label>
+        <DescLabel>Descrição</DescLabel>
         <Textarea
           id="lesson-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Descreva o conteúdo desta aula..."
         />
-      </Field>
+      </ScrollArea>
 
-      <Field>
-        <Label>Recursos externos</Label>
-        <ResourceList lessonId={lesson.id} initialResources={lesson.resources} />
-      </Field>
-
-      <VisibilityRow>
-        <Label htmlFor="lesson-visible">Aula visível para os alunos</Label>
-        <Switch id="lesson-visible" checked={visible} onCheckedChange={handleToggleVisible} />
-      </VisibilityRow>
-
-      <DangerZone>
-        <Button
-          size="sm"
-          variant="outline"
-          style={{ color: 'var(--color-destructive)', borderColor: 'var(--color-destructive)' }}
-          onClick={() => setDeleteOpen(true)}
-        >
-          <Icon name="delete" size={14} />
-          Excluir aula
-        </Button>
-      </DangerZone>
-
-      <Dialog
-        open={deleteOpen}
-        onOpenChange={(o) => { if (!deleting) setDeleteOpen(o); }}
-        title="Excluir aula"
-        description={`"${lesson.title}" será removida permanentemente.`}
-      >
-        <ModalFooter>
-          <DialogClose asChild>
-            <Button size="sm" variant="outline" disabled={deleting}>Cancelar</Button>
-          </DialogClose>
-          <Button size="sm" variant="destructive" disabled={deleting} onClick={handleConfirmDelete}>
-            {deleting ? 'Excluindo...' : 'Excluir'}
-          </Button>
-        </ModalFooter>
-      </Dialog>
-    </Wrapper>
+      {propertiesTarget && createPortal(sidePanel, propertiesTarget)}
+    </EditorOuter>
   );
 }
 

@@ -10,18 +10,6 @@ const Wrapper = styled.div`
   gap: 8px;
 `;
 
-const BadgeValid = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-success);
-  background: rgba(34,197,94,0.12);
-  border: 1px solid rgba(34,197,94,0.3);
-  border-radius: 4px;
-  padding: 2px 8px;
-`;
 
 const BadgeInvalid = styled.span`
   display: inline-flex;
@@ -45,36 +33,37 @@ const BadgeLoading = styled.span`
 `;
 
 const Preview = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--color-surface-secondary);
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  padding: 12px;
+  overflow: hidden;
+  background: var(--color-surface-secondary);
+`;
+
+const ThumbnailWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
 `;
 
 const Thumbnail = styled.img`
-  width: 120px;
-  height: 68px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 4px;
-  flex-shrink: 0;
+  display: block;
 `;
 
 const ThumbnailSkeleton = styled.div`
-  width: 120px;
-  height: 68px;
-  border-radius: 4px;
-  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
   background: var(--color-surface-tertiary);
 `;
 
 const Info = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  overflow: hidden;
+  gap: 2px;
+  padding: 10px 12px;
 `;
 
 const VideoTitle = styled.span`
@@ -159,29 +148,25 @@ export default function YouTubePreview({ url, onVideoInfo }: YouTubePreviewProps
     <Wrapper>
       {loading ? (
         <>
-          <BadgeLoading>
-            <Icon name="sync" size={13} />
-            Carregando...
-          </BadgeLoading>
           <Preview>
-            <ThumbnailSkeleton />
+            <ThumbnailWrapper><ThumbnailSkeleton /></ThumbnailWrapper>
             <Info>
-              <ThumbnailSkeleton style={{ width: 160, height: 14, borderRadius: 3 }} />
-              <ThumbnailSkeleton style={{ width: 100, height: 12, borderRadius: 3, marginTop: 4 }} />
+              <ThumbnailSkeleton style={{ width: '60%', height: 13, borderRadius: 3 }} />
+              <ThumbnailSkeleton style={{ width: '35%', height: 11, borderRadius: 3, marginTop: 2 }} />
             </Info>
           </Preview>
+          <BadgeLoading><Icon name="sync" size={13} />Carregando...</BadgeLoading>
         </>
       ) : data ? (
-        <>
-          <BadgeValid><Icon name="check_circle" size={14} fill /> URL válida</BadgeValid>
-          <Preview>
+        <Preview>
+          <ThumbnailWrapper>
             <Thumbnail src={data.thumbnailUrl} alt={data.title} />
-            <Info>
-              <VideoTitle>{data.title}</VideoTitle>
-              <Channel>{data.authorName}</Channel>
-            </Info>
-          </Preview>
-        </>
+          </ThumbnailWrapper>
+          <Info>
+            <VideoTitle>{data.title}</VideoTitle>
+            <Channel>{data.authorName}</Channel>
+          </Info>
+        </Preview>
       ) : invalid ? (
         <BadgeInvalid><Icon name="cancel" size={14} fill /> URL inválida</BadgeInvalid>
       ) : null}
