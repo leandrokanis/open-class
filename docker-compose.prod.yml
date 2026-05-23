@@ -1,0 +1,67 @@
+name: open-class
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: openclass
+      POSTGRES_USER: openclass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openclass"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: leandrokanis/open-class-api:latest
+    ports:
+      - "41701:3001"
+    environment:
+      DATABASE_URL: postgresql://openclass:${POSTGRES_PASSWORD:?required}@db:5432/openclass
+      JWT_SECRET: ${JWT_SECRET:?required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-100y}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: https://api.picgama.online/auth/google/callback
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      FRONTEND_URL: https://picgama.online
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
+      APP_URL: https://api.picgama.online
+      NODE_ENV: production
+      COOKIE_SECURE: "true"
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+
+  ui:
+    image: leandrokanis/open-class-ui:latest
+    ports:
+      - "41700:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: https://api.picgama.online
+      API_INTERNAL_URL: http://api:3001
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:
