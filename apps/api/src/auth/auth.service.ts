@@ -9,7 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import type { Response } from 'express';
+import type { Response, CookieOptions } from 'express';
 import type { Profile } from 'passport-google-oauth20';
 import { UsersRepository } from '../users/users.repository';
 import { MailService } from '../mail/mail.service';
@@ -63,7 +63,7 @@ export class AuthService {
 
   issueToken(userId: string, email: string, role: string, res: Response): string {
     const token = this.jwtService.sign({ sub: userId, email, role });
-    const cookieOpts: Parameters<typeof res.cookie>[2] = {
+    const cookieOpts: CookieOptions = {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'lax',
