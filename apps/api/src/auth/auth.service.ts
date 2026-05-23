@@ -63,12 +63,14 @@ export class AuthService {
 
   issueToken(userId: string, email: string, role: string, res: Response): string {
     const token = this.jwtService.sign({ sub: userId, email, role });
-    res.cookie('access_token', token, {
+    const cookieOpts: Parameters<typeof res.cookie>[2] = {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'lax',
       maxAge: 100 * 365 * 24 * 60 * 60 * 1000,
-    });
+    };
+    if (process.env.COOKIE_DOMAIN) cookieOpts.domain = process.env.COOKIE_DOMAIN;
+    res.cookie('access_token', token, cookieOpts);
     return token;
   }
 

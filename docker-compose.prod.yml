@@ -26,7 +26,7 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-100y}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GOOGLE_CALLBACK_URL: https://api.picgama.online/auth/google/callback
+      GOOGLE_CALLBACK_URL: https://api.picgama.online/api/auth/google/callback
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
@@ -36,6 +36,7 @@ services:
       APP_URL: https://api.picgama.online
       NODE_ENV: production
       COOKIE_SECURE: "true"
+      COOKIE_DOMAIN: .picgama.online
       YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
     volumes:
       - uploads:/app/uploads
