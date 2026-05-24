@@ -162,6 +162,7 @@ export function CourseProgressSection({
   const { progress, completedIds } = status;
   const nextLesson = progress ? findNextLesson(modules, completedIds) : null;
   const isComplete = (progress?.percentage ?? 0) >= 100;
+  const firstLesson = modules.flatMap((m) => m.lessons)[0] ?? null;
 
   return (
     <Wrapper>
@@ -187,7 +188,11 @@ export function CourseProgressSection({
         Você está inscrito
       </EnrolledBadge>
 
-      <CtaButton onClick={() => router.push("/aprendizado")}>
+      <CtaButton onClick={() => {
+        const target = nextLesson ?? firstLesson;
+        if (target) router.push(`/curso/${course.slug}/aula/${target.id}`);
+        else router.push("/aprendizado");
+      }}>
         {isComplete ? "Rever curso" : nextLesson ? `Continuar — Aula ${nextLesson.number}` : "Ir para o curso"}
       </CtaButton>
     </Wrapper>

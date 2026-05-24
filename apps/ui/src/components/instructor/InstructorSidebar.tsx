@@ -215,6 +215,9 @@ export function InstructorSidebar({ userName = "Instrutor", userRole = "Instruto
           <DropdownItem onClick={() => { setOpen(false); router.push("/perfil"); }}>
             Meu perfil
           </DropdownItem>
+          <DropdownItem onClick={() => { setOpen(false); router.push("/aprendizado"); }}>
+            Meu aprendizado
+          </DropdownItem>
           <DropdownLogout onClick={handleLogout}>Sair</DropdownLogout>
         </Dropdown>
         <AvatarButton onClick={() => setOpen((v) => !v)} aria-label="Menu do usuário" aria-expanded={open}>

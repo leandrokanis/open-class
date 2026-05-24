@@ -208,8 +208,13 @@ export function EnrollmentModal({ course, modules, onClose }: EnrollmentModalPro
     setError(null);
     try {
       await enrollInCourse(course.id);
-      onClose();
-      router.refresh();
+      const firstLesson = modules.flatMap((m) => m.lessons)[0];
+      if (firstLesson) {
+        router.push(`/curso/${course.slug}/aula/${firstLesson.id}`);
+      } else {
+        onClose();
+        router.refresh();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao realizar inscrição. Tente novamente.");
       setLoading(false);

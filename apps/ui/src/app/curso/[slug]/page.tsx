@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import styled from "styled-components";
 import { fetchCourseDetail } from "@/lib/course-detail";
 import { AppHeader } from "@/components/catalog/AppHeader";
-import { MobileBottomNav } from "@/components/catalog/MobileBottomNav";
 import { CourseDetailHeader } from "@/components/course-detail/CourseDetailHeader";
 import { CourseHero } from "@/components/course-detail/CourseHero";
 import { CourseMeta } from "@/components/course-detail/CourseMeta";
@@ -205,7 +204,6 @@ export default async function CoursePage({
         <CourseContent modules={course.modules} completedLessonIds={[]} />
 
         <MobileBottomPad />
-        <MobileBottomNav />
       </MobileLayout>
 
       {/* ─── DESKTOP LAYOUT ─── */}
