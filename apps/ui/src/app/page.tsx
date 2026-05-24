@@ -2,7 +2,6 @@ import { fetchStats, fetchCategories, fetchCatalog } from "@/lib/catalog";
 import { AppHeader } from "@/components/catalog/AppHeader";
 import { HeroSection } from "@/components/catalog/HeroSection";
 import { CatalogClient } from "@/components/catalog/CatalogClient";
-import { MobileBottomNav } from "@/components/catalog/MobileBottomNav";
 
 export default async function Home({
   searchParams,
@@ -31,7 +30,6 @@ export default async function Home({
         initialPage={initialPage}
         initialCategoryId={matchedCategory?.id ?? null}
       />
-      <MobileBottomNav />
     </>
   );
 }

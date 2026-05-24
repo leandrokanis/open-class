@@ -10,7 +10,6 @@ import type { CourseModule } from "@/lib/course-detail";
 import { YouTubeEmbed } from "./YouTubeEmbed";
 import { LessonHeader } from "./LessonHeader";
 import { LessonTabs } from "./LessonTabs";
-import { LessonNav } from "./LessonNav";
 import { CurriculumPanel } from "./CurriculumPanel";
 import { PlayerNavbar } from "./PlayerNavbar";
 
@@ -35,11 +34,7 @@ const MainColumn = styled.div`
   flex-direction: column;
   min-width: 0;
 
-  /* mobile: push content above the fixed nav bar */
-  padding-bottom: 72px;
-
   @media (min-width: 1024px) {
-    padding-bottom: 0;
     overflow-y: auto;
   }
 
@@ -131,24 +126,6 @@ const Sidebar = styled.aside`
     flex-direction: column;
     border-left: 1px solid var(--color-border);
     overflow-y: auto;
-  }
-`;
-
-const MobileNavFixed = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--color-surface);
-  z-index: 40;
-  border-top: 1px solid var(--color-border);
-
-  @media (min-width: 1024px) {
-    display: none;
-  }
-
-  @media (orientation: landscape) and (max-width: 1023px) {
-    display: none;
   }
 `;
 
@@ -255,11 +232,6 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
     })),
   }));
 
-  const navLinks = {
-    prev: prevLesson ? { title: prevLesson.title, href: `/curso/${courseSlug}/aula/${prevLesson.id}` } : null,
-    next: nextLesson ? { title: nextLesson.title, href: `/curso/${courseSlug}/aula/${nextLesson.id}` } : null,
-  };
-
   function handleLessonClick(lessonId: string) {
     router.push(`/curso/${courseSlug}/aula/${lessonId}`);
   }
@@ -360,7 +332,6 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
                 </ResourcesDesktop>
               )}
             </BelowVideo>
-            <LessonNav {...navLinks} />
           </DesktopOnly>
         </MainColumn>
 
@@ -378,11 +349,6 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
           />
         </Sidebar>
       </OuterLayout>
-
-      {/* Nav fixa na base — mobile only */}
-      <MobileNavFixed>
-        <LessonNav {...navLinks} />
-      </MobileNavFixed>
 
       {/* Diálogo de confirmação de desmarcar */}
       <Dialog

@@ -2,7 +2,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { fetchMe, fetchMyEnrollments, fetchRecentActivity } from "@/lib/dashboard";
 import { AppHeader } from "@/components/catalog/AppHeader";
-import { MobileBottomNav } from "@/components/catalog/MobileBottomNav";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import { EnrolledCourseCard } from "@/components/dashboard/EnrolledCourseCard";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
@@ -116,7 +115,6 @@ export default async function AprendizadoPage() {
 
         <RecentActivity items={recentActivity} />
       </Layout>
-      <MobileBottomNav />
     </Page>
   );
 }

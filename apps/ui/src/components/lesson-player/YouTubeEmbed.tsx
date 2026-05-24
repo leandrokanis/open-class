@@ -97,9 +97,10 @@ export function YouTubeEmbed({ videoId, onEnded }: YouTubeEmbedProps) {
     if (!videoId) return;
 
     function createPlayer() {
+      const isMobile = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
       playerRef.current = new window.YT.Player(containerId, {
         videoId,
-        playerVars: { rel: 0, modestbranding: 1, autoplay: 1 },
+        playerVars: { rel: 0, modestbranding: 1, autoplay: isMobile ? 0 : 1 },
         events: {
           onStateChange: (event: YT.OnStateChangeEvent) => {
             if (event.data === window.YT.PlayerState.ENDED) {
