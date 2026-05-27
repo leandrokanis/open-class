@@ -18,11 +18,13 @@ import { UsersService } from '../users/users.service';
 import { McpController } from './mcp.controller';
 import { createMcpServer } from './mcp-server.factory';
 import { createMcpAuthMiddleware } from './mcp-auth.middleware';
+import { McpOAuthModule } from '../mcp-oauth/mcp-oauth.module';
+import { McpOAuthService } from '../mcp-oauth/mcp-oauth.service';
 
 export { createMcpAuthMiddleware };
 
 @Module({
-  imports: [EnrollmentsModule, CoursesModule, UsersModule],
+  imports: [EnrollmentsModule, CoursesModule, UsersModule, McpOAuthModule],
   controllers: [McpController],
 })
 export class McpModule implements OnApplicationBootstrap {
@@ -37,17 +39,19 @@ export class McpModule implements OnApplicationBootstrap {
     @Inject(CoursesService) private readonly coursesService: CoursesService,
     @Inject(CoursesRepository) private readonly coursesRepository: CoursesRepository,
     @Inject(UsersService) private readonly usersService: UsersService,
+    @Inject(McpOAuthService) private readonly mcpOAuthService: McpOAuthService,
   ) {}
 
   onApplicationBootstrap() {
     const token = process.env.MCP_API_TOKEN;
-    if (!token) {
-      console.warn('MCP_API_TOKEN not set — MCP endpoint disabled');
+
+    if (!token && !this.mcpOAuthService) {
+      console.warn('MCP_API_TOKEN not set and OAuth service unavailable — MCP endpoint disabled');
       return;
     }
 
     const app = this.httpAdapterHost.httpAdapter.getInstance();
-    const authMiddleware = createMcpAuthMiddleware(token);
+    const authMiddleware = createMcpAuthMiddleware(token, this.mcpOAuthService);
 
     app.use('/mcp', authMiddleware);
 

@@ -36,6 +36,20 @@
       "when": 1778961984587,
       "tag": "0004_thick_scourge",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1748304000000,
+      "tag": "0005_catalog_rating_review",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1748390400000,
+      "tag": "0006_mcp_oauth",
+      "breakpoints": true
     }
   ]
 }
