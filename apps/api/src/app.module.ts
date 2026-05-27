@@ -19,6 +19,7 @@ import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { AdminModule } from './admin/admin.module';
 import { CategoriesModule } from './categories/categories.module';
 import { McpModule } from './mcp/mcp.module';
+import { McpOAuthModule } from './mcp-oauth/mcp-oauth.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { McpModule } from './mcp/mcp.module';
     AdminModule,
     CategoriesModule,
     McpModule,
+    McpOAuthModule,
   ],
   controllers: [AppController],
   providers: [

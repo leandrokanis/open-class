@@ -10,3 +10,6 @@ export * from './schema/enrollments';
 export * from './schema/lesson-progress';
 export * from './schema/platform-config';
 export * from './schema/relations';
+export * from './schema/oauth-clients';
+export * from './schema/oauth-authorization-codes';
+export * from './schema/oauth-access-tokens';
