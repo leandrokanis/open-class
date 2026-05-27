@@ -56,6 +56,8 @@ export class McpOAuthController {
     @Query('response_type') responseType: string,
     @Query('scope') scope = 'mcp',
     @Query('state') state = '',
+    @Query('code_challenge') codeChallenge = '',
+    @Query('code_challenge_method') codeChallengeMethod = '',
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -75,11 +77,10 @@ export class McpOAuthController {
     const cookieToken: string | undefined = req.cookies?.['access_token'];
     const isLoggedIn = cookieToken ? this.verifyJwt(cookieToken) : false;
 
-    if (isLoggedIn) {
-      res.send(this.renderConsentForm(client.clientName, clientId, redirectUri, scope, state, false));
-    } else {
-      res.send(this.renderConsentForm(client.clientName, clientId, redirectUri, scope, state, true));
-    }
+    res.send(this.renderConsentForm(
+      client.clientName, clientId, redirectUri, scope, state,
+      !isLoggedIn, undefined, codeChallenge, codeChallengeMethod,
+    ));
   }
 
   @Post('authorize')
@@ -91,7 +92,11 @@ export class McpOAuthController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const { client_id, redirect_uri, scope = 'mcp', state = '', approved, email, password } = body;
+    const {
+      client_id, redirect_uri, scope = 'mcp', state = '',
+      approved, email, password,
+      code_challenge = '', code_challenge_method = '',
+    } = body;
 
     const redirectBase = `${redirect_uri}?${state ? `state=${encodeURIComponent(state)}&` : ''}`;
 
@@ -112,12 +117,8 @@ export class McpOAuthController {
         return res.send(
           this.renderConsentForm(
             client?.clientName ?? client_id,
-            client_id,
-            redirect_uri,
-            scope,
-            state,
-            true,
-            'Credenciais inválidas',
+            client_id, redirect_uri, scope, state, true,
+            'Credenciais inválidas', code_challenge, code_challenge_method,
           ),
         );
       }
@@ -127,12 +128,8 @@ export class McpOAuthController {
         return res.send(
           this.renderConsentForm(
             client?.clientName ?? client_id,
-            client_id,
-            redirect_uri,
-            scope,
-            state,
-            true,
-            'Credenciais inválidas',
+            client_id, redirect_uri, scope, state, true,
+            'Credenciais inválidas', code_challenge, code_challenge_method,
           ),
         );
       }
@@ -143,10 +140,8 @@ export class McpOAuthController {
 
     try {
       const code = await this.oauthService.createAuthorizationCode(
-        client_id,
-        redirect_uri,
-        userId,
-        scope,
+        client_id, redirect_uri, userId, scope,
+        code_challenge || undefined, code_challenge_method || undefined,
       );
       return res.redirect(`${redirectBase}code=${encodeURIComponent(code)}`);
     } catch {
@@ -187,6 +182,7 @@ export class McpOAuthController {
         redirect_uri: body.redirect_uri,
         client_id: clientId,
         client_secret: clientSecret,
+        code_verifier: body.code_verifier,
       });
       return res.json(result);
     } catch (err) {
@@ -214,6 +210,8 @@ export class McpOAuthController {
     state: string,
     showLogin: boolean,
     errorMsg?: string,
+    codeChallenge = '',
+    codeChallengeMethod = '',
   ): string {
     const loginFields = showLogin
       ? `
@@ -260,6 +258,8 @@ export class McpOAuthController {
     <input type="hidden" name="redirect_uri" value="${redirectUri}" />
     <input type="hidden" name="scope" value="${scope}" />
     <input type="hidden" name="state" value="${state}" />
+    <input type="hidden" name="code_challenge" value="${codeChallenge}" />
+    <input type="hidden" name="code_challenge_method" value="${codeChallengeMethod}" />
     ${loginFields}
     <div class="actions">
       <button type="submit" name="approved" value="true" class="allow">Permitir</button>

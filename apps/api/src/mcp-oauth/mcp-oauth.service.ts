@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import * as bcrypt from 'bcrypt';
 import { McpOAuthRepository } from './mcp-oauth.repository';
 
@@ -11,6 +11,7 @@ export interface RegisterClientDto {
   redirect_uris: string[];
   grant_types?: string[];
   scope?: string;
+  token_endpoint_auth_method?: string;
 }
 
 export interface ExchangeCodeDto {
@@ -18,7 +19,8 @@ export interface ExchangeCodeDto {
   code: string;
   redirect_uri: string;
   client_id: string;
-  client_secret: string;
+  client_secret?: string;
+  code_verifier?: string;
 }
 
 export interface TokenResult {
@@ -37,9 +39,10 @@ export class McpOAuthService {
       throw new BadRequestException('redirect_uris must not be empty');
     }
 
+    const authMethod = dto.token_endpoint_auth_method ?? 'client_secret_basic';
     const clientId = randomUUID();
-    const clientSecret = randomUUID();
-    const clientSecretHash = await bcrypt.hash(clientSecret, BCRYPT_ROUNDS);
+    const clientSecret = authMethod === 'none' ? '' : randomUUID();
+    const clientSecretHash = authMethod === 'none' ? '' : await bcrypt.hash(clientSecret, BCRYPT_ROUNDS);
 
     await this.repo.createClient({
       clientId,
@@ -48,16 +51,23 @@ export class McpOAuthService {
       redirectUris: dto.redirect_uris,
       grantTypes: dto.grant_types ?? ['authorization_code'],
       scope: dto.scope ?? 'mcp',
+      tokenEndpointAuthMethod: authMethod,
     });
 
-    return {
+    const response: Record<string, unknown> = {
       client_id: clientId,
-      client_secret: clientSecret,
       client_name: dto.client_name,
       redirect_uris: dto.redirect_uris,
       grant_types: dto.grant_types ?? ['authorization_code'],
       scope: dto.scope ?? 'mcp',
+      token_endpoint_auth_method: authMethod,
     };
+
+    if (authMethod !== 'none') {
+      response.client_secret = clientSecret;
+    }
+
+    return response;
   }
 
   async createAuthorizationCode(
@@ -65,6 +75,8 @@ export class McpOAuthService {
     redirectUri: string,
     userId: string,
     scope: string,
+    codeChallenge?: string,
+    codeChallengeMethod?: string,
   ): Promise<string> {
     const client = await this.repo.findClientByClientId(clientId);
     if (!client) {
@@ -79,7 +91,16 @@ export class McpOAuthService {
     const code = randomUUID();
     const expiresAt = new Date(Date.now() + AUTH_CODE_TTL_MS);
 
-    await this.repo.createAuthCode({ code, clientId, userId, redirectUri, scope, expiresAt });
+    await this.repo.createAuthCode({
+      code,
+      clientId,
+      userId,
+      redirectUri,
+      scope,
+      expiresAt,
+      codeChallenge: codeChallenge ?? null,
+      codeChallengeMethod: codeChallengeMethod ?? null,
+    });
 
     return code;
   }
@@ -90,9 +111,14 @@ export class McpOAuthService {
       throw new UnauthorizedException('invalid_client');
     }
 
-    const secretValid = await bcrypt.compare(dto.client_secret, client.clientSecretHash);
-    if (!secretValid) {
-      throw new UnauthorizedException('invalid_client');
+    if (client.tokenEndpointAuthMethod !== 'none') {
+      if (!dto.client_secret) {
+        throw new UnauthorizedException('invalid_client');
+      }
+      const secretValid = await bcrypt.compare(dto.client_secret, client.clientSecretHash);
+      if (!secretValid) {
+        throw new UnauthorizedException('invalid_client');
+      }
     }
 
     const authCode = await this.repo.findAuthCode(dto.code);
@@ -104,6 +130,19 @@ export class McpOAuthService {
     }
     if (authCode.expiresAt < new Date()) {
       throw new UnauthorizedException('invalid_grant');
+    }
+
+    if (authCode.codeChallenge) {
+      if (!dto.code_verifier) {
+        throw new UnauthorizedException('invalid_grant');
+      }
+      const method = authCode.codeChallengeMethod ?? 'plain';
+      const computed = method === 'S256'
+        ? createHash('sha256').update(dto.code_verifier).digest('base64url')
+        : dto.code_verifier;
+      if (computed !== authCode.codeChallenge) {
+        throw new UnauthorizedException('invalid_grant');
+      }
     }
 
     await this.repo.markAuthCodeUsed(authCode.id);

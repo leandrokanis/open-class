@@ -7,10 +7,12 @@ export const oauthAuthorizationCodes = pgTable('oauth_authorization_codes', {
   clientId:    varchar('client_id', { length: 128 }).notNull(),
   userId:      uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   redirectUri: text('redirect_uri').notNull(),
-  scope:       varchar('scope', { length: 255 }).notNull(),
-  expiresAt:   timestamp('expires_at', { withTimezone: true }).notNull(),
-  usedAt:      timestamp('used_at', { withTimezone: true }),
-  createdAt:   timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  scope:               varchar('scope', { length: 255 }).notNull(),
+  codeChallenge:       varchar('code_challenge', { length: 128 }),
+  codeChallengeMethod: varchar('code_challenge_method', { length: 10 }),
+  expiresAt:           timestamp('expires_at', { withTimezone: true }).notNull(),
+  usedAt:              timestamp('used_at', { withTimezone: true }),
+  createdAt:           timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 export type OauthAuthorizationCode = typeof oauthAuthorizationCodes.$inferSelect;
