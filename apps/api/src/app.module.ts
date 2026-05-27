@@ -18,6 +18,7 @@ import { ProgressModule } from './progress/progress.module';
 import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { AdminModule } from './admin/admin.module';
 import { CategoriesModule } from './categories/categories.module';
+import { McpModule } from './mcp/mcp.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { CategoriesModule } from './categories/categories.module';
     PlatformConfigModule,
     AdminModule,
     CategoriesModule,
+    McpModule,
   ],
   controllers: [AppController],
   providers: [

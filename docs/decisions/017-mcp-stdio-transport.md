@@ -1,7 +1,7 @@
 # ADR-017 — stdio como transporte primário do MCP Server
 
 **Data**: 2026-05-27
-**Status**: Aceito
+**Status**: Substituído por [ADR-019](019-mcp-sse-http-transport.md)
 **Decisores**: Leandro Alves
 
 ---
