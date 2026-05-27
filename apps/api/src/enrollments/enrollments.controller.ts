@@ -18,6 +18,16 @@ class EnrollDto {
   courseId!: string;
 }
 
+class AdminEnrollDto {
+  @ApiProperty({ description: 'UUID do aluno a matricular', format: 'uuid' })
+  @IsUUID()
+  studentId!: string;
+
+  @ApiProperty({ description: 'UUID do curso', format: 'uuid' })
+  @IsUUID()
+  courseId!: string;
+}
+
 @ApiTags('enrollments')
 @ApiCookieAuth('access_token')
 @ApiBearerAuth()
@@ -59,5 +69,18 @@ export class EnrollmentsController {
   @ApiResponse({ status: 403, description: 'Papel insuficiente.' })
   findAll() {
     return this.enrollmentsService.findAll();
+  }
+
+  @Post('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @ApiOperation({ summary: 'Matricular aluno em curso (admin)' })
+  @ApiResponse({ status: 201, description: 'Matrícula criada pelo admin.' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @ApiResponse({ status: 403, description: 'Papel insuficiente.' })
+  @ApiResponse({ status: 409, description: 'Aluno já matriculado.' })
+  enrollForStudent(@Body() body: AdminEnrollDto) {
+    return this.enrollmentsService.enroll(body.studentId, body.courseId);
   }
 }

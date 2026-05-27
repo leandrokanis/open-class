@@ -29,6 +29,7 @@ Open Class is for communities, independent educators, and non-profits who want:
 - **Role-based access** — `aluno`, `instrutor`, `admin`
 - **White-label ready** — CSS variables for full theme customization
 - **Swagger docs** — full API documentation at `/api/docs`
+- **MCP Server** — expose courses, users, and enrollments as tools/resources consumable by AI agents (Claude Code, Claude Desktop)
 
 ---
 
@@ -133,7 +134,8 @@ open-class/
 │   ├── api/          # NestJS — auth, courses, lessons, enrollments, progress
 │   └── ui/           # Next.js — student dashboard, instructor panel, lesson player
 ├── packages/
-│   └── db/           # Drizzle schema + migrations (shared by API)
+│   ├── db/           # Drizzle schema + migrations (shared by API)
+│   └── mcp-server/   # MCP server — exposes platform data/actions to AI agents
 └── docs/
     ├── prd.md
     ├── architecture/  # C4 diagrams
@@ -145,6 +147,9 @@ open-class/
 ```bash
 # API unit tests
 cd apps/api && pnpm test
+
+# MCP server unit tests
+cd packages/mcp-server && pnpm test
 
 # Watch mode
 cd apps/api && pnpm test:watch
@@ -183,9 +188,55 @@ Key resources:
 | Courses | `GET /api/courses`, `POST /api/courses` |
 | Modules | `GET /api/courses/:id`, `POST /api/courses/:id/modules` |
 | Lessons | `GET /api/lessons/:id`, `POST /api/modules/:id/lessons` |
-| Enrollments | `POST /api/enrollments` |
+| Enrollments | `POST /api/enrollments`, `POST /api/enrollments/admin` |
 | Progress | `GET /api/progress/courses/:id` |
 | Admin | `GET /api/admin/users`, `GET /api/admin/courses` |
+
+---
+
+## MCP Server
+
+Open Class ships an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server that exposes platform data and actions as tools/resources consumable by AI agents such as Claude Code and Claude Desktop.
+
+### Quick setup with Claude Code
+
+Build the server and add it to your Claude Code config:
+
+```bash
+cd packages/mcp-server && pnpm build
+```
+
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "open-class": {
+      "command": "node",
+      "args": ["/absolute/path/to/open-class/packages/mcp-server/dist/index.js"],
+      "env": {
+        "MCP_API_TOKEN": "your-secret-token",
+        "OPEN_CLASS_API_URL": "http://localhost:41701",
+        "OPEN_CLASS_ADMIN_EMAIL": "admin@yourdomain.com",
+        "OPEN_CLASS_ADMIN_PASSWORD": "your-admin-password"
+      }
+    }
+  }
+}
+```
+
+### Available resources and tools
+
+| Type | Name | Description |
+|------|------|-------------|
+| Resource | `courses://list` | All published courses |
+| Resource | `users://list` | All platform users (admin) |
+| Resource | `enrollments://list/{userEmail}` | Enrollments for a user |
+| Tool | `enroll_user` | Enroll a user in a course by email |
+| Tool | `create_course` | Create a draft course |
+| Tool | `get_student_progress` | Get a student's progress in a course |
+
+See [`packages/mcp-server/README.md`](./packages/mcp-server/README.md) for full documentation.
 
 ---
 

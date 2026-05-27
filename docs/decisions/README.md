@@ -21,6 +21,9 @@ Decisões técnicas significativas do projeto Open Class, documentadas no format
 | [ADR-013](013-nextjs-middleware-auth-guard.md) | Proteção de rotas privadas via Next.js middleware | Aceito | 2026-05-18 |
 | [ADR-014](014-dark-theme-by-route.md) | Tema escuro por rota via `data-theme` no layout | Aceito | 2026-05-19 |
 | [ADR-015](015-dnd-kit-drag-and-drop.md) | dnd-kit como biblioteca de drag-and-drop | Aceito | 2026-05-21 |
+| [ADR-016](016-mcp-server-standalone-package.md) | MCP Server como pacote standalone em `packages/` | Aceito | 2026-05-27 |
+| [ADR-017](017-mcp-stdio-transport.md) | stdio como transporte primário do MCP Server | Aceito | 2026-05-27 |
+| [ADR-018](018-mcp-server-api-auth.md) | Autenticação do MCP Server na API via login admin + JWT Bearer | Aceito | 2026-05-27 |
 
 ## Como usar
 
