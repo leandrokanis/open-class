@@ -134,8 +134,7 @@ open-class/
 │   ├── api/          # NestJS — auth, courses, lessons, enrollments, progress
 │   └── ui/           # Next.js — student dashboard, instructor panel, lesson player
 ├── packages/
-│   ├── db/           # Drizzle schema + migrations (shared by API)
-│   └── mcp-server/   # MCP server — exposes platform data/actions to AI agents
+│   └── db/           # Drizzle schema + migrations (shared by API)
 └── docs/
     ├── prd.md
     ├── architecture/  # C4 diagrams
@@ -145,11 +144,8 @@ open-class/
 ### Running tests
 
 ```bash
-# API unit tests
+# API unit tests (includes MCP module)
 cd apps/api && pnpm test
-
-# MCP server unit tests
-cd packages/mcp-server && pnpm test
 
 # Watch mode
 cd apps/api && pnpm test:watch
@@ -173,6 +169,7 @@ All configuration is done via environment variables. See the full reference in [
 | `GOOGLE_CLIENT_ID` | — | Enables Google OAuth login |
 | `COOKIE_SECURE` | `false` | Set to `true` when serving over HTTPS |
 | `FRONTEND_URL` | `http://localhost:41700` | CORS allowed origins (comma-separated) |
+| `MCP_API_TOKEN` | — | Bearer token for the MCP endpoint. If unset, `/mcp` is disabled. |
 
 ---
 
@@ -196,47 +193,37 @@ Key resources:
 
 ## MCP Server
 
-Open Class ships an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server that exposes platform data and actions as tools/resources consumable by AI agents such as Claude Code and Claude Desktop.
+Open Class ships an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server built into the API (`apps/api/src/mcp/`). It exposes platform data and actions as tools and resources consumable by AI agents such as Claude Code and Claude Desktop.
 
-### Quick setup with Claude Code
+The MCP server runs on the same port as the API (`41701`) and is protected by a static Bearer token (`MCP_API_TOKEN`).
 
-Build the server and add it to your Claude Code config:
+### Connecting via SSE/HTTP
 
-```bash
-cd packages/mcp-server && pnpm build
+Configure any MCP-compatible client to connect to the API:
+
+```
+POST|GET|DELETE http://your-host:41701/mcp
+Authorization: Bearer <MCP_API_TOKEN>
 ```
 
-Add to `~/.claude/settings.json`:
+Healthcheck (no auth required): `GET http://your-host:41701/mcp/health`
 
-```json
-{
-  "mcpServers": {
-    "open-class": {
-      "command": "node",
-      "args": ["/absolute/path/to/open-class/packages/mcp-server/dist/index.js"],
-      "env": {
-        "MCP_API_TOKEN": "your-secret-token",
-        "OPEN_CLASS_API_URL": "http://localhost:41701",
-        "OPEN_CLASS_ADMIN_EMAIL": "admin@yourdomain.com",
-        "OPEN_CLASS_ADMIN_PASSWORD": "your-admin-password"
-      }
-    }
-  }
-}
-```
+### Environment variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MCP_API_TOKEN` | No | Bearer token for MCP access. If unset, the `/mcp` endpoint is disabled. |
 
 ### Available resources and tools
 
 | Type | Name | Description |
 |------|------|-------------|
-| Resource | `courses://list` | All published courses |
-| Resource | `users://list` | All platform users (admin) |
-| Resource | `enrollments://list/{userEmail}` | Enrollments for a user |
-| Tool | `enroll_user` | Enroll a user in a course by email |
-| Tool | `create_course` | Create a draft course |
-| Tool | `get_student_progress` | Get a student's progress in a course |
-
-See [`packages/mcp-server/README.md`](./packages/mcp-server/README.md) for full documentation.
+| Resource | `courses://list` | All courses on the platform |
+| Resource | `users://list` | All platform users |
+| Resource | `enrollments://{studentId}` | Enrollments and progress for a student |
+| Tool | `enroll` | Enroll a student in a course by UUID |
+| Tool | `create-course` | Create a draft course assigned to an instructor |
+| Tool | `get-progress` | Get a student's progress across all enrolled courses |
 
 ---
 
