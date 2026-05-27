@@ -9,5 +9,6 @@ import { CommonModule } from '../common';
   imports: [CommonModule, ProgressModule],
   controllers: [EnrollmentsController],
   providers: [EnrollmentsService, EnrollmentsRepository],
+  exports: [EnrollmentsService],
 })
 export class EnrollmentsModule {}

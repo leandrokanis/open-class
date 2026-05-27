@@ -39,6 +39,7 @@
     "pg": "^8.13.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "slugify": "^1.6.9"
   },
   "devDependencies": {

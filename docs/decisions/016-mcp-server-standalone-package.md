@@ -1,7 +1,7 @@
 # ADR-016 — MCP Server como pacote standalone em `packages/`
 
 **Data**: 2026-05-27
-**Status**: Aceito
+**Status**: Substituído por [ADR-020](020-mcp-nestjs-module.md)
 **Decisores**: Leandro Alves
 
 ---

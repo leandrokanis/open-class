@@ -14,6 +14,6 @@ import { CommonModule } from '../common';
   imports: [DatabaseModule, CommonModule],
   controllers: [CoursesController, ModulesController, LessonsController],
   providers: [CoursesService, CoursesRepository, UploadService, ModulesService, LessonsService],
-  exports: [CoursesRepository],
+  exports: [CoursesRepository, CoursesService],
 })
 export class CoursesModule {}
