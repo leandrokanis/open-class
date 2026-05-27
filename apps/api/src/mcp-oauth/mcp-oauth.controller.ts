@@ -9,6 +9,8 @@ import {
   HttpCode,
   BadRequestException,
   UnauthorizedException,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -35,6 +37,7 @@ export class McpOAuthController {
 
   @Post('register')
   @HttpCode(201)
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
   @ApiOperation({ summary: 'Dynamic client registration (RFC 7591)' })
   @ApiBody({ type: RegisterClientDto })
   @ApiResponse({ status: 201, type: RegisterClientResponseDto, description: 'Client registered' })

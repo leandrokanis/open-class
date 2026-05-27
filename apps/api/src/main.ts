@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, RequestMethod } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
@@ -11,12 +11,22 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+    exclude: [
+      { path: '.well-known/oauth-authorization-server', method: RequestMethod.GET },
+      { path: 'oauth/register', method: RequestMethod.POST },
+      { path: 'oauth/authorize', method: RequestMethod.GET },
+      { path: 'oauth/authorize', method: RequestMethod.POST },
+      { path: 'oauth/token', method: RequestMethod.POST },
+    ],
+  });
   app.use(cookieParser());
 
   const allowedOrigins = (process.env.FRONTEND_URL ?? 'http://localhost:3000')
     .split(',')
     .map((o) => o.trim());
+
+  const oauthPaths = ['/oauth/', '/.well-known/'];
 
   app.enableCors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
@@ -28,6 +38,18 @@ async function bootstrap() {
     },
     credentials: true,
   });
+
+  // OAuth endpoints must be reachable from any origin (claude.ai, other MCP clients)
+  const rawApp = app.getHttpAdapter().getInstance();
+  for (const path of oauthPaths) {
+    rawApp.use(path, (_req: any, res: any, next: any) => {
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      if (_req.method === 'OPTIONS') { res.sendStatus(204); return; }
+      next();
+    });
+  }
 
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
