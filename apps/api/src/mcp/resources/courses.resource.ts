@@ -7,7 +7,7 @@ export function registerCoursesResource(server: McpServer, coursesRepository: Co
     'courses://list',
     { description: 'Lista todos os cursos cadastrados na plataforma' },
     async () => {
-      const courses = await coursesRepository.findAll();
+      const courses = await coursesRepository.findAll(1, 100, { status: 'published' });
       return {
         contents: [{ uri: 'courses://list', text: JSON.stringify(courses), mimeType: 'application/json' }],
       };
