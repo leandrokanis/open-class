@@ -1,6 +1,6 @@
 import {
   Module,
-  OnApplicationBootstrap,
+  OnModuleInit,
   Inject,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
@@ -27,7 +27,7 @@ export { createMcpAuthMiddleware };
   imports: [EnrollmentsModule, CoursesModule, UsersModule, McpOAuthModule],
   controllers: [McpController],
 })
-export class McpModule implements OnApplicationBootstrap {
+export class McpModule implements OnModuleInit {
   private readonly sessions = new Map<
     string,
     { server: McpServer; transport: StreamableHTTPServerTransport }
@@ -42,7 +42,7 @@ export class McpModule implements OnApplicationBootstrap {
     @Inject(McpOAuthService) private readonly mcpOAuthService: McpOAuthService,
   ) {}
 
-  onApplicationBootstrap() {
+  onModuleInit() {
     const token = process.env.MCP_API_TOKEN;
 
     if (!token && !this.mcpOAuthService) {
