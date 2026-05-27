@@ -18,6 +18,7 @@ import { registerUpdateCourseTool } from './tools/update-course.tool';
 import { registerPublishCourseTool } from './tools/publish-course.tool';
 import { registerCreateModuleTool } from './tools/create-module.tool';
 import { registerCreateLessonTool } from './tools/create-lesson.tool';
+import { registerUpdateLessonTool } from './tools/update-lesson.tool';
 import { registerListCategoriesTool } from './tools/list-categories.tool';
 import { registerCoursesResource } from './resources/courses.resource';
 import { registerUsersResource } from './resources/users.resource';
@@ -53,6 +54,7 @@ export function createMcpServer(services: McpServices): McpServer {
   // Instrutor — estrutura
   registerCreateModuleTool(server, services.modulesService);
   registerCreateLessonTool(server, services.lessonsService);
+  registerUpdateLessonTool(server, services.lessonsService);
 
   // Aluno
   registerEnrollTool(server, services.enrollmentsService);
