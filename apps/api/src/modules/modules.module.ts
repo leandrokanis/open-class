@@ -8,6 +8,6 @@ import { CoursesModule } from '../courses/courses.module';
   imports: [CoursesModule],
   controllers: [ModulesController],
   providers: [ModulesService, ModulesRepository],
-  exports: [ModulesRepository],
+  exports: [ModulesService, ModulesRepository],
 })
 export class ModulesModule {}

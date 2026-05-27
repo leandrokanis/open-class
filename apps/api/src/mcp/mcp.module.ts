@@ -15,6 +15,12 @@ import { CoursesService } from '../courses/courses.service';
 import { CoursesRepository } from '../courses/courses.repository';
 import { UsersModule } from '../users/users.module';
 import { UsersService } from '../users/users.service';
+import { ModulesModule } from '../modules/modules.module';
+import { ModulesService } from '../modules/modules.service';
+import { LessonsModule } from '../lessons/lessons.module';
+import { LessonsService } from '../lessons/lessons.service';
+import { CategoriesModule } from '../categories/categories.module';
+import { CategoriesService } from '../categories/categories.service';
 import { McpController } from './mcp.controller';
 import { createMcpServer } from './mcp-server.factory';
 import { createMcpAuthMiddleware } from './mcp-auth.middleware';
@@ -24,7 +30,15 @@ import { McpOAuthService } from '../mcp-oauth/mcp-oauth.service';
 export { createMcpAuthMiddleware };
 
 @Module({
-  imports: [EnrollmentsModule, CoursesModule, UsersModule, McpOAuthModule],
+  imports: [
+    EnrollmentsModule,
+    CoursesModule,
+    UsersModule,
+    ModulesModule,
+    LessonsModule,
+    CategoriesModule,
+    McpOAuthModule,
+  ],
   controllers: [McpController],
 })
 export class McpModule implements OnModuleInit {
@@ -39,6 +53,9 @@ export class McpModule implements OnModuleInit {
     @Inject(CoursesService) private readonly coursesService: CoursesService,
     @Inject(CoursesRepository) private readonly coursesRepository: CoursesRepository,
     @Inject(UsersService) private readonly usersService: UsersService,
+    @Inject(ModulesService) private readonly modulesService: ModulesService,
+    @Inject(LessonsService) private readonly lessonsService: LessonsService,
+    @Inject(CategoriesService) private readonly categoriesService: CategoriesService,
     @Inject(McpOAuthService) private readonly mcpOAuthService: McpOAuthService,
   ) {}
 
@@ -72,6 +89,9 @@ export class McpModule implements OnModuleInit {
           coursesService: this.coursesService,
           coursesRepository: this.coursesRepository,
           usersService: this.usersService,
+          modulesService: this.modulesService,
+          lessonsService: this.lessonsService,
+          categoriesService: this.categoriesService,
         });
 
         await server.connect(transport);
