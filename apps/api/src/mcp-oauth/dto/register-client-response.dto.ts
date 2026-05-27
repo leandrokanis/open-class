@@ -1,11 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RegisterClientResponseDto {
   @ApiProperty({ description: 'OAuth client ID', example: 'a1b2c3d4-...' })
   client_id!: string;
 
-  @ApiProperty({ description: 'OAuth client secret (shown once)', example: 'e5f6g7h8-...' })
-  client_secret!: string;
+  @ApiPropertyOptional({ description: 'OAuth client secret — omitted for token_endpoint_auth_method=none', example: 'e5f6g7h8-...' })
+  client_secret?: string;
 
   @ApiProperty({ description: 'Human-readable client name', example: 'claude.ai' })
   client_name!: string;

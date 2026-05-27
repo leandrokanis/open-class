@@ -34,7 +34,15 @@ export interface TokenResult {
 export class McpOAuthService {
   constructor(private readonly repo: McpOAuthRepository) {}
 
-  async registerClient(dto: RegisterClientDto) {
+  async registerClient(dto: RegisterClientDto): Promise<{
+    client_id: string;
+    client_secret?: string;
+    client_name: string;
+    redirect_uris: string[];
+    grant_types: string[];
+    scope: string;
+    token_endpoint_auth_method: string;
+  }> {
     if (!dto.redirect_uris || dto.redirect_uris.length === 0) {
       throw new BadRequestException('redirect_uris must not be empty');
     }
