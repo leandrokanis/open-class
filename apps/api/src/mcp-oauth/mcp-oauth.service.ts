@@ -62,20 +62,15 @@ export class McpOAuthService {
       tokenEndpointAuthMethod: authMethod,
     });
 
-    const response: Record<string, unknown> = {
+    return {
       client_id: clientId,
+      ...(authMethod !== 'none' ? { client_secret: clientSecret } : {}),
       client_name: dto.client_name,
       redirect_uris: dto.redirect_uris,
       grant_types: dto.grant_types ?? ['authorization_code'],
       scope: dto.scope ?? 'mcp',
       token_endpoint_auth_method: authMethod,
     };
-
-    if (authMethod !== 'none') {
-      response.client_secret = clientSecret;
-    }
-
-    return response;
   }
 
   async createAuthorizationCode(
