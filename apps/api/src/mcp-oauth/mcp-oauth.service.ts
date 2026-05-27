@@ -111,16 +111,6 @@ export class McpOAuthService {
       throw new UnauthorizedException('invalid_client');
     }
 
-    if (client.tokenEndpointAuthMethod !== 'none') {
-      if (!dto.client_secret) {
-        throw new UnauthorizedException('invalid_client');
-      }
-      const secretValid = await bcrypt.compare(dto.client_secret, client.clientSecretHash);
-      if (!secretValid) {
-        throw new UnauthorizedException('invalid_client');
-      }
-    }
-
     const authCode = await this.repo.findAuthCode(dto.code);
     if (!authCode) {
       throw new UnauthorizedException('invalid_grant');
@@ -132,6 +122,8 @@ export class McpOAuthService {
       throw new UnauthorizedException('invalid_grant');
     }
 
+    // Validate PKCE if code_challenge was stored with the auth code
+    let pkceValid = false;
     if (authCode.codeChallenge) {
       if (!dto.code_verifier) {
         throw new UnauthorizedException('invalid_grant');
@@ -142,6 +134,20 @@ export class McpOAuthService {
         : dto.code_verifier;
       if (computed !== authCode.codeChallenge) {
         throw new UnauthorizedException('invalid_grant');
+      }
+      pkceValid = true;
+    }
+
+    // PKCE alone is sufficient for public clients (RFC 7636 §4.6).
+    // Only enforce client_secret when no valid PKCE was used and the client requires it.
+    const requiresSecret = client.tokenEndpointAuthMethod !== 'none' && !pkceValid;
+    if (requiresSecret) {
+      if (!dto.client_secret) {
+        throw new UnauthorizedException('invalid_client');
+      }
+      const secretValid = await bcrypt.compare(dto.client_secret, client.clientSecretHash);
+      if (!secretValid) {
+        throw new UnauthorizedException('invalid_client');
       }
     }
 
