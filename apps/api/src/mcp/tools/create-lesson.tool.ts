@@ -11,14 +11,14 @@ export function registerCreateLessonTool(server: McpServer, lessonsService: Less
       moduleId: z.string().uuid().describe('UUID do módulo'),
       title: z.string().min(1).max(150).describe('Título da aula'),
       description: z.string().optional().describe('Descrição da aula'),
-      videoUrl: z.string().url().optional().describe('URL do vídeo (YouTube, etc.)'),
+      youtubeUrl: z.string().url().optional().describe('URL do YouTube'),
       duration: z.number().int().min(0).optional().describe('Duração em segundos'),
       visibility: z.enum(['visible', 'hidden']).default('visible').describe('Visibilidade da aula'),
     },
-    async ({ instructorId, moduleId, title, description, videoUrl, duration, visibility }) => {
+    async ({ instructorId, moduleId, title, description, youtubeUrl, duration, visibility }) => {
       const lesson = await lessonsService.create(
         moduleId,
-        { title, description, videoUrl, duration, visibility },
+        { title, description, youtubeUrl, duration, visibility },
         instructorId,
         'instructor',
       );
