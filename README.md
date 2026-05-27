@@ -169,7 +169,9 @@ All configuration is done via environment variables. See the full reference in [
 | `GOOGLE_CLIENT_ID` | — | Enables Google OAuth login |
 | `COOKIE_SECURE` | `false` | Set to `true` when serving over HTTPS |
 | `FRONTEND_URL` | `http://localhost:41700` | CORS allowed origins (comma-separated) |
-| `MCP_API_TOKEN` | — | Bearer token for the MCP endpoint. If unset, `/mcp` is disabled. |
+| `MCP_API_TOKEN` | — | Static Bearer token for programmatic MCP clients. Optional — OAuth 2.0 is the primary auth method. |
+| `OAUTH_TOKEN_TTL` | — | OAuth access token lifetime in seconds (default: `3600`) |
+| `APP_URL` | — | Public API base URL used to build OAuth endpoint URIs |
 
 ---
 
@@ -195,11 +197,22 @@ Key resources:
 
 Open Class ships an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server built into the API (`apps/api/src/mcp/`). It exposes platform data and actions as tools and resources consumable by AI agents such as Claude Code and Claude Desktop.
 
-The MCP server runs on the same port as the API (`41701`) and is protected by a static Bearer token (`MCP_API_TOKEN`).
+The MCP server runs on the same port as the API (`41701`) and supports two authentication modes:
 
-### Connecting via SSE/HTTP
+- **OAuth 2.0** (recommended) — full Authorization Code Grant flow compatible with claude.ai connectors
+- **Static Bearer token** (`MCP_API_TOKEN`) — legacy mode for programmatic clients (Claude Code, curl)
 
-Configure any MCP-compatible client to connect to the API:
+### Connecting via claude.ai
+
+Add your instance as a custom connector in claude.ai using the URL:
+
+```
+https://your-host/mcp
+```
+
+Claude.ai will automatically discover the OAuth endpoints via `GET /.well-known/oauth-authorization-server`, register a client, and walk through the authorization flow. You will be prompted to log in with your Open Class credentials to approve access.
+
+### Connecting via SSE/HTTP (programmatic)
 
 ```
 POST|GET|DELETE http://your-host:41701/mcp
@@ -208,11 +221,22 @@ Authorization: Bearer <MCP_API_TOKEN>
 
 Healthcheck (no auth required): `GET http://your-host:41701/mcp/health`
 
+### OAuth endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /.well-known/oauth-authorization-server` | Metadata discovery (RFC 8414) |
+| `POST /oauth/register` | Dynamic client registration (RFC 7591) |
+| `GET /oauth/authorize` | Consent screen — shows login form if not authenticated |
+| `POST /oauth/token` | Exchange authorization code for access token |
+
 ### Environment variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `MCP_API_TOKEN` | No | Bearer token for MCP access. If unset, the `/mcp` endpoint is disabled. |
+| `APP_URL` | Yes (production) | Public base URL of the API, e.g. `https://api.example.com`. Used to build OAuth endpoint URIs. |
+| `MCP_API_TOKEN` | No | Static Bearer token for programmatic MCP access (backward compat). If unset and no OAuth token is provided, the request is rejected with 401. |
+| `OAUTH_TOKEN_TTL` | No | OAuth access token lifetime in seconds. Default: `3600`. |
 
 ### Available resources and tools
 
