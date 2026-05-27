@@ -20,11 +20,13 @@ export function createMcpAuthMiddleware(
     }
 
     const valid = await oauthService.validateAccessToken(token);
+    console.log('[mcp-auth] token valid:', valid, '| token prefix:', token.slice(0, 8));
     if (valid) {
       next();
       return;
     }
 
+    console.warn('[mcp-auth] rejected token prefix:', token.slice(0, 8));
     res.status(401).json({ message: 'Unauthorized' });
   };
 }

@@ -175,6 +175,15 @@ export class McpOAuthController {
       return res.status(400).json({ error: 'unsupported_grant_type' });
     }
 
+    console.log('[oauth/token] request', {
+      grant_type: body.grant_type,
+      client_id: clientId,
+      has_secret: !!clientSecret,
+      has_code: !!body.code,
+      has_verifier: !!body.code_verifier,
+      redirect_uri: body.redirect_uri,
+    });
+
     try {
       const result = await this.oauthService.exchangeCodeForToken({
         grant_type: body.grant_type,
@@ -184,8 +193,10 @@ export class McpOAuthController {
         client_secret: clientSecret,
         code_verifier: body.code_verifier,
       });
+      console.log('[oauth/token] success, scope:', result.scope);
       return res.json(result);
     } catch (err) {
+      console.error('[oauth/token] error:', err instanceof Error ? err.message : err);
       if (err instanceof UnauthorizedException) {
         return res.status(401).json({ error: err.message });
       }
