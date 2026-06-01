@@ -459,6 +459,97 @@ Critérios de Aceitação:
 
 ---
 
+### Epic 7 — Turmas
+
+> **v2.0**
+
+#### US-22 — Criar e configurar uma turma
+
+```
+Como instrutor,
+Quero criar uma turma para um curso e definir seu cronograma e configurações,
+Para oferecer uma experiência de aprendizado estruturada e com prazo definido.
+
+Critérios de Aceitação:
+- O instrutor pode criar múltiplas turmas para o mesmo curso
+- Campos obrigatórios da turma: nome, período de inscrições (data início e fim), vagas disponíveis
+- O instrutor define, por módulo, a data a partir da qual ele ficará disponível para os alunos da turma
+- O curso pode ser configurado para aceitar acesso: somente on demand, somente via turma, ou ambos
+- Quando configurado como "ambos", o aluno escolhe no momento da inscrição; ao optar por uma turma, o modo on demand fica indisponível para ele naquele curso
+- Turma com vagas esgotadas não aceita novas inscrições mesmo dentro do período
+- O instrutor pode encerrar manualmente uma turma antes do fim do período de inscrições
+```
+
+#### US-23 — Inscrever-se em uma turma
+
+> **Depende de**: US-22
+
+```
+Como aluno,
+Quero me inscrever em uma turma de um curso,
+Para seguir um cronograma estruturado e ter acesso ao conteúdo exclusivo da turma.
+
+Critérios de Aceitação:
+- Turmas com inscrições abertas e vagas disponíveis são exibidas na página do curso
+- O aluno pode se inscrever apenas dentro do período de inscrições da turma
+- Ao se inscrever em uma turma, o acesso on demand ao mesmo curso é desabilitado para o aluno
+- Turma com vagas esgotadas exibe status "Esgotada" e não permite nova inscrição
+- O aluno visualiza no seu dashboard as turmas em que está matriculado, com cronograma de módulos
+```
+
+#### US-24 — Acessar conteúdo da turma com cronograma de módulos
+
+> **Depende de**: US-23
+
+```
+Como aluno matriculado em uma turma,
+Quero acessar os módulos conforme o cronograma definido pelo instrutor,
+Para progredir no curso seguindo a estrutura planejada.
+
+Critérios de Aceitação:
+- Módulos com data de liberação futura aparecem no currículo com cadeado e a data prevista de liberação
+- Módulos com data já atingida ficam disponíveis para acesso normalmente
+- Após o encerramento da turma, o aluno mantém acesso ao conteúdo regular do curso
+- Após o encerramento da turma, o aluno perde acesso às aulas exclusivas daquela turma
+- O progresso do aluno dentro da turma é calculado com base apenas nas aulas regulares (aulas exclusivas não entram no percentual)
+```
+
+#### US-25 — Adicionar aula exclusiva de turma
+
+> **Depende de**: US-22
+
+```
+Como instrutor,
+Quero criar aulas disponíveis exclusivamente para os alunos de uma turma específica,
+Para oferecer conteúdo diferenciado sem expô-lo no on demand nem em outras turmas.
+
+Critérios de Aceitação:
+- Na edição de uma turma, o instrutor pode criar aulas marcadas como "exclusivas desta turma"
+- Aulas exclusivas não aparecem no currículo on demand do curso
+- Aulas exclusivas não aparecem nem são acessíveis em outras turmas do mesmo curso
+- Aulas exclusivas seguem o mesmo formato de aula regular: título, descrição, URL YouTube, duração
+- Após o encerramento da turma, as aulas exclusivas ficam inacessíveis para os alunos matriculados
+- O instrutor visualiza claramente no painel quais aulas são exclusivas de qual turma
+```
+
+#### US-26 — Acompanhar progresso da turma
+
+> **Depende de**: US-22, US-23
+
+```
+Como instrutor,
+Quero visualizar o progresso agregado dos alunos de uma turma,
+Para identificar engajamento e pontos de abandono no cronograma.
+
+Critérios de Aceitação:
+- Painel da turma exibe: total de inscritos, vagas restantes, percentual médio de conclusão da turma
+- Listagem de alunos com: nome, progresso individual (%), última aula acessada e data
+- Visualização por módulo: quantos alunos concluíram cada módulo
+- Indicação de alunos sem acesso nos últimos 7 dias (inativos)
+```
+
+---
+
 ## 6. Métricas de Sucesso
 
 ### Métricas de Adoção (pós-lançamento open source)
@@ -524,6 +615,7 @@ Critérios de Aceitação:
 - Avaliações, notas e certificados (considerado para v2.0)
 - Fórum ou chat integrado (considerado para v2.0)
 - Aulas extras com desbloqueio por progresso e gamificação (considerado para v2.0 — US-20, US-21)
+- Sistema de turmas com cronograma de módulos e aulas exclusivas (considerado para v2.0 — US-22 a US-26)
 - App mobile nativo
 - Integração com outros provedores de vídeo (Vimeo, etc.) — fora do escopo v1.0
 - CDN própria ou gerenciamento de assets de mídia pesados
