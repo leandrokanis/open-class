@@ -273,6 +273,25 @@ Critérios de Aceitação:
 - Filtro por curso
 ```
 
+#### US-20 — Desbloquear e acessar aulas extras do módulo
+
+```
+Como aluno,
+Quero desbloquear e acessar aulas extras de um módulo após concluir todas as aulas normais,
+Para acessar conteúdo bônus exclusivo como recompensa pelo meu avanço.
+
+Critérios de Aceitação:
+- Aulas extras aparecem no currículo do módulo com indicação visual de bloqueio (ex: ícone de cadeado) antes do desbloqueio
+- O desbloqueio ocorre automaticamente quando o aluno conclui todas as aulas normais visíveis do módulo
+- Alunos que já tinham concluído todas as aulas normais antes de o instrutor adicionar as extras têm as extras desbloqueadas automaticamente
+- Ao acessar o módulo pela primeira vez após o desbloqueio, um pop-up modal celebra o evento e exibe as aulas extras disponíveis
+- O pop-up de celebração é exibido apenas uma vez por módulo por aluno
+- Aulas extras não são contabilizadas no percentual de progresso do curso; somente aulas normais determinam 100%
+- Aulas extras não são contabilizadas no tempo total estimado do módulo nem do curso
+- Após o desbloqueio, as aulas extras são assistidas normalmente via player YouTube embed
+- Aulas extras concluídas são registradas no histórico de aprendizado do aluno
+```
+
 ---
 
 ### Epic 4 — Criação e Gestão de Conteúdo (Instrutor)
@@ -348,6 +367,25 @@ Para entender o engajamento do meu conteúdo.
 Critérios de Aceitação:
 - Lista de cursos com: status, total de alunos inscritos, taxa de conclusão média
 - Detalhe por curso: aulas com maior e menor taxa de conclusão
+```
+
+#### US-21 — Adicionar aulas extras a um módulo
+
+> **Depende de**: US-12
+
+```
+Como instrutor,
+Quero marcar aulas de um módulo como "extras",
+Para oferecer conteúdo bônus acessível apenas após o aluno concluir o currículo normal do módulo.
+
+Critérios de Aceitação:
+- Na edição do módulo, o instrutor pode marcar qualquer aula como "extra" via toggle
+- Aulas extras são exibidas em seção separada no painel de edição do módulo, com indicação visual distinta das aulas normais
+- O instrutor pode reordenar aulas extras independentemente das aulas normais
+- Aulas extras seguem o mesmo formato de aula normal: título, descrição opcional, URL YouTube, duração
+- Ao marcar uma aula como "extra", ela passa a aparecer bloqueada para alunos que ainda não concluíram todas as aulas normais do módulo
+- Alunos que já concluíram todas as aulas normais do módulo têm as extras desbloqueadas automaticamente no momento da adição
+- O painel de edição exibe, por módulo, quantos alunos já desbloquearam as aulas extras
 ```
 
 ---
@@ -485,6 +523,7 @@ Critérios de Aceitação:
 - Transmissões ao vivo (live streaming)
 - Avaliações, notas e certificados (considerado para v2.0)
 - Fórum ou chat integrado (considerado para v2.0)
+- Aulas extras com desbloqueio por progresso e gamificação (considerado para v2.0 — US-20, US-21)
 - App mobile nativo
 - Integração com outros provedores de vídeo (Vimeo, etc.) — fora do escopo v1.0
 - CDN própria ou gerenciamento de assets de mídia pesados
@@ -775,6 +814,7 @@ Implementação da interface com contratos de API já estáveis.
 | 4   | Suporte a SSO (OAuth com Google/GitHub) no v1.0?                                     | Simplifica onboarding mas adiciona dependência |
 | 5   | Limite de tamanho de thumbnail/avatar armazenados localmente?                        | Impacto em armazenamento do servidor           |
 | 6   | Internacionalização de conteúdo (cursos em múltiplos idiomas com UI correspondente)? | Complexidade vs. alcance global                |
+| 7   | Aulas extras (US-20/US-21) pertencem ao v1.0 ou v2.0?                               | **Decidido**: v2.0 — gamificação fora do escopo do MVP                 |
 
 
 ---

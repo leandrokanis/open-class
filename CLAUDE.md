@@ -20,6 +20,7 @@ Use as skills `oc-*` para desenvolvimento orientado a spec neste projeto:
 
 | Skill | O que faz |
 |-------|-----------|
+| `/oc-clarify` | Elucida uma ideia nova via perguntas guiadas e gera entrada no `docs/prd.md`; precede o specify |
 | `/oc-specify` | Cria `specs/<issue>-<name>/spec.md`; atualiza C4 se novos atores/sistemas |
 | `/oc-plan` | Cria `plan.md` com data model, contratos e cenários BDD; cria ADRs se houver decisão arquitetural |
 | `/oc-tasks` | Gera `tasks.md` com tarefas ordenadas e caminhos de arquivo exatos |
@@ -30,6 +31,7 @@ Use as skills `oc-*` para desenvolvimento orientado a spec neste projeto:
 ### Fluxo individual
 
 ```
+/oc-clarify <ideia>       →  entrada no prd.md + issue no GitHub
 /oc-specify <descrição>   →  spec.md
 /oc-plan                  →  plan.md + ADRs + C4
 /oc-tasks                 →  tasks.md
@@ -40,7 +42,7 @@ Use as skills `oc-*` para desenvolvimento orientado a spec neste projeto:
 ### Fluxo completo
 
 ```
-/oc-ship <descrição>      →  faz tudo acima de uma vez
+/oc-ship <descrição>      →  faz tudo acima de uma vez (a partir do specify)
 ```
 
 ### Contexto ativo
