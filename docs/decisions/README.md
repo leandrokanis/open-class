@@ -27,6 +27,7 @@ Decisões técnicas significativas do projeto Open Class, documentadas no format
 | [ADR-019](019-mcp-sse-http-transport.md) | SSE/HTTP como transporte do MCP Server para deploys públicos | Aceito | 2026-05-27 |
 | [ADR-020](020-mcp-nestjs-module.md) | MCP Server como módulo NestJS em `apps/api/` | Aceito | 2026-05-27 |
 | [ADR-021](021-mcp-oauth-from-scratch.md) | OAuth 2.0 Authorization Server implementado from scratch para MCP | Aceito | 2026-05-27 |
+| [ADR-022](022-mailhog-dev-smtp.md) | MailHog como servidor SMTP local para desenvolvimento | Aceito | 2026-06-02 |
 
 ## Como usar
 
