@@ -1,18 +1,41 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { EnrollmentsRepository } from './enrollments.repository';
 import { ProgressRepository } from '../progress/progress.repository';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class EnrollmentsService {
+  private readonly logger = new Logger(EnrollmentsService.name);
+
   constructor(
     private readonly repo: EnrollmentsRepository,
     private readonly progressRepo: ProgressRepository,
+    private readonly mailService: MailService,
   ) {}
 
   async enroll(studentId: string, courseId: string) {
     const enrollment = await this.repo.create(studentId, courseId);
     if (!enrollment) throw new ConflictException('Aluno já matriculado neste curso.');
+
+    this.sendWelcomeEmail(studentId, courseId);
+
     return enrollment;
+  }
+
+  private sendWelcomeEmail(studentId: string, courseId: string): void {
+    Promise.all([
+      this.repo.findStudentEmailById(studentId),
+      this.repo.findCourseBasicById(courseId),
+    ])
+      .then(([email, course]) => {
+        if (!email || !course) return;
+        const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+        const courseUrl = `${frontendUrl}/courses/${course.slug}`;
+        return this.mailService.sendEnrollmentWelcome(email, course.title, courseUrl);
+      })
+      .catch((err: unknown) => {
+        this.logger.error('Failed to send enrollment welcome email', err);
+      });
   }
 
   async findByStudent(studentId: string) {

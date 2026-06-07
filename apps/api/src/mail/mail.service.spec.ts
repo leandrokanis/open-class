@@ -150,6 +150,32 @@ describe('MailService', () => {
     });
   });
 
+  // T001 — sendEnrollmentWelcome()
+  describe('sendEnrollmentWelcome()', () => {
+    it('should call sendMail with course name in subject and link in body when SMTP is configured', async () => {
+      process.env.SMTP_HOST = 'smtp.example.com';
+      process.env.SMTP_FROM = 'noreply@example.com';
+      sendMailMock.mockResolvedValue({});
+
+      await service.sendEnrollmentWelcome('aluno@example.com', 'Curso de NestJS', 'http://localhost:41700/courses/nestjs');
+
+      expect(sendMailMock).toHaveBeenCalledOnce();
+      const call = sendMailMock.mock.calls[0][0];
+      expect(call.to).toBe('aluno@example.com');
+      expect(call.from).toBe('noreply@example.com');
+      expect(call.subject).toContain('Curso de NestJS');
+      expect(call.html).toContain('http://localhost:41700/courses/nestjs');
+    });
+
+    it('should log warning and not call sendMail when SMTP is not configured', async () => {
+      delete process.env.SMTP_HOST;
+
+      await service.sendEnrollmentWelcome('aluno@example.com', 'Curso de NestJS', 'http://localhost:41700/courses/nestjs');
+
+      expect(sendMailMock).not.toHaveBeenCalled();
+    });
+  });
+
   // T008 — sendPasswordReset() regression
   describe('sendPasswordReset() regression', () => {
     it('should use SMTP_FROM as sender', async () => {

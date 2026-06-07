@@ -1,15 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { EnrollmentsService } from './enrollments.service';
+import { ConflictException } from '@nestjs/common';
 
-const makeRepo = (overrides: Record<string, unknown> = {}) => ({
+vi.mock('./enrollments.repository');
+vi.mock('../progress/progress.repository');
+vi.mock('../mail/mail.service');
+
+import { EnrollmentsService } from './enrollments.service';
+import { EnrollmentsRepository } from './enrollments.repository';
+import { ProgressRepository } from '../progress/progress.repository';
+import { MailService } from '../mail/mail.service';
+
+const makeRepo = () => ({
   findByStudent: vi.fn(),
-  ...overrides,
+  create: vi.fn(),
+  findCourseBasicById: vi.fn(),
+  findStudentEmailById: vi.fn(),
 });
 
-const makeProgressRepo = (overrides: Record<string, unknown> = {}) => ({
+const makeProgressRepo = () => ({
   getCompletionStats: vi.fn(),
   getLastAccessedLesson: vi.fn(),
-  ...overrides,
+});
+
+const makeMail = () => ({
+  sendEnrollmentWelcome: vi.fn().mockResolvedValue(undefined),
 });
 
 const fakeEnrollment = {
@@ -32,14 +46,58 @@ describe('EnrollmentsService', () => {
   let service: EnrollmentsService;
   let repo: ReturnType<typeof makeRepo>;
   let progressRepo: ReturnType<typeof makeProgressRepo>;
+  let mail: ReturnType<typeof makeMail>;
 
   beforeEach(() => {
     repo = makeRepo();
     progressRepo = makeProgressRepo();
-    service = new EnrollmentsService(repo as never, progressRepo as never);
+    mail = makeMail();
+    service = new EnrollmentsService(
+      repo as unknown as EnrollmentsRepository,
+      progressRepo as unknown as ProgressRepository,
+      mail as unknown as MailService,
+    );
   });
 
-  describe('findByStudent', () => {
+  describe('enroll()', () => {
+    it('cria matrícula e dispara e-mail de boas-vindas', async () => {
+      const fakeRow = { id: 'enroll-new', studentId: 'student-1', courseId: 'course-1', status: 'active', enrolledAt: new Date() };
+      repo.create.mockResolvedValue(fakeRow);
+      repo.findStudentEmailById.mockResolvedValue('aluno@example.com');
+      repo.findCourseBasicById.mockResolvedValue({ title: 'Curso de NestJS', slug: 'nestjs' });
+
+      const result = await service.enroll('student-1', 'course-1');
+
+      expect(result).toBe(fakeRow);
+      await vi.waitFor(() => expect(mail.sendEnrollmentWelcome).toHaveBeenCalledOnce());
+      expect(mail.sendEnrollmentWelcome).toHaveBeenCalledWith(
+        'aluno@example.com',
+        'Curso de NestJS',
+        expect.stringContaining('/courses/nestjs'),
+      );
+    });
+
+    it('não chama sendEnrollmentWelcome quando aluno já está matriculado', async () => {
+      repo.create.mockResolvedValue(null);
+
+      await expect(service.enroll('student-1', 'course-1')).rejects.toBeInstanceOf(ConflictException);
+      expect(mail.sendEnrollmentWelcome).not.toHaveBeenCalled();
+    });
+
+    it('não propaga erro de e-mail — matrícula retorna normalmente', async () => {
+      const fakeRow = { id: 'enroll-new', studentId: 'student-1', courseId: 'course-1', status: 'active', enrolledAt: new Date() };
+      repo.create.mockResolvedValue(fakeRow);
+      repo.findStudentEmailById.mockResolvedValue('aluno@example.com');
+      repo.findCourseBasicById.mockResolvedValue({ title: 'Curso de NestJS', slug: 'nestjs' });
+      mail.sendEnrollmentWelcome.mockRejectedValue(new Error('SMTP down'));
+
+      const result = await service.enroll('student-1', 'course-1');
+
+      expect(result).toBe(fakeRow);
+    });
+  });
+
+  describe('findByStudent()', () => {
     it('retorna array vazio quando aluno não tem matrículas', async () => {
       repo.findByStudent.mockResolvedValue([]);
 

@@ -98,4 +98,22 @@ export class EnrollmentsRepository {
       .returning();
     return row ?? null;
   }
+
+  async findCourseBasicById(courseId: string): Promise<{ title: string; slug: string } | null> {
+    const [row] = await this.db
+      .select({ title: courses.title, slug: courses.slug })
+      .from(courses)
+      .where(eq(courses.id, courseId))
+      .limit(1);
+    return row ?? null;
+  }
+
+  async findStudentEmailById(studentId: string): Promise<string | null> {
+    const [row] = await this.db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, studentId))
+      .limit(1);
+    return row?.email ?? null;
+  }
 }

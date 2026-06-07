@@ -1,7 +1,13 @@
+import { resolve } from 'path';
 import swc from 'unplugin-swc';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@open-class/db': resolve(__dirname, '../../packages/db/src/index.ts'),
+    },
+  },
   test: {
     globals: true,
     include: ['src/**/*.{test,spec}.ts', 'test/**/*.{test,spec}.ts'],
