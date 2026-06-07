@@ -4,9 +4,10 @@ import { EnrollmentsService } from './enrollments.service';
 import { EnrollmentsRepository } from './enrollments.repository';
 import { ProgressModule } from '../progress/progress.module';
 import { CommonModule } from '../common';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
-  imports: [CommonModule, ProgressModule],
+  imports: [CommonModule, ProgressModule, MailModule],
   controllers: [EnrollmentsController],
   providers: [EnrollmentsService, EnrollmentsRepository],
   exports: [EnrollmentsService],

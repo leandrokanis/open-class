@@ -37,6 +37,8 @@ services:
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:41700,http://192.168.0.169:41700}
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
       APP_URL: ${APP_URL:-http://localhost:41701}
@@ -62,6 +64,13 @@ services:
       timeout: 5s
       retries: 5
       start_period: 45s
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
 
   ui:
     build:
