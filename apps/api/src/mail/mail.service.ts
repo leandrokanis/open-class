@@ -67,7 +67,35 @@ export class MailService {
       to: email,
       subject: 'Redefinição de senha — Open Class',
       text: `Para redefinir sua senha acesse: ${resetUrl}\n\nEste link expira em 1 hora e é de uso único.`,
-      html: `<p>Para redefinir sua senha <a href="${resetUrl}">clique aqui</a>.</p><p>Este link expira em 1 hora e é de uso único.</p>`,
+      html: `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 0">
+    <tr><td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+        <!-- header -->
+        <tr><td style="background:#18181b;padding:32px 40px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.3px">Open Class</p>
+        </td></tr>
+        <!-- body -->
+        <tr><td style="padding:40px 40px 32px">
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#18181b">Redefinição de senha</h1>
+          <p style="margin:0 0 24px;font-size:15px;color:#52525b;line-height:1.6">Recebemos uma solicitação para redefinir a senha da sua conta. Clique no botão abaixo para criar uma nova senha.</p>
+          <a href="${resetUrl}" style="display:inline-block;background:#18181b;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:13px 28px;border-radius:8px">Redefinir senha</a>
+          <p style="margin:28px 0 0;font-size:13px;color:#a1a1aa;line-height:1.6">Se o botão não funcionar, copie e cole o link abaixo no navegador:<br>
+            <a href="${resetUrl}" style="color:#52525b;word-break:break-all">${resetUrl}</a>
+          </p>
+        </td></tr>
+        <!-- footer -->
+        <tr><td style="padding:20px 40px;border-top:1px solid #f4f4f5">
+          <p style="margin:0;font-size:12px;color:#a1a1aa">Este link expira em <strong>1 hora</strong> e é de uso único. Se você não solicitou a redefinição, ignore este e-mail.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
     });
   }
 }
