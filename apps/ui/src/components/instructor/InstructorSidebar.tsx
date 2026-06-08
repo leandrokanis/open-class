@@ -7,6 +7,7 @@ import { useRouter, usePathname } from "next/navigation";
 import styled from "styled-components";
 import { logout } from "@/lib/auth";
 import { useSidebarSlot } from "@/components/instructor/SidebarSlotContext";
+import { Icon } from "@/components/ui/Icon";
 
 const Sidebar = styled.aside<{ $width: number }>`
   width: ${({ $width }) => $width}px;
@@ -16,9 +17,17 @@ const Sidebar = styled.aside<{ $width: number }>`
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
   user-select: none;
+  z-index: 10;
+`;
+
+const SidebarSpacer = styled.div<{ $width: number }>`
+  width: ${({ $width }) => $width}px;
+  min-width: ${({ $width }) => $width}px;
+  flex-shrink: 0;
 `;
 
 const ResizeHandle = styled.div`
@@ -54,6 +63,12 @@ const Nav = styled.nav`
   flex-shrink: 0;
 `;
 
+const NavDivider = styled.div`
+  height: 1px;
+  background: var(--color-border);
+  margin: 6px 8px;
+`;
+
 const NavLink = styled(Link)<{ $active: boolean }>`
   display: flex;
   align-items: center;
@@ -76,11 +91,6 @@ const NavLink = styled(Link)<{ $active: boolean }>`
   }
 `;
 
-const NavDivider = styled.div`
-  height: 1px;
-  background: var(--color-border);
-  margin: 6px 8px;
-`;
 
 const PanelSlot = styled.div`
   flex: 1;
@@ -244,22 +254,25 @@ export function InstructorSidebar({ userName = "Instrutor", userRole = "Instruto
   }
 
   return (
-    <Sidebar $width={effectiveWidth} style={{ position: 'relative' }}>
+    <>
+    <SidebarSpacer $width={effectiveWidth} />
+    <Sidebar $width={effectiveWidth}>
       <ResizeHandle onMouseDown={handleResizeMouseDown} />
 
       <Nav>
         <NavLink href="/instructor" $active={pathname === "/instructor"}>
+          <Icon name="school" size={16} />
           Meus Cursos
         </NavLink>
         {isAdmin && (
-          <NavLink href="/admin/configuracoes" $active={pathname.startsWith("/admin")}>
-            Configurações da plataforma
-          </NavLink>
+          <>
+            <NavLink href="/admin/configuracoes" $active={pathname.startsWith("/admin")}>
+              <Icon name="settings" size={16} />
+              Configurações
+            </NavLink>
+            <NavDivider />
+          </>
         )}
-        <NavDivider />
-        <NavLink href="/" $active={false}>
-          Voltar ao catálogo
-        </NavLink>
       </Nav>
 
       <PanelSlot ref={registerTarget} />
@@ -289,5 +302,6 @@ export function InstructorSidebar({ userName = "Instrutor", userRole = "Instruto
         </AvatarButton>
       </Footer>
     </Sidebar>
+    </>
   );
 }

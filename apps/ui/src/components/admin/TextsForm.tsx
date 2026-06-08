@@ -1,15 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { updatePlatformConfig, type PlatformConfig, type UpdatePlatformConfig } from "@/lib/platform-config";
 
-const Form = styled.form`
+const Form = styled.div`
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -42,16 +40,15 @@ const Hint = styled.span`
   color: var(--color-text-tertiary);
 `;
 
-const Actions = styled.div`
-  display: flex;
-  gap: 12px;
-`;
-
 interface TextsFormProps {
   config: PlatformConfig;
+  onSaving: () => void;
+  onSaved: () => void;
 }
 
-export function TextsForm({ config }: TextsFormProps) {
+const AUTOSAVE_DELAY = 800;
+
+export function TextsForm({ config, onSaving, onSaved }: TextsFormProps) {
   const [values, setValues] = useState<Required<UpdatePlatformConfig>>({
     platformName: config.platformName,
     catalogHeroEyebrow: config.catalogHeroEyebrow,
@@ -60,37 +57,34 @@ export function TextsForm({ config }: TextsFormProps) {
     loginHeroTagline: config.loginHeroTagline,
     loginHeroSubtitle: config.loginHeroSubtitle,
   });
-  const [saving, setSaving] = useState(false);
+  const isInitialMount = useRef(true);
 
   function set<K extends keyof UpdatePlatformConfig>(key: K, value: string) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const result = await updatePlatformConfig({
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    const timer = setTimeout(async () => {
+      onSaving();
+      await updatePlatformConfig({
         catalogHeroEyebrow: values.catalogHeroEyebrow,
         catalogHeroHeadline: values.catalogHeroHeadline,
         catalogHeroSubtitle: values.catalogHeroSubtitle,
         loginHeroTagline: values.loginHeroTagline,
         loginHeroSubtitle: values.loginHeroSubtitle,
       });
-      if (!result) {
-        toast.error("Falha ao salvar os textos.");
-        return;
-      }
-      toast.success("Textos salvos. Deixe um campo em branco para voltar ao padrão.");
-    } catch {
-      toast.error("Erro inesperado ao salvar.");
-    } finally {
-      setSaving(false);
-    }
-  }
+      onSaved();
+    }, AUTOSAVE_DELAY);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values]);
 
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form>
       <Group>
         <Legend>Página inicial (catálogo)</Legend>
         <Field>
@@ -147,12 +141,6 @@ export function TextsForm({ config }: TextsFormProps) {
       </Group>
 
       <Hint>Campos em branco voltam a exibir o texto padrão da plataforma.</Hint>
-
-      <Actions>
-        <Button type="submit" disabled={saving}>
-          {saving ? "Salvando..." : "Salvar textos"}
-        </Button>
-      </Actions>
     </Form>
   );
 }

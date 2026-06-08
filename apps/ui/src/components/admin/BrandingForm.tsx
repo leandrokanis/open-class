@@ -1,14 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updatePlatformConfig, uploadLogo, type PlatformConfig } from "@/lib/platform-config";
 
-const Form = styled.form`
+const Form = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -52,21 +50,49 @@ const Empty = styled.span`
   padding: 4px;
 `;
 
-const Actions = styled.div`
-  display: flex;
-  gap: 12px;
-`;
-
 interface BrandingFormProps {
   config: PlatformConfig;
+  onSaving: () => void;
+  onSaved: () => void;
 }
 
-export function BrandingForm({ config }: BrandingFormProps) {
+const AUTOSAVE_DELAY = 800;
+
+export function BrandingForm({ config, onSaving, onSaved }: BrandingFormProps) {
   const [platformName, setPlatformName] = useState(config.platformName);
   const [logoUrl, setLogoUrl] = useState(config.logoUrl);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const isDirty = useRef(false);
+
+  // Auto-save platformName
+  useEffect(() => {
+    if (!isDirty.current) return;
+    const timer = setTimeout(async () => {
+      onSaving();
+      await updatePlatformConfig({ platformName });
+      onSaved();
+    }, AUTOSAVE_DELAY);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [platformName]);
+
+  // Auto-upload logo when file selected
+  useEffect(() => {
+    if (!logoFile) return;
+    const timer = setTimeout(async () => {
+      onSaving();
+      const result = await uploadLogo(logoFile);
+      if (result) {
+        setLogoUrl(result.logoUrl);
+        setLogoFile(null);
+        setPreview(null);
+        onSaved();
+      }
+    }, AUTOSAVE_DELAY);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logoFile]);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
@@ -74,43 +100,19 @@ export function BrandingForm({ config }: BrandingFormProps) {
     setPreview(file ? URL.createObjectURL(file) : null);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      if (logoFile) {
-        const result = await uploadLogo(logoFile);
-        if (!result) {
-          toast.error("Falha no upload do logo. Verifique o formato (jpg, png, webp) e o tamanho (máx 2MB).");
-          return;
-        }
-        setLogoUrl(result.logoUrl);
-        setLogoFile(null);
-        setPreview(null);
-      }
-      const result = await updatePlatformConfig({ platformName });
-      if (!result) {
-        toast.error("Falha ao salvar o nome da plataforma.");
-        return;
-      }
-      toast.success("Identidade da plataforma salva.");
-    } catch {
-      toast.error("Erro inesperado ao salvar.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
   const shownLogo = preview ?? logoUrl;
 
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form>
       <Field>
         <Label htmlFor="platformName">Nome da plataforma</Label>
         <Input
           id="platformName"
           value={platformName}
-          onChange={(e) => setPlatformName(e.target.value)}
+          onChange={(e) => {
+            isDirty.current = true;
+            setPlatformName(e.target.value);
+          }}
           placeholder="Digite o nome da plataforma"
         />
       </Field>
@@ -128,12 +130,6 @@ export function BrandingForm({ config }: BrandingFormProps) {
           <Input id="logo" type="file" accept="image/png,image/jpeg,image/webp" onChange={handleFileChange} />
         </LogoRow>
       </Field>
-
-      <Actions>
-        <Button type="submit" disabled={saving}>
-          {saving ? "Salvando..." : "Salvar identidade"}
-        </Button>
-      </Actions>
     </Form>
   );
 }
