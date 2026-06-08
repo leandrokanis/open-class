@@ -76,15 +76,69 @@ Se `.current-plan.md` não existir ou `feature_directory` estiver vazio, pare e 
 
 ---
 
-## Etapa 2 — Escrever plan.md
+## Etapa 2 — Entrevista técnica (OBRIGATÓRIA — não pule)
 
-Crie `<feature_directory>/plan.md` com a estrutura abaixo:
+Antes de escrever qualquer arquivo, você **deve** entrevistar o usuário sobre todas as decisões técnicas abertas.
+
+**Regras desta etapa:**
+- Nunca suponha uma abordagem técnica sem perguntar.
+- Nunca tome uma decisão arquitetural por conta própria.
+- Se houver mais de uma forma razoável de fazer algo, apresente as opções com prós e contras e pergunte qual o usuário prefere.
+- Continue perguntando até não restar nenhuma incerteza técnica relevante.
+- Só avance para a Etapa 3 quando o usuário disser que está satisfeito com as respostas dadas ou explicitamente mandar continuar.
+
+### Como conduzir a entrevista
+
+1. **Analise o spec** e identifique todas as decisões técnicas que precisam ser tomadas. Para cada uma das categorias abaixo, liste as perguntas abertas que encontrar:
+
+   **Data model**
+   - Quais entidades novas serão necessárias? Como se relacionam entre si?
+   - Campos e tipos: há campos com semântica especial (dinheiro, datas com timezone, soft delete)?
+   - Enums: os valores possíveis são fixos ou podem crescer? (impacta pgEnum vs tabela de lookup)
+   - Relações: one-to-many, many-to-many? Cascade delete ou soft delete?
+   - Índices: quais queries serão mais frequentes?
+
+   **Módulo e arquitetura**
+   - O que cabe neste módulo vs. o que é responsabilidade de outro já existente?
+   - O service precisará emitir eventos (ex: para o módulo de notificações)?
+   - Alguma lógica precisa ser transacional (múltiplas writes atômicas)?
+
+   **Contratos de API**
+   - Quais endpoints são necessários (além dos CRUD óbvios)?
+   - Paginação, filtros e ordenação — como devem funcionar?
+   - Quais roles têm acesso a quais endpoints?
+   - Algum endpoint precisa de autorização por ownership (ex: só o dono pode editar)?
+
+   **Integrações e serviços externos**
+   - A feature depende de algum serviço externo (storage, e-mail, pagamento)?
+   - Há side effects esperados ao criar/atualizar/deletar (ex: enviar e-mail, invalidar cache)?
+
+   **Decisões de implementação**
+   - Há lógica de negócio complexa que merece um padrão específico (strategy, policy, domain service)?
+   - Uploads de arquivos? Qual provedor e como validar tamanho/tipo?
+
+2. **Apresente as perguntas** de forma clara, agrupadas por categoria, com opções quando aplicável. Não faça mais de 5–7 perguntas por rodada para não sobrecarregar.
+
+3. **Espere as respostas** do usuário antes de continuar.
+
+4. **Faça rodadas adicionais** se as respostas levantarem novas dúvidas técnicas. Repita até o usuário confirmar que está tudo claro ou mandar prosseguir.
+
+5. **Resuma o entendimento** no final da entrevista antes de escrever o plano:
+   > "Entendido. Vou planejar com base em: [lista das decisões tomadas]. Posso prosseguir?"
+
+Só avance quando receber confirmação.
+
+---
+
+## Etapa 3 — Escrever plan.md
+
+Com todas as decisões técnicas resolvidas via entrevista, crie `<feature_directory>/plan.md`:
 
 ```markdown
 # Plano: <Nome da Feature>
 
 ## Stack e decisões técnicas
-<Quais bibliotecas, padrões e abordagens serão usados. Justifique escolhas não-óbvias.>
+<Quais bibliotecas, padrões e abordagens serão usados. Justifique cada escolha com base nas respostas da entrevista.>
 
 ## Data model
 
@@ -183,7 +237,7 @@ Inclua cenários para:
 
 ---
 
-## Etapa 3 — Registrar decisões arquiteturais
+## Etapa 4 — Registrar decisões arquiteturais
 
 Após escrever o `plan.md`, identifique se ele contém decisões que merecem um ADR.
 
@@ -258,7 +312,7 @@ Pule esta etapa silenciosamente.
 
 ---
 
-## Etapa 4 — Atualizar `.current-plan.md`
+## Etapa 5 — Atualizar `.current-plan.md`
 
 Atualize o campo `plan:` em `.current-plan.md`:
 
@@ -273,7 +327,7 @@ tasks:
 
 ---
 
-## Etapa 5 — Reportar
+## Etapa 6 — Reportar
 
 Informe:
 - Caminho do plan: `<feature_directory>/plan.md`
