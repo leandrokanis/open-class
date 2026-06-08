@@ -4,8 +4,6 @@ import { redirect } from "next/navigation";
 import { fetchMe } from "@/lib/dashboard";
 import { InstructorSidebar } from "@/components/instructor/InstructorSidebar";
 import { SidebarSlotProvider } from "@/components/instructor/SidebarSlotContext";
-import { ActivityProvider } from "@/components/instructor/ActivityContext";
-import { ActivityBar } from "@/components/instructor/ActivityBar";
 import styled from "styled-components";
 
 const Wrapper = styled.div`
@@ -33,17 +31,20 @@ export default async function InstructorLayout({
   if (!me) redirect("/login");
   if (me.role !== "instrutor" && me.role !== "admin") redirect("/");
 
-  const userInitial = (me.name ?? "?").charAt(0).toUpperCase();
+  const isAdmin = me.role === "admin";
+  const roleLabel = isAdmin ? "Administrador" : "Instrutor";
 
   return (
-    <ActivityProvider>
-      <SidebarSlotProvider>
-        <Wrapper data-theme="dark">
-          <ActivityBar userInitial={userInitial} />
-          <InstructorSidebar userName={me.name} userRole="Instrutor" avatarUrl={me.avatarUrl ?? undefined} />
-          <Main>{children}</Main>
-        </Wrapper>
-      </SidebarSlotProvider>
-    </ActivityProvider>
+    <SidebarSlotProvider>
+      <Wrapper data-theme="dark">
+        <InstructorSidebar
+          userName={me.name}
+          userRole={roleLabel}
+          avatarUrl={me.avatarUrl ?? undefined}
+          isAdmin={isAdmin}
+        />
+        <Main>{children}</Main>
+      </Wrapper>
+    </SidebarSlotProvider>
   );
 }

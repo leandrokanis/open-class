@@ -135,6 +135,9 @@ export class CourseListItemDto {
   @ApiPropertyOptional()
   thumbnailUrl?: string | null;
 
+  @ApiPropertyOptional({ example: 'João Silva', description: 'Nome do instrutor dono do curso (presente apenas na listagem do admin)' })
+  instructorName?: string;
+
   @ApiProperty()
   createdAt!: Date;
 

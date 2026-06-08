@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import styled from "styled-components";
 import { logout } from "@/lib/auth";
 import { useSidebarSlot } from "@/components/instructor/SidebarSlotContext";
@@ -43,6 +44,42 @@ const ResizeHandle = styled.div`
   &:hover::after {
     background: var(--color-primary);
   }
+`;
+
+const Nav = styled.nav`
+  padding: 12px 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+`;
+
+const NavLink = styled(Link)<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: ${({ $active }) => ($active ? 600 : 400)};
+  color: ${({ $active }) => ($active ? "var(--color-primary)" : "var(--color-text-secondary)")};
+  background: ${({ $active }) => ($active ? "rgba(232,160,69,0.12)" : "transparent")};
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover {
+    background: var(--color-surface-secondary);
+    color: var(--color-primary);
+  }
+`;
+
+const NavDivider = styled.div`
+  height: 1px;
+  background: var(--color-border);
+  margin: 6px 8px;
 `;
 
 const PanelSlot = styled.div`
@@ -152,13 +189,15 @@ interface InstructorSidebarProps {
   userName?: string;
   userRole?: string;
   avatarUrl?: string;
+  isAdmin?: boolean;
 }
 
 const MIN_WIDTH = 180;
 const MAX_WIDTH = 480;
 
-export function InstructorSidebar({ userName = "Instrutor", userRole = "Instrutor", avatarUrl }: InstructorSidebarProps) {
+export function InstructorSidebar({ userName = "Instrutor", userRole = "Instrutor", avatarUrl, isAdmin = false }: InstructorSidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [width, setWidth] = useState<number | null>(null);
   const footerRef = useRef<HTMLDivElement>(null);
@@ -207,6 +246,21 @@ export function InstructorSidebar({ userName = "Instrutor", userRole = "Instruto
   return (
     <Sidebar $width={effectiveWidth} style={{ position: 'relative' }}>
       <ResizeHandle onMouseDown={handleResizeMouseDown} />
+
+      <Nav>
+        <NavLink href="/instructor" $active={pathname === "/instructor"}>
+          Meus Cursos
+        </NavLink>
+        {isAdmin && (
+          <NavLink href="/admin/configuracoes" $active={pathname.startsWith("/admin")}>
+            Configurações da plataforma
+          </NavLink>
+        )}
+        <NavDivider />
+        <NavLink href="/" $active={false}>
+          Voltar ao catálogo
+        </NavLink>
+      </Nav>
 
       <PanelSlot ref={registerTarget} />
 

@@ -68,6 +68,7 @@ export interface CourseListItem {
   createdAt: string;
   enrollmentCount?: number;
   lessonCount?: number;
+  instructorName?: string;
 }
 
 export interface CourseEditorData {

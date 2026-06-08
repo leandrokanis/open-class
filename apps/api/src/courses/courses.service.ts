@@ -47,6 +47,7 @@ export class CoursesService {
   }
 
   async findMine(user: RequestingUser, page: number, limit: number) {
+    if (user.role === 'admin') return this.repo.findAllWithInstructor(page, limit);
     return this.repo.findByInstructorId(user.id, page, limit);
   }
 
@@ -111,6 +112,7 @@ export class CoursesService {
   }
 
   async getInstructorStats(user: RequestingUser) {
+    if (user.role === 'admin') return this.repo.getGlobalStats();
     return this.repo.getInstructorStats(user.id);
   }
 
