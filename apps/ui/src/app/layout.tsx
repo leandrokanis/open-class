@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const config = await fetchPlatformConfig();
   return {
     title: config.platformName,
-    description: "Plataforma open source de cursos gratuitos",
+    description: config.platformName,
   };
 }
 
@@ -30,7 +30,10 @@ export default async function RootLayout({
   const config = await fetchPlatformConfig();
 
   return (
-    <html lang="pt-BR" className={inter.variable} data-theme="light">
+    <html lang="pt-BR" className={inter.variable} data-theme="light" style={{ colorScheme: "light" }}>
+      <head>
+        <meta name="color-scheme" content="light" />
+      </head>
       <body>
         <StyledComponentsRegistry>
           <PlatformConfigProvider config={config}>

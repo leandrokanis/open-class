@@ -64,11 +64,12 @@ const LogoText = styled.span`
   }
 `;
 
-const LogoDesktop = styled.div`
+const LogoDesktop = styled(Link)`
   display: flex;
   align-items: center;
   gap: 8px;
   margin-right: 32px;
+  text-decoration: none;
 `;
 
 const LogoImg = styled.img`
@@ -300,15 +301,17 @@ export function AppHeader() {
       <MobileSpacer />
 
       <HeaderDesktop>
-        <LogoDesktop>
+        <LogoDesktop href="/">
           {config.logoUrl ? (
             <LogoImg src={config.logoUrl} alt={config.platformName} />
           ) : (
-            <div style={{ color: "var(--color-primary)", display: "flex" }}>
-              <GridIcon />
-            </div>
+            <>
+              <div style={{ color: "var(--color-primary)", display: "flex" }}>
+                <GridIcon />
+              </div>
+              <LogoText>{config.platformName}</LogoText>
+            </>
           )}
-          <LogoText>{config.platformName}</LogoText>
         </LogoDesktop>
         <NavLinks>
           <NavLink href="/" $active={pathname === "/"}>Catálogo</NavLink>
