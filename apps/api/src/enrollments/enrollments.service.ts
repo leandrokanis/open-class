@@ -2,6 +2,7 @@ import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { EnrollmentsRepository } from './enrollments.repository';
 import { ProgressRepository } from '../progress/progress.repository';
 import { MailService } from '../mail/mail.service';
+import { t } from '../i18n/translate';
 
 @Injectable()
 export class EnrollmentsService {
@@ -15,7 +16,7 @@ export class EnrollmentsService {
 
   async enroll(studentId: string, courseId: string) {
     const enrollment = await this.repo.create(studentId, courseId);
-    if (!enrollment) throw new ConflictException('Aluno já matriculado neste curso.');
+    if (!enrollment) throw new ConflictException(t('enrollments.already_enrolled'));
 
     this.sendWelcomeEmail(studentId, courseId);
 

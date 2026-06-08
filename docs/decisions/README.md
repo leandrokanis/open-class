@@ -29,6 +29,7 @@ Decisões técnicas significativas do projeto Open Class, documentadas no format
 | [ADR-021](021-mcp-oauth-from-scratch.md) | OAuth 2.0 Authorization Server implementado from scratch para MCP | Aceito | 2026-05-27 |
 | [ADR-022](022-mailhog-dev-smtp.md) | MailHog como servidor SMTP local para desenvolvimento | Aceito | 2026-06-02 |
 | [ADR-023](023-white-label-config-loading.md) | Configuração white-label carregada no root layout e distribuída via context | Aceito | 2026-06-02 |
+| [ADR-024](024-nestjs-i18n.md) | nestjs-i18n para internacionalização da API | Aceito | 2026-06-07 |
 
 ## Como usar
 

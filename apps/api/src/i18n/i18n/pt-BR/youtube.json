@@ -1,0 +1,6 @@
+{
+  "url_required": "Parâmetro url é obrigatório.",
+  "invalid_url": "URL do YouTube inválida ou em formato não reconhecido.",
+  "video_not_found": "Vídeo do YouTube não encontrado ou não está disponível.",
+  "embed_not_allowed": "O vídeo do YouTube não permite incorporação (embed)."
+}

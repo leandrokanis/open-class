@@ -1,0 +1,19 @@
+{
+  "is_email": "Invalid email",
+  "is_string": "The {property} field must be a string",
+  "is_boolean": "The {property} field must be a boolean",
+  "is_int": "The {property} field must be an integer",
+  "is_array": "The {property} field must be an array",
+  "is_uuid": "The {property} field must be a valid UUID",
+  "is_url": "The {property} field must be a valid URL",
+  "is_in": "The {property} field has an invalid value",
+  "is_not_empty": "The {property} field is required",
+  "matches": "The {property} field has an invalid format",
+  "min": "The {property} field must be greater than or equal to {constraints.0}",
+  "max": "The {property} field must be less than or equal to {constraints.0}",
+  "min_length": "The {property} field must be at least {constraints.0} characters long",
+  "max_length": "The {property} field must be at most {constraints.0} characters long",
+  "array_not_empty": "The {property} field must not be an empty array",
+  "array_min_size": "The {property} field must contain at least {constraints.0} items",
+  "array_unique": "The {property} field must not contain duplicate items"
+}

@@ -1,0 +1,8 @@
+{
+  "not_found": "Lesson not found.",
+  "reorder_count_mismatch": "The list of IDs must contain exactly all lessons of the module.",
+  "no_permission": "You do not have permission to modify this module.",
+  "reorder_set_mismatch": "The submitted IDs do not match the current set of {label}.",
+  "reorder_label": "module lessons",
+  "resource_not_found": "Resource not found."
+}

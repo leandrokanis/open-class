@@ -3,6 +3,7 @@ import {
 } from '@nestjs/common';
 import slugify from 'slugify';
 import { CategoriesRepository } from './categories.repository';
+import { t } from '../i18n/translate';
 import type { CreateCategoryDto } from './dto/create-category.dto';
 import type { UpdateCategoryDto } from './dto/update-category.dto';
 
@@ -26,13 +27,13 @@ export class CategoriesService {
 
   async findOne(id: string) {
     const category = await this.repo.findById(id);
-    if (!category) throw new NotFoundException('Categoria não encontrada');
+    if (!category) throw new NotFoundException(t('categories.not_found'));
     return category;
   }
 
   async create(dto: CreateCategoryDto) {
     const existing = await this.repo.findByName(dto.name);
-    if (existing) throw new ConflictException('Já existe uma categoria com esse nome');
+    if (existing) throw new ConflictException(t('categories.name_taken'));
 
     const slug = await this.generateSlug(dto.name);
     const position = (await this.repo.maxPosition()) + 1;
@@ -42,13 +43,13 @@ export class CategoriesService {
 
   async update(id: string, dto: UpdateCategoryDto) {
     const category = await this.repo.findById(id);
-    if (!category) throw new NotFoundException('Categoria não encontrada');
+    if (!category) throw new NotFoundException(t('categories.not_found'));
 
     const data: Record<string, unknown> = {};
 
     if (dto.name !== undefined && dto.name !== category.name) {
       const existing = await this.repo.findByName(dto.name);
-      if (existing) throw new ConflictException('Já existe uma categoria com esse nome');
+      if (existing) throw new ConflictException(t('categories.name_taken'));
       data.name = dto.name;
       data.slug = await this.generateSlug(dto.name);
     }
@@ -60,13 +61,11 @@ export class CategoriesService {
 
   async remove(id: string) {
     const category = await this.repo.findById(id);
-    if (!category) throw new NotFoundException('Categoria não encontrada');
+    if (!category) throw new NotFoundException(t('categories.not_found'));
 
     const linked = await this.repo.countLinkedCourses(id);
     if (linked > 0) {
-      throw new ConflictException(
-        `Não é possível excluir: ${linked} curso(s) referencia(m) esta categoria`,
-      );
+      throw new ConflictException(t('categories.has_linked_courses', { count: linked }));
     }
 
     await this.repo.delete(id);

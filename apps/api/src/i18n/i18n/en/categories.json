@@ -1,0 +1,5 @@
+{
+  "not_found": "Category not found",
+  "name_taken": "A category with this name already exists",
+  "has_linked_courses": "Cannot delete: {count} course(s) reference this category"
+}

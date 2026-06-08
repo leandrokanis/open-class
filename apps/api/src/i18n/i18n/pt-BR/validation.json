@@ -1,0 +1,19 @@
+{
+  "is_email": "E-mail inválido",
+  "is_string": "O campo {property} deve ser um texto",
+  "is_boolean": "O campo {property} deve ser um booleano",
+  "is_int": "O campo {property} deve ser um número inteiro",
+  "is_array": "O campo {property} deve ser uma lista",
+  "is_uuid": "O campo {property} deve ser um UUID válido",
+  "is_url": "O campo {property} deve ser uma URL válida",
+  "is_in": "O campo {property} possui um valor inválido",
+  "is_not_empty": "O campo {property} é obrigatório",
+  "matches": "O campo {property} está em formato inválido",
+  "min": "O campo {property} deve ser maior ou igual a {constraints.0}",
+  "max": "O campo {property} deve ser menor ou igual a {constraints.0}",
+  "min_length": "O campo {property} deve ter no mínimo {constraints.0} caracteres",
+  "max_length": "O campo {property} deve ter no máximo {constraints.0} caracteres",
+  "array_not_empty": "O campo {property} não pode ser uma lista vazia",
+  "array_min_size": "O campo {property} deve ter no mínimo {constraints.0} itens",
+  "array_unique": "O campo {property} não pode conter itens duplicados"
+}

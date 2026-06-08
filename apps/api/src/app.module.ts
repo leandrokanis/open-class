@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { APP_GUARD } from '@nestjs/core';
+import { I18nModule, AcceptLanguageResolver } from 'nestjs-i18n';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
@@ -25,6 +26,14 @@ import { McpOAuthModule } from './mcp-oauth/mcp-oauth.module';
   imports: [
     DatabaseModule,
     CommonModule,
+    I18nModule.forRoot({
+      fallbackLanguage: 'pt-BR',
+      loaderOptions: {
+        path: join(__dirname, 'i18n', 'i18n'),
+        watch: true,
+      },
+      resolvers: [AcceptLanguageResolver],
+    }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),

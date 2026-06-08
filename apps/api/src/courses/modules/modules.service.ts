@@ -2,6 +2,7 @@ import {
   Injectable, NotFoundException, ForbiddenException, BadRequestException, ConflictException,
 } from '@nestjs/common';
 import { CoursesRepository } from '../courses.repository';
+import { t } from '../../i18n/translate';
 import type { CreateModuleDto } from '../dto/create-module.dto';
 import type { UpdateModuleDto } from '../dto/update-module.dto';
 
@@ -13,7 +14,7 @@ export class ModulesService {
 
   private async assertCourseAccess(courseId: string, user: RequestingUser) {
     const course = await this.repo.findById(courseId);
-    if (!course) throw new NotFoundException('Curso não encontrado.');
+    if (!course) throw new NotFoundException(t('courses.not_found'));
     if (course.instructorId !== user.id && user.role !== 'admin') throw new ForbiddenException();
     return course;
   }
@@ -21,7 +22,7 @@ export class ModulesService {
   private async assertModuleAccess(courseId: string, moduleId: string, user: RequestingUser) {
     await this.assertCourseAccess(courseId, user);
     const mod = await this.repo.findModuleById(moduleId);
-    if (!mod || mod.courseId !== courseId) throw new NotFoundException('Módulo não encontrado.');
+    if (!mod || mod.courseId !== courseId) throw new NotFoundException(t('modules.not_found'));
     return mod;
   }
 
@@ -39,9 +40,7 @@ export class ModulesService {
     await this.assertModuleAccess(courseId, moduleId, user);
     const lessonCount = await this.repo.countLessonsInModule(moduleId);
     if (lessonCount > 0 && !force) {
-      throw new ConflictException(
-        'O módulo possui aulas. Use ?force=true para excluir junto com as aulas.',
-      );
+      throw new ConflictException(t('modules.has_lessons'));
     }
     await this.repo.deleteModule(moduleId);
   }
@@ -50,9 +49,7 @@ export class ModulesService {
     await this.assertCourseAccess(courseId, user);
     const total = await this.repo.countModulesInCourse(courseId);
     if (ids.length !== total) {
-      throw new BadRequestException(
-        'A lista de IDs deve conter exatamente todos os módulos do curso.',
-      );
+      throw new BadRequestException(t('modules.reorder_count_mismatch'));
     }
     await this.repo.reorderModules(courseId, ids);
     return { reordered: ids.length };

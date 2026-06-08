@@ -4,6 +4,7 @@ import {
 import slugify from 'slugify';
 import { CoursesRepository } from './courses.repository';
 import { UploadService } from '../common/upload/upload.service';
+import { t } from '../i18n/translate';
 import type { CreateCourseDto } from './dto/create-course.dto';
 import type { UpdateCourseDto } from './dto/update-course.dto';
 
@@ -53,14 +54,14 @@ export class CoursesService {
 
   async findOne(id: string, user: RequestingUser) {
     const course = await this.repo.findWithModulesAndLessons(id);
-    if (!course) throw new NotFoundException('Curso não encontrado.');
+    if (!course) throw new NotFoundException(t('courses.not_found'));
     if (!this.isOwnerOrAdmin(course, user)) throw new ForbiddenException();
     return course;
   }
 
   async update(id: string, user: RequestingUser, dto: UpdateCourseDto) {
     const course = await this.repo.findById(id);
-    if (!course) throw new NotFoundException('Curso não encontrado.');
+    if (!course) throw new NotFoundException(t('courses.not_found'));
     if (!this.isOwnerOrAdmin(course, user)) throw new ForbiddenException();
 
     const update: Record<string, unknown> = {};
@@ -81,9 +82,9 @@ export class CoursesService {
 
   async uploadThumbnail(id: string, user: RequestingUser, file: Express.Multer.File) {
     const course = await this.repo.findById(id);
-    if (!course) throw new NotFoundException('Curso não encontrado.');
+    if (!course) throw new NotFoundException(t('courses.not_found'));
     if (!this.isOwnerOrAdmin(course, user)) throw new ForbiddenException();
-    if (!file) throw new BadRequestException('Arquivo de thumbnail não enviado.');
+    if (!file) throw new BadRequestException(t('courses.thumbnail_missing'));
 
     const thumbnailUrl = this.uploadService.thumbnailUrl(file.filename);
     return this.repo.update(id, { thumbnailUrl });
@@ -91,14 +92,12 @@ export class CoursesService {
 
   async publish(id: string, user: RequestingUser) {
     const course = await this.repo.findById(id);
-    if (!course) throw new NotFoundException('Curso não encontrado.');
+    if (!course) throw new NotFoundException(t('courses.not_found'));
     if (!this.isOwnerOrAdmin(course, user)) throw new ForbiddenException();
 
     const visibleLessons = await this.repo.countVisibleLessons(id);
     if (visibleLessons === 0) {
-      throw new BadRequestException(
-        'O curso precisa ter pelo menos uma aula visível para ser publicado.',
-      );
+      throw new BadRequestException(t('courses.publish_requires_visible_lesson'));
     }
 
     return this.repo.update(id, { status: 'published' });
@@ -106,7 +105,7 @@ export class CoursesService {
 
   async unpublish(id: string, user: RequestingUser) {
     const course = await this.repo.findById(id);
-    if (!course) throw new NotFoundException('Curso não encontrado.');
+    if (!course) throw new NotFoundException(t('courses.not_found'));
     if (!this.isOwnerOrAdmin(course, user)) throw new ForbiddenException();
     return this.repo.update(id, { status: 'draft' });
   }
@@ -118,7 +117,7 @@ export class CoursesService {
 
   async remove(id: string, user: RequestingUser) {
     const course = await this.repo.findById(id);
-    if (!course) throw new NotFoundException('Curso não encontrado.');
+    if (!course) throw new NotFoundException(t('courses.not_found'));
     if (!this.isOwnerOrAdmin(course, user)) throw new ForbiddenException();
     await this.repo.softDelete(id);
   }

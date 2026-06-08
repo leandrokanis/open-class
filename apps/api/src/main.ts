@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, RequestMethod } from '@nestjs/common';
+import { RequestMethod } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { I18nValidationPipe } from 'nestjs-i18n';
 import * as cookieParser from 'cookie-parser';
 import { runMigrations } from '@open-class/db';
 import { AppModule } from './app.module';
@@ -52,7 +53,7 @@ async function bootstrap() {
   }
 
   app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+    new I18nValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   );
 
   app.useGlobalFilters(new HttpExceptionFilter());
@@ -68,9 +69,19 @@ async function bootstrap() {
       '- `instrutor` — pode criar e editar seus cursos\n' +
       '- `admin` — acesso total (usuários, cursos, matrículas)\n\n' +
       'Rotas protegidas retornam `401` quando não autenticado e `403` quando o papel é insuficiente.\n\n' +
+      '**Idioma (i18n)**: mensagens de erro, validação e e-mails respeitam o cabeçalho ' +
+      '`Accept-Language`. Idiomas suportados: `pt-BR` (padrão) e `en`. Qualquer outro valor ' +
+      'recai para `pt-BR`.\n\n' +
       '**Esquemas disponíveis**: cursos, módulos, aulas, matrículas, categorias, progresso de aulas, configurações da plataforma.',
     )
     .setVersion('0.3.0')
+    .addGlobalParameters({
+      name: 'Accept-Language',
+      in: 'header',
+      required: false,
+      description: 'Idioma das mensagens: `pt-BR` (padrão) ou `en`',
+      schema: { type: 'string', enum: ['pt-BR', 'en'], default: 'pt-BR' },
+    })
     .addCookieAuth('access_token')
     .addBearerAuth()
     .build();

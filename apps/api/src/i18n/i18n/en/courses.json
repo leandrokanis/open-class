@@ -1,0 +1,5 @@
+{
+  "not_found": "Course not found.",
+  "thumbnail_missing": "No thumbnail file was uploaded.",
+  "publish_requires_visible_lesson": "The course must have at least one visible lesson to be published."
+}

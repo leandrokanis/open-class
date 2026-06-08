@@ -2,6 +2,7 @@ import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { YouTubeService } from './youtube.service';
 import { VideoInfoResponseDto } from './dto/video-info-response.dto';
+import { t } from '../i18n/translate';
 
 @ApiTags('youtube')
 @Controller('youtube')
@@ -15,7 +16,7 @@ export class YouTubeController {
   @ApiResponse({ status: 400, description: 'Parâmetro url ausente' })
   @ApiResponse({ status: 422, description: 'URL inválida ou vídeo não disponível' })
   async getVideoInfo(@Query('url') url: string): Promise<VideoInfoResponseDto> {
-    if (!url) throw new BadRequestException('Parâmetro url é obrigatório.');
+    if (!url) throw new BadRequestException(t('youtube.url_required'));
 
     const info = await this.youtube.validateAndFetchInfo(url);
 
