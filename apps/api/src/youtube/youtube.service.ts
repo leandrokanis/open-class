@@ -1,4 +1,5 @@
 import { Injectable, UnprocessableEntityException, ServiceUnavailableException } from '@nestjs/common';
+import { t } from '../i18n/translate';
 
 export interface YouTubeVideoInfo {
   videoId: string;
@@ -46,7 +47,7 @@ export class YouTubeService {
   async validateAndFetchInfo(url: string): Promise<YouTubeVideoInfo> {
     const videoId = this.extractVideoId(url);
     if (!videoId) {
-      throw new UnprocessableEntityException('URL do YouTube inválida ou em formato não reconhecido.');
+      throw new UnprocessableEntityException(t('youtube.invalid_url'));
     }
 
     if (!this.apiKey) {
@@ -70,12 +71,12 @@ export class YouTubeService {
     }
 
     if (!data.items || data.items.length === 0) {
-      throw new UnprocessableEntityException('Vídeo do YouTube não encontrado ou não está disponível.');
+      throw new UnprocessableEntityException(t('youtube.video_not_found'));
     }
 
     const item = data.items[0];
     if (item.status?.embeddable === false) {
-      throw new UnprocessableEntityException('O vídeo do YouTube não permite incorporação (embed).');
+      throw new UnprocessableEntityException(t('youtube.embed_not_allowed'));
     }
 
     const durationSeconds = item.contentDetails?.duration

@@ -1,0 +1,8 @@
+{
+  "not_found": "Módulo não encontrado.",
+  "has_lessons": "O módulo possui aulas. Use ?force=true para excluir junto com as aulas.",
+  "reorder_count_mismatch": "A lista de IDs deve conter exatamente todos os módulos do curso.",
+  "no_permission": "Você não tem permissão para modificar este curso.",
+  "reorder_set_mismatch": "Os IDs enviados não correspondem ao conjunto atual de {label}.",
+  "reorder_label": "módulos do curso"
+}

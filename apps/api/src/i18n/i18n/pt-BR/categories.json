@@ -1,0 +1,5 @@
+{
+  "not_found": "Categoria não encontrada",
+  "name_taken": "Já existe uma categoria com esse nome",
+  "has_linked_courses": "Não é possível excluir: {count} curso(s) referencia(m) esta categoria"
+}

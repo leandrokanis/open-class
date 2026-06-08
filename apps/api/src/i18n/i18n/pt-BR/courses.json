@@ -1,0 +1,5 @@
+{
+  "not_found": "Curso não encontrado.",
+  "thumbnail_missing": "Arquivo de thumbnail não enviado.",
+  "publish_requires_visible_lesson": "O curso precisa ter pelo menos uma aula visível para ser publicado."
+}

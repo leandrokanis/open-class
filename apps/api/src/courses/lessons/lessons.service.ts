@@ -2,6 +2,7 @@ import {
   Injectable, NotFoundException, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { CoursesRepository } from '../courses.repository';
+import { t } from '../../i18n/translate';
 import type { CreateLessonDto } from '../dto/create-lesson.dto';
 import type { UpdateLessonDto } from '../dto/update-lesson.dto';
 
@@ -13,17 +14,17 @@ export class LessonsService {
 
   private async assertModuleAccess(courseId: string, moduleId: string, user: RequestingUser) {
     const course = await this.repo.findById(courseId);
-    if (!course) throw new NotFoundException('Curso não encontrado.');
+    if (!course) throw new NotFoundException(t('courses.not_found'));
     if (course.instructorId !== user.id && user.role !== 'admin') throw new ForbiddenException();
     const mod = await this.repo.findModuleById(moduleId);
-    if (!mod || mod.courseId !== courseId) throw new NotFoundException('Módulo não encontrado.');
+    if (!mod || mod.courseId !== courseId) throw new NotFoundException(t('modules.not_found'));
     return { course, mod };
   }
 
   private async assertLessonAccess(courseId: string, moduleId: string, lessonId: string, user: RequestingUser) {
     await this.assertModuleAccess(courseId, moduleId, user);
     const lesson = await this.repo.findLessonById(lessonId);
-    if (!lesson || lesson.moduleId !== moduleId) throw new NotFoundException('Aula não encontrada.');
+    if (!lesson || lesson.moduleId !== moduleId) throw new NotFoundException(t('lessons.not_found'));
     return lesson;
   }
 
@@ -61,9 +62,7 @@ export class LessonsService {
     const { mod } = await this.assertModuleAccess(courseId, moduleId, user);
     const total = await this.repo.countLessonsInModule(mod.id);
     if (ids.length !== total) {
-      throw new BadRequestException(
-        'A lista de IDs deve conter exatamente todas as aulas do módulo.',
-      );
+      throw new BadRequestException(t('lessons.reorder_count_mismatch'));
     }
     await this.repo.reorderLessons(moduleId, ids);
     return { reordered: ids.length };

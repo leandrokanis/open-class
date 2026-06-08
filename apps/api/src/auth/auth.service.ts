@@ -7,12 +7,14 @@ import {
   Inject,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { I18nContext } from 'nestjs-i18n';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import type { Response, CookieOptions } from 'express';
 import type { Profile } from 'passport-google-oauth20';
 import { UsersRepository } from '../users/users.repository';
 import { MailService } from '../mail/mail.service';
+import { t } from '../i18n/translate';
 import type { RegisterDto } from './dto/register.dto';
 import type { AuthConfig } from './auth.config';
 
@@ -29,11 +31,11 @@ export class AuthService {
 
   async register(dto: RegisterDto, res: Response) {
     if (process.env.ALLOW_REGISTRATION === 'false') {
-      throw new ForbiddenException('Registro de novas contas está desativado');
+      throw new ForbiddenException(t('auth.registration_disabled'));
     }
 
     const existing = await this.usersRepository.findByEmail(dto.email);
-    if (existing) throw new ConflictException('E-mail já cadastrado');
+    if (existing) throw new ConflictException(t('auth.email_taken'));
 
     const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
     const user = await this.usersRepository.create({
@@ -49,7 +51,7 @@ export class AuthService {
   async validateUser(email: string, password: string) {
     const user = await this.usersRepository.findByEmail(email);
     if (!user) return null;
-    if (!user.isActive) throw new ForbiddenException('Conta desativada');
+    if (!user.isActive) throw new ForbiddenException(t('auth.account_disabled'));
     if (!user.passwordHash) return null;
 
     const valid = await bcrypt.compare(password, user.passwordHash);
@@ -90,14 +92,14 @@ export class AuthService {
 
     const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
     const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
-    await this.mailService.sendPasswordReset(email, resetUrl);
+    await this.mailService.sendPasswordReset(email, resetUrl, I18nContext.current()?.lang);
   }
 
   async resetPassword(rawToken: string, newPassword: string) {
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
     const record = await this.usersRepository.findValidPasswordResetToken(tokenHash);
 
-    if (!record) throw new BadRequestException('Token inválido, expirado ou já utilizado');
+    if (!record) throw new BadRequestException(t('auth.invalid_reset_token'));
 
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     await this.usersRepository.updatePasswordHash(record.userId, passwordHash);
@@ -112,24 +114,24 @@ export class AuthService {
 
     const byGoogleId = await this.usersRepository.findByGoogleId(googleId);
     if (byGoogleId) {
-      if (!byGoogleId.isActive) throw new ForbiddenException('Conta desativada');
+      if (!byGoogleId.isActive) throw new ForbiddenException(t('auth.account_disabled'));
       return byGoogleId;
     }
 
     if (email) {
       const byEmail = await this.usersRepository.findByEmail(email);
       if (byEmail) {
-        if (!byEmail.isActive) throw new ForbiddenException('Conta desativada');
+        if (!byEmail.isActive) throw new ForbiddenException(t('auth.account_disabled'));
         return this.usersRepository.linkGoogleId(byEmail.id, googleId, avatarUrl);
       }
 
       if (process.env.ALLOW_REGISTRATION === 'false') {
-        throw new ForbiddenException('Registro de novas contas está desativado');
+        throw new ForbiddenException(t('auth.registration_disabled'));
       }
 
       return this.usersRepository.create({ name: name ?? email, email, googleId, avatarUrl });
     }
 
-    throw new UnauthorizedException('Google não retornou e-mail');
+    throw new UnauthorizedException(t('auth.google_no_email'));
   }
 }

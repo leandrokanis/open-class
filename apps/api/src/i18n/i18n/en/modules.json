@@ -1,0 +1,8 @@
+{
+  "not_found": "Module not found.",
+  "has_lessons": "The module has lessons. Use ?force=true to delete it along with the lessons.",
+  "reorder_count_mismatch": "The list of IDs must contain exactly all modules of the course.",
+  "no_permission": "You do not have permission to modify this course.",
+  "reorder_set_mismatch": "The submitted IDs do not match the current set of {label}.",
+  "reorder_label": "course modules"
+}

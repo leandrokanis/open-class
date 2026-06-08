@@ -3,6 +3,7 @@ import {
 } from '@nestjs/common';
 import { ModulesRepository } from './modules.repository';
 import { CoursesRepository } from '../courses/courses.repository';
+import { t } from '../i18n/translate';
 import type { CreateModuleDto } from './dto/create-module.dto';
 import type { UpdateModuleDto } from './dto/update-module.dto';
 
@@ -32,14 +33,14 @@ export class ModulesService {
 
   async update(id: string, dto: UpdateModuleDto, userId: string, userRole: string) {
     const mod = await this.repo.findById(id);
-    if (!mod) throw new NotFoundException('Módulo não encontrado.');
+    if (!mod) throw new NotFoundException(t('modules.not_found'));
     await this.assertCourseOwnership(mod.courseId, userId, userRole);
     return this.repo.update(id, dto);
   }
 
   async delete(id: string, userId: string, userRole: string) {
     const mod = await this.repo.findById(id);
-    if (!mod) throw new NotFoundException('Módulo não encontrado.');
+    if (!mod) throw new NotFoundException(t('modules.not_found'));
     await this.assertCourseOwnership(mod.courseId, userId, userRole);
     await this.repo.delete(id);
   }
@@ -47,16 +48,16 @@ export class ModulesService {
   async reorder(courseId: string, ids: string[], userId: string, userRole: string) {
     await this.assertCourseOwnership(courseId, userId, userRole);
     const currentIds = await this.repo.findAllIdsByCourse(courseId);
-    this.assertSameSet(currentIds, ids, 'módulos do curso');
+    this.assertSameSet(currentIds, ids, t('modules.reorder_label'));
     await Promise.all(ids.map((id, i) => this.repo.updatePosition(id, i + 1)));
     return { reordered: ids.length };
   }
 
   private async assertCourseOwnership(courseId: string, userId: string, userRole: string) {
     const course = await this.coursesRepo.findById(courseId);
-    if (!course) throw new NotFoundException('Curso não encontrado.');
+    if (!course) throw new NotFoundException(t('courses.not_found'));
     if (userRole !== 'admin' && course.instructorId !== userId) {
-      throw new ForbiddenException('Você não tem permissão para modificar este curso.');
+      throw new ForbiddenException(t('modules.no_permission'));
     }
   }
 
@@ -64,9 +65,7 @@ export class ModulesService {
     const currentSet = new Set(current);
     const incomingSet = new Set(incoming);
     if (currentSet.size !== incomingSet.size || ![...currentSet].every((id) => incomingSet.has(id))) {
-      throw new UnprocessableEntityException(
-        `Os IDs enviados não correspondem ao conjunto atual de ${label}.`,
-      );
+      throw new UnprocessableEntityException(t('modules.reorder_set_mismatch', { label }));
     }
   }
 }

@@ -1,0 +1,5 @@
+{
+  "password_reset_subject": "Redefinição de senha — Open Class",
+  "password_reset_text": "Para redefinir sua senha acesse: {url}\n\nEste link expira em 1 hora e é de uso único.",
+  "password_reset_html": "<p>Para redefinir sua senha <a href=\"{url}\">clique aqui</a>.</p><p>Este link expira em 1 hora e é de uso único.</p>"
+}

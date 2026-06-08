@@ -153,6 +153,7 @@ describe('AuthService', () => {
       expect(mail.sendPasswordReset).toHaveBeenCalledWith(
         'a@b.com',
         expect.stringContaining('reset-password'),
+        undefined,
       );
     });
 

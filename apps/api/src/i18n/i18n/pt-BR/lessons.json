@@ -1,0 +1,8 @@
+{
+  "not_found": "Aula não encontrada.",
+  "reorder_count_mismatch": "A lista de IDs deve conter exatamente todas as aulas do módulo.",
+  "no_permission": "Você não tem permissão para modificar este módulo.",
+  "reorder_set_mismatch": "Os IDs enviados não correspondem ao conjunto atual de {label}.",
+  "reorder_label": "aulas do módulo",
+  "resource_not_found": "Recurso não encontrado."
+}

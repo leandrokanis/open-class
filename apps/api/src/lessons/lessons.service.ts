@@ -5,6 +5,7 @@ import { LessonsRepository } from './lessons.repository';
 import { ModulesRepository } from '../modules/modules.repository';
 import { CoursesRepository } from '../courses/courses.repository';
 import { YouTubeService } from '../youtube/youtube.service';
+import { t } from '../i18n/translate';
 import type { CreateLessonDto } from './dto/create-lesson.dto';
 import type { UpdateLessonDto } from './dto/update-lesson.dto';
 import type { MoveLessonDto } from './dto/move-lesson.dto';
@@ -48,16 +49,16 @@ export class LessonsService {
 
   async findById(id: string, userRole?: string) {
     const lesson = await this.repo.findByIdWithResources(id);
-    if (!lesson) throw new NotFoundException('Aula não encontrada.');
+    if (!lesson) throw new NotFoundException(t('lessons.not_found'));
     if (lesson.visibility !== 'visible' && userRole !== 'instrutor' && userRole !== 'admin') {
-      throw new NotFoundException('Aula não encontrada.');
+      throw new NotFoundException(t('lessons.not_found'));
     }
     return lesson;
   }
 
   async update(id: string, dto: UpdateLessonDto, userId: string, userRole: string) {
     const lesson = await this.repo.findById(id);
-    if (!lesson) throw new NotFoundException('Aula não encontrada.');
+    if (!lesson) throw new NotFoundException(t('lessons.not_found'));
     await this.assertModuleOwnership(lesson.moduleId, userId, userRole);
 
     let youtubeVideoId = lesson.youtubeVideoId;
@@ -86,7 +87,7 @@ export class LessonsService {
 
   async move(id: string, dto: MoveLessonDto, userId: string, userRole: string) {
     const lesson = await this.repo.findById(id);
-    if (!lesson) throw new NotFoundException('Aula não encontrada.');
+    if (!lesson) throw new NotFoundException(t('lessons.not_found'));
     await this.assertModuleOwnership(lesson.moduleId, userId, userRole);
     await this.assertModuleOwnership(dto.moduleId, userId, userRole);
     return this.repo.moveToModule(id, lesson.moduleId, dto.moduleId, dto.position);
@@ -94,14 +95,14 @@ export class LessonsService {
 
   async setVisibility(id: string, visibility: 'visible' | 'hidden', userId: string, userRole: string) {
     const lesson = await this.repo.findById(id);
-    if (!lesson) throw new NotFoundException('Aula não encontrada.');
+    if (!lesson) throw new NotFoundException(t('lessons.not_found'));
     await this.assertModuleOwnership(lesson.moduleId, userId, userRole);
     return this.repo.update(id, { visibility });
   }
 
   async delete(id: string, userId: string, userRole: string) {
     const lesson = await this.repo.findById(id);
-    if (!lesson) throw new NotFoundException('Aula não encontrada.');
+    if (!lesson) throw new NotFoundException(t('lessons.not_found'));
     await this.assertModuleOwnership(lesson.moduleId, userId, userRole);
     await this.repo.delete(id);
   }
@@ -109,24 +110,24 @@ export class LessonsService {
   async reorder(moduleId: string, ids: string[], userId: string, userRole: string) {
     await this.assertModuleOwnership(moduleId, userId, userRole);
     const currentIds = await this.repo.findAllIdsByModule(moduleId);
-    this.assertSameSet(currentIds, ids, 'aulas do módulo');
+    this.assertSameSet(currentIds, ids, t('lessons.reorder_label'));
     await Promise.all(ids.map((id, i) => this.repo.updatePosition(id, i + 1)));
     return { reordered: ids.length };
   }
 
   async assertLessonOwnership(lessonId: string, userId: string, userRole: string) {
     const lesson = await this.repo.findById(lessonId);
-    if (!lesson) throw new NotFoundException('Aula não encontrada.');
+    if (!lesson) throw new NotFoundException(t('lessons.not_found'));
     await this.assertModuleOwnership(lesson.moduleId, userId, userRole);
   }
 
   private async assertModuleOwnership(moduleId: string, userId: string, userRole: string) {
     const mod = await this.modulesRepo.findById(moduleId);
-    if (!mod) throw new NotFoundException('Módulo não encontrado.');
+    if (!mod) throw new NotFoundException(t('modules.not_found'));
     const course = await this.coursesRepo.findById(mod.courseId);
-    if (!course) throw new NotFoundException('Curso não encontrado.');
+    if (!course) throw new NotFoundException(t('courses.not_found'));
     if (userRole !== 'admin' && course.instructorId !== userId) {
-      throw new ForbiddenException('Você não tem permissão para modificar este módulo.');
+      throw new ForbiddenException(t('lessons.no_permission'));
     }
   }
 
@@ -134,9 +135,7 @@ export class LessonsService {
     const currentSet = new Set(current);
     const incomingSet = new Set(incoming);
     if (currentSet.size !== incomingSet.size || ![...currentSet].every((id) => incomingSet.has(id))) {
-      throw new UnprocessableEntityException(
-        `Os IDs enviados não correspondem ao conjunto atual de ${label}.`,
-      );
+      throw new UnprocessableEntityException(t('lessons.reorder_set_mismatch', { label }));
     }
   }
 }

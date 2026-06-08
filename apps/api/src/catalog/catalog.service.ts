@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CatalogRepository } from './catalog.repository';
+import { t } from '../i18n/translate';
 import type { ListCatalogDto } from './dto/list-catalog.dto';
 import type {
   CatalogListItemDto,
@@ -31,7 +32,7 @@ function decodeCursor(raw: string): { createdAt: Date; id: string } {
     if (Number.isNaN(date.getTime())) throw new Error('invalid date');
     return { createdAt: date, id };
   } catch {
-    throw new BadRequestException('Cursor inválido.');
+    throw new BadRequestException(t('catalog.invalid_cursor'));
   }
 }
 
@@ -84,12 +85,12 @@ export class CatalogService {
     const allowDraft = !!requesterId;
     const course = await this.repo.findBySlug(slug, allowDraft);
 
-    if (!course) throw new NotFoundException('Curso não encontrado.');
+    if (!course) throw new NotFoundException(t('courses.not_found'));
 
     const isOwner = course.instructor?.id === requesterId;
     const isAdmin = requesterRole === 'admin';
     if (course.status !== 'published' && !isOwner && !isAdmin) {
-      throw new NotFoundException('Curso não encontrado.');
+      throw new NotFoundException(t('courses.not_found'));
     }
 
     const detail: CatalogDetailDto = {
