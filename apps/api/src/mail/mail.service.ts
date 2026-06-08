@@ -98,6 +98,21 @@ export class MailService {
     });
   }
 
+  async sendPasswordChanged(email: string, lang?: string): Promise<void> {
+    if (!this.isConfigured()) {
+      this.logger.warn(`[DEV] Password changed notification for ${email}`);
+      return;
+    }
+
+    await this.transporter.sendMail({
+      from: process.env.SMTP_FROM,
+      to: email,
+      subject: this.i18n.translate('mail.password_changed_subject', { lang }),
+      text: this.i18n.translate('mail.password_changed_text', { lang }),
+      html: this.i18n.translate('mail.password_changed_html', { lang }),
+    });
+  }
+
   async sendPasswordReset(email: string, resetUrl: string, lang?: string): Promise<void> {
     if (!this.isConfigured()) {
       this.logger.warn(`[DEV] Password reset link for ${email}: ${resetUrl}`);

@@ -1,5 +1,8 @@
 {
   "password_reset_subject": "Redefinição de senha — Open Class",
   "password_reset_text": "Para redefinir sua senha acesse: {url}\n\nEste link expira em 1 hora e é de uso único.",
-  "password_reset_html": "<p>Para redefinir sua senha <a href=\"{url}\">clique aqui</a>.</p><p>Este link expira em 1 hora e é de uso único.</p>"
+  "password_reset_html": "<p>Para redefinir sua senha <a href=\"{url}\">clique aqui</a>.</p><p>Este link expira em 1 hora e é de uso único.</p>",
+  "password_changed_subject": "Sua senha foi alterada — Open Class",
+  "password_changed_text": "Sua senha foi alterada com sucesso. Se você não reconhece essa atividade, entre em contato conosco imediatamente.",
+  "password_changed_html": "<p>Sua senha foi alterada com sucesso.</p><p>Se você não reconhece essa atividade, entre em contato conosco imediatamente.</p>"
 }

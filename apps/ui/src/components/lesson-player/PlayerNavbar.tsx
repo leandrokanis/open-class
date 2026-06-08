@@ -75,7 +75,7 @@ export function PlayerNavbar({
   return (
     <Bar>
       <Button variant="ghost" size="sm" asChild style={{ flexShrink: 0, color: "var(--color-text-primary)" }}>
-        <Link href="/aprendizado" aria-label="Voltar">
+        <Link href="/learning" aria-label="Voltar">
           <Icon name="arrow_back" size={18} style={{ color: "var(--color-text-primary)" }} />
         </Link>
       </Button>

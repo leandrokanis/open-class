@@ -1,5 +1,8 @@
 {
   "password_reset_subject": "Password reset — Open Class",
   "password_reset_text": "To reset your password, go to: {url}\n\nThis link expires in 1 hour and is single-use.",
-  "password_reset_html": "<p>To reset your password <a href=\"{url}\">click here</a>.</p><p>This link expires in 1 hour and is single-use.</p>"
+  "password_reset_html": "<p>To reset your password <a href=\"{url}\">click here</a>.</p><p>This link expires in 1 hour and is single-use.</p>",
+  "password_changed_subject": "Your password was changed — Open Class",
+  "password_changed_text": "Your password was changed successfully. If you did not perform this action, please contact us immediately.",
+  "password_changed_html": "<p>Your password was changed successfully.</p><p>If you did not perform this action, please contact us immediately.</p>"
 }

@@ -210,7 +210,7 @@ export function EnrollmentModal({ course, modules, onClose }: EnrollmentModalPro
       await enrollInCourse(course.id);
       const firstLesson = modules.flatMap((m) => m.lessons)[0];
       if (firstLesson) {
-        router.push(`/curso/${course.slug}/aula/${firstLesson.id}`);
+        router.push(`/course/${course.slug}/lesson/${firstLesson.id}`);
       } else {
         onClose();
         router.refresh();

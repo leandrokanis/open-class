@@ -88,7 +88,7 @@ export function LoginForm() {
     if (result.error) setError(result.error.message);
     else {
       const role = result.data?.data?.role;
-      if (role === "aluno") router.push("/aprendizado");
+      if (role === "aluno") router.push("/learning");
       else if (role === "instrutor" || role === "admin") router.push("/instructor");
       else router.push("/");
     }

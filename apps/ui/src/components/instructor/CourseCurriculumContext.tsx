@@ -14,7 +14,7 @@ import { createLesson } from '@/lib/instructor';
 import type { ModuleWithLessons, LessonData } from '@/lib/instructor';
 import CurriculumPanel from './CurriculumPanel';
 import { useSidebarSlot } from './SidebarSlotContext';
-import { CourseEditorContext } from '@/app/instructor/cursos/[id]/layout';
+import { CourseEditorContext } from '@/app/instructor/courses/[id]/layout';
 
 // ── Reducer ───────────────────────────────────────────────────────────────────
 
@@ -116,7 +116,7 @@ export function CourseCurriculumProvider({ courseId, children }: Props) {
     load();
   }, [courseId, apiBase]);
 
-  const aulasPath = `/instructor/cursos/${courseId}/aulas`;
+  const aulasPath = `/instructor/courses/${courseId}/lessons`;
 
   const handleSelectLesson = useCallback((id: string) => {
     setSelectedLessonId(id);

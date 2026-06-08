@@ -13,7 +13,7 @@ export function NewCourseButton() {
     setLoading(true);
     const course = await createCourse({ title: 'Novo Curso' });
     if (course) {
-      router.push(`/instructor/cursos/${course.id}`);
+      router.push(`/instructor/courses/${course.id}`);
     } else {
       setLoading(false);
     }

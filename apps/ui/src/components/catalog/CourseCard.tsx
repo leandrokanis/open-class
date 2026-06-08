@@ -194,7 +194,7 @@ export function CourseCard({ course }: CourseCardProps) {
   const levelColor = LEVEL_COLORS[course.level ?? ""] ?? "#6b7280";
 
   return (
-    <Card href={`/curso/${course.slug}`}>
+    <Card href={`/course/${course.slug}`}>
       <Thumbnail $gradient={gradient}>
         {course.category && (
           <CategoryBadge>{course.category.name}</CategoryBadge>

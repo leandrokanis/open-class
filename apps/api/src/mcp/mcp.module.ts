@@ -15,6 +15,7 @@ import { CoursesService } from '../courses/courses.service';
 import { CoursesRepository } from '../courses/courses.repository';
 import { UsersModule } from '../users/users.module';
 import { UsersService } from '../users/users.service';
+import { ProfileService } from '../users/profile.service';
 import { ModulesModule } from '../modules/modules.module';
 import { ModulesService } from '../modules/modules.service';
 import { LessonsModule } from '../lessons/lessons.module';
@@ -53,6 +54,7 @@ export class McpModule implements OnModuleInit {
     @Inject(CoursesService) private readonly coursesService: CoursesService,
     @Inject(CoursesRepository) private readonly coursesRepository: CoursesRepository,
     @Inject(UsersService) private readonly usersService: UsersService,
+    @Inject(ProfileService) private readonly profileService: ProfileService,
     @Inject(ModulesService) private readonly modulesService: ModulesService,
     @Inject(LessonsService) private readonly lessonsService: LessonsService,
     @Inject(CategoriesService) private readonly categoriesService: CategoriesService,
@@ -92,6 +94,7 @@ export class McpModule implements OnModuleInit {
           modulesService: this.modulesService,
           lessonsService: this.lessonsService,
           categoriesService: this.categoriesService,
+          profileService: this.profileService,
         });
 
         await server.connect(transport);

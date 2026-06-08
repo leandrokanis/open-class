@@ -92,4 +92,22 @@ export class UsersRepository {
       .set({ usedAt: new Date() })
       .where(eq(passwordResetTokens.id, id));
   }
+
+  async updateProfile(id: string, data: { name?: string; bio?: string }) {
+    const [user] = await this.db
+      .update(users)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async updateAvatarUrl(id: string, avatarUrl: string | null) {
+    const [user] = await this.db
+      .update(users)
+      .set({ avatarUrl, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
 }

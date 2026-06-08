@@ -6,6 +6,7 @@ import type { UsersService } from '../users/users.service';
 import type { ModulesService } from '../modules/modules.service';
 import type { LessonsService } from '../lessons/lessons.service';
 import type { CategoriesService } from '../categories/categories.service';
+import type { ProfileService } from '../users/profile.service';
 import { registerEnrollTool } from './tools/enroll.tool';
 import { registerCreateCourseTool } from './tools/create-course.tool';
 import { registerGetProgressTool } from './tools/get-progress.tool';
@@ -20,6 +21,8 @@ import { registerCreateModuleTool } from './tools/create-module.tool';
 import { registerCreateLessonTool } from './tools/create-lesson.tool';
 import { registerUpdateLessonTool } from './tools/update-lesson.tool';
 import { registerListCategoriesTool } from './tools/list-categories.tool';
+import { registerGetProfileTool } from './tools/get-profile.tool';
+import { registerUpdateProfileTool } from './tools/update-profile.tool';
 import { registerCoursesResource } from './resources/courses.resource';
 import { registerUsersResource } from './resources/users.resource';
 import { registerEnrollmentsResource } from './resources/enrollments.resource';
@@ -32,6 +35,7 @@ export interface McpServices {
   modulesService: ModulesService;
   lessonsService: LessonsService;
   categoriesService: CategoriesService;
+  profileService: ProfileService;
 }
 
 export function createMcpServer(services: McpServices): McpServer {
@@ -58,6 +62,10 @@ export function createMcpServer(services: McpServices): McpServer {
 
   // Aluno
   registerEnrollTool(server, services.enrollmentsService);
+
+  // Perfil
+  registerGetProfileTool(server, services.profileService);
+  registerUpdateProfileTool(server, services.profileService);
 
   // Resources (para clientes MCP que suportam)
   registerCoursesResource(server, services.coursesRepository);

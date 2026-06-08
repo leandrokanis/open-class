@@ -27,7 +27,7 @@ interface PlayerNavbarMobileProps {
 
 export function PlayerNavbarMobile({ courseSlug }: PlayerNavbarMobileProps) {
   return (
-    <BackBtn href={`/curso/${courseSlug}`} aria-label="Voltar para o curso">
+    <BackBtn href={`/course/${courseSlug}`} aria-label="Voltar para o curso">
       <Icon name="arrow_back" size={20} style={{ color: "#ffffff" }} />
     </BackBtn>
   );

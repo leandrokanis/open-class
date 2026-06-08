@@ -207,8 +207,8 @@ export function EnrolledCourseCard({ enrollment, featured }: EnrolledCourseCardP
   const levelLabel = course.level ? (LEVEL_LABELS[course.level] ?? course.level) : null;
 
   const continueHref = lastLesson
-    ? `/curso/${course.slug}/aula/${lastLesson.id}`
-    : `/curso/${course.slug}/aula`;
+    ? `/course/${course.slug}/lesson/${lastLesson.id}`
+    : `/course/${course.slug}/aula`;
 
   return (
     <Card $featured={featured}>

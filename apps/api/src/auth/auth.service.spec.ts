@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 
 const makeUsersRepo = (overrides = {}) => ({
   findByEmail: vi.fn().mockResolvedValue(null),
+  findById: vi.fn().mockResolvedValue(null),
   findByGoogleId: vi.fn().mockResolvedValue(null),
   create: vi.fn().mockImplementation((d) =>
     Promise.resolve({ id: 'user-1', role: 'aluno', isActive: true, ...d }),
@@ -23,7 +24,10 @@ const makeUsersRepo = (overrides = {}) => ({
 });
 
 const makeJwt = () => ({ sign: vi.fn().mockReturnValue('jwt-token') });
-const makeMail = () => ({ sendPasswordReset: vi.fn().mockResolvedValue(undefined) });
+const makeMail = () => ({
+  sendPasswordReset: vi.fn().mockResolvedValue(undefined),
+  sendPasswordChanged: vi.fn().mockResolvedValue(undefined),
+});
 const makeRes = () => ({ cookie: vi.fn() } as never);
 const makeConfig = () => ({ jwtSecret: 'secret', jwtExpiresIn: '1d' });
 
@@ -264,6 +268,75 @@ describe('AuthService', () => {
         ForbiddenException,
       );
       delete process.env.ALLOW_REGISTRATION;
+    });
+  });
+
+  describe('changePassword()', () => {
+    it('should update password hash and send confirmation email for account with local password', async () => {
+      const hash = await bcrypt.hash('oldpass123', 10);
+      const { service, repo, mail } = buildService({
+        findById: vi.fn().mockResolvedValue({
+          id: 'user-1',
+          email: 'user@test.com',
+          passwordHash: hash,
+        }),
+      });
+
+      await service.changePassword('user-1', { currentPassword: 'oldpass123', newPassword: 'newpass456' });
+
+      expect(repo.updatePasswordHash).toHaveBeenCalledWith('user-1', expect.any(String));
+      const newHash = (repo.updatePasswordHash as ReturnType<typeof vi.fn>).mock.calls[0][1];
+      const valid = await bcrypt.compare('newpass456', newHash);
+      expect(valid).toBe(true);
+      expect(mail.sendPasswordChanged).toHaveBeenCalledWith('user@test.com', undefined);
+    });
+
+    it('should throw and not update hash or send email when currentPassword is wrong', async () => {
+      const hash = await bcrypt.hash('correctpass', 10);
+      const { service, repo, mail } = buildService({
+        findById: vi.fn().mockResolvedValue({
+          id: 'user-1',
+          email: 'user@test.com',
+          passwordHash: hash,
+        }),
+      });
+
+      await expect(
+        service.changePassword('user-1', { currentPassword: 'wrongpass', newPassword: 'newpass456' }),
+      ).rejects.toThrow();
+
+      expect(repo.updatePasswordHash).not.toHaveBeenCalled();
+      expect(mail.sendPasswordChanged).not.toHaveBeenCalled();
+    });
+
+    it('should set password for Google-only account without requiring currentPassword', async () => {
+      const { service, repo, mail } = buildService({
+        findById: vi.fn().mockResolvedValue({
+          id: 'user-1',
+          email: 'user@test.com',
+          passwordHash: null,
+        }),
+      });
+
+      await service.changePassword('user-1', { newPassword: 'newpass456' });
+
+      expect(repo.updatePasswordHash).toHaveBeenCalledWith('user-1', expect.any(String));
+      expect(mail.sendPasswordChanged).toHaveBeenCalledWith('user@test.com', undefined);
+    });
+
+    it('should throw BadRequestException when currentPassword is missing for account with local password', async () => {
+      const hash = await bcrypt.hash('existingpass', 10);
+      const { service } = buildService({
+        findById: vi.fn().mockResolvedValue({
+          id: 'user-1',
+          email: 'user@test.com',
+          passwordHash: hash,
+        }),
+      });
+
+      await expect(
+        service.changePassword('user-1', { newPassword: 'newpass456' }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

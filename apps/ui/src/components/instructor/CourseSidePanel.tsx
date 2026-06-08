@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { publishCourse, unpublishCourse, updateCourse, uploadCourseThumbnail, deleteCourse } from "@/lib/instructor";
 import type { CourseEditorData, Category } from "@/lib/instructor";
 import { useRouter } from "next/navigation";
-import { CourseEditorContext } from "@/app/instructor/cursos/[id]/layout";
+import { CourseEditorContext } from "@/app/instructor/courses/[id]/layout";
 
 const Panel = styled.div`
   display: flex;

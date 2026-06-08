@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/Icon";
 import { updateCourse } from "@/lib/instructor";
 import type { CourseEditorData } from "@/lib/instructor";
-import { CourseEditorContext } from "@/app/instructor/cursos/[id]/layout";
+import { CourseEditorContext } from "@/app/instructor/courses/[id]/layout";
 
 const Form = styled.div`
   display: flex;
@@ -100,12 +100,12 @@ export function CourseInfoForm({ course }: CourseInfoFormProps) {
 
   function handleCopy() {
     const base = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
-    navigator.clipboard.writeText(`${base}/curso/${currentSlug}`);
+    navigator.clipboard.writeText(`${base}/course/${currentSlug}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
-  const publicUrl = `${origin}/curso/${currentSlug}`;
+  const publicUrl = `${origin}/course/${currentSlug}`;
 
   return (
     <Form>
