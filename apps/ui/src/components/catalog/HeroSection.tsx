@@ -1,5 +1,8 @@
+"use client";
+
 import styled from "styled-components";
 import type { CatalogStats } from "@/lib/catalog";
+import { usePlatformConfig } from "@/lib/platform-config/usePlatformConfig";
 
 const HeroWrapper = styled.section`
   background: var(--gradient-hero);
@@ -99,17 +102,12 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ stats }: HeroSectionProps) {
+  const config = usePlatformConfig();
   return (
     <HeroWrapper>
-      <Eyebrow>Plataforma open source de cursos gratuitos</Eyebrow>
-      <Headline>
-        Aprenda sem limites,
-        <br />
-        publique sem custos.
-      </Headline>
-      <Subtitle>
-        Cursos estruturados, organizados em módulos, com acompanhamento de progresso. Grátis para sempre.
-      </Subtitle>
+      <Eyebrow>{config.catalogHeroEyebrow}</Eyebrow>
+      <Headline>{config.catalogHeroHeadline}</Headline>
+      <Subtitle>{config.catalogHeroSubtitle}</Subtitle>
       <MobileCount>{stats.totalCourses} cursos gratuitos disponíveis</MobileCount>
       <StatsRow>
         <StatItem>

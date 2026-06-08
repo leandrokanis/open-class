@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useContext } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeContext } from "@/lib/theme/ThemeProvider";
+import { usePlatformConfig } from "@/lib/platform-config/usePlatformConfig";
 import { logout, type UserProfile } from "@/lib/auth";
 
 const slideIn = keyframes`
@@ -227,6 +228,15 @@ const Toggle = styled.button<{ $dark: boolean }>`
   }
 `;
 
+function SettingsIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
+    </svg>
+  );
+}
+
 function ChalkboardIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -303,6 +313,7 @@ interface SidebarProps {
 export function Sidebar({ open, onClose, onLogout, user }: SidebarProps) {
   const pathname = usePathname();
   const ctx = useContext(ThemeContext);
+  const config = usePlatformConfig();
   const router = useRouter();
 
   async function handleLogout() {
@@ -320,7 +331,7 @@ export function Sidebar({ open, onClose, onLogout, user }: SidebarProps) {
       <Overlay $open={open} onClick={onClose} />
       <Panel $open={open}>
         <Header>
-          <LogoText>Open Class</LogoText>
+          <LogoText>{config.platformName}</LogoText>
           <CloseBtn onClick={onClose} aria-label="Fechar menu">
             <XIcon />
           </CloseBtn>
@@ -363,6 +374,16 @@ export function Sidebar({ open, onClose, onLogout, user }: SidebarProps) {
             >
               <NavIcon><ChalkboardIcon /></NavIcon>
               Painel do instrutor
+            </NavLink>
+          )}
+          {user && user.role === "admin" && (
+            <NavLink
+              href="/admin/configuracoes"
+              $active={pathname.startsWith("/admin")}
+              onClick={onClose}
+            >
+              <NavIcon><SettingsIcon /></NavIcon>
+              Configurações da plataforma
             </NavLink>
           )}
         </Nav>

@@ -1,6 +1,7 @@
 "use client";
 
 import styled from "styled-components";
+import { usePlatformConfig } from "@/lib/platform-config/usePlatformConfig";
 
 const HeroWrapper = styled.div`
   background: linear-gradient(
@@ -45,6 +46,13 @@ const LogoText = styled.span`
   font-size: 17px;
   font-weight: 700;
   line-height: 22px;
+`;
+
+const LogoImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 5px;
 `;
 
 const TextBlock = styled.div`
@@ -95,21 +103,22 @@ const GridIcon = () => (
 );
 
 export function AuthHero() {
+  const config = usePlatformConfig();
   return (
     <HeroWrapper>
       <LogoRow>
         <LogoIcon>
-          <GridIcon />
+          {config.logoUrl ? (
+            <LogoImg src={config.logoUrl} alt={config.platformName} />
+          ) : (
+            <GridIcon />
+          )}
         </LogoIcon>
-        <LogoText>Open Class</LogoText>
+        <LogoText>{config.platformName}</LogoText>
       </LogoRow>
       <TextBlock>
-        <Tagline>
-          Aprenda de graça,
-          <br />
-          no seu ritmo.
-        </Tagline>
-        <Subtitle>Plataforma open source e self-hosted.</Subtitle>
+        <Tagline>{config.loginHeroTagline}</Tagline>
+        <Subtitle>{config.loginHeroSubtitle}</Subtitle>
       </TextBlock>
     </HeroWrapper>
   );

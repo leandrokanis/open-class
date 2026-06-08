@@ -3,7 +3,7 @@ import {
 } from '@nestjs/common';
 import slugify from 'slugify';
 import { CoursesRepository } from './courses.repository';
-import { UploadService } from './upload/upload.service';
+import { UploadService } from '../common/upload/upload.service';
 import type { CreateCourseDto } from './dto/create-course.dto';
 import type { UpdateCourseDto } from './dto/update-course.dto';
 

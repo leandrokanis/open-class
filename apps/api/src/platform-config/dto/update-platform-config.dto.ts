@@ -42,4 +42,34 @@ export class UpdatePlatformConfigDto {
   @IsString()
   @MaxLength(255)
   fontFamilyMono?: string;
+
+  @ApiPropertyOptional({ description: 'Texto de apoio (eyebrow) do hero do catálogo', example: 'Plataforma open source de cursos gratuitos' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  catalogHeroEyebrow?: string;
+
+  @ApiPropertyOptional({ description: 'Chamada principal (headline) do hero do catálogo', example: 'Aprenda sem limites, publique sem custos.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  catalogHeroHeadline?: string;
+
+  @ApiPropertyOptional({ description: 'Subtítulo do hero do catálogo', example: 'Cursos estruturados, organizados em módulos.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  catalogHeroSubtitle?: string;
+
+  @ApiPropertyOptional({ description: 'Tagline do hero da página de login', example: 'Aprenda de graça, no seu ritmo.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  loginHeroTagline?: string;
+
+  @ApiPropertyOptional({ description: 'Subtítulo do hero da página de login', example: 'Plataforma open source e self-hosted.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  loginHeroSubtitle?: string;
 }

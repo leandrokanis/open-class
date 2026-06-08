@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { CoursesController } from './courses.controller';
 import { CoursesService } from './courses.service';
 import { CoursesRepository } from './courses.repository';
-import { UploadService } from './upload/upload.service';
+import { UploadService } from '../common/upload/upload.service';
 import { ModulesController } from './modules/modules.controller';
 import { ModulesService } from './modules/modules.service';
 import { LessonsController } from './lessons/lessons.controller';

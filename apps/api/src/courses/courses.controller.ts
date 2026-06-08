@@ -15,7 +15,7 @@ import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard, Roles, Role } from '../common';
 import { CoursesService } from './courses.service';
-import { UploadService } from './upload/upload.service';
+import { UploadService } from '../common/upload/upload.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 
