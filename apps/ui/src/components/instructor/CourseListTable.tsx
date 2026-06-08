@@ -200,6 +200,8 @@ export function CourseListTable({ initialCourses }: CourseListTableProps) {
   const [search, setSearch] = useState("");
   const [isPending, startTransition] = useTransition();
 
+  const showInstructorColumn = initialCourses.some((c) => c.instructorName);
+
   const visible = initialCourses.filter((c) => {
     const matchFilter =
       filter === "all" ||
@@ -232,7 +234,7 @@ export function CourseListTable({ initialCourses }: CourseListTableProps) {
   return (
     <Wrapper>
       <TableHeader>
-        <Title>Meus Cursos</Title>
+        <Title>{showInstructorColumn ? "Todos os Cursos" : "Meus Cursos"}</Title>
         <Controls>
           <SearchWrapper>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -257,6 +259,7 @@ export function CourseListTable({ initialCourses }: CourseListTableProps) {
         <thead>
           <tr>
             <Th>Curso</Th>
+            {showInstructorColumn && <Th>Instrutor</Th>}
             <Th>Alunos</Th>
             <Th>Status</Th>
             <Th>Avaliação</Th>
@@ -267,7 +270,7 @@ export function CourseListTable({ initialCourses }: CourseListTableProps) {
         <tbody>
           {visible.length === 0 ? (
             <tr>
-              <td colSpan={6}>
+              <td colSpan={showInstructorColumn ? 7 : 6}>
                 <Empty>Nenhum curso encontrado.</Empty>
               </td>
             </tr>
@@ -287,6 +290,9 @@ export function CourseListTable({ initialCourses }: CourseListTableProps) {
                       </div>
                     </CourseCell>
                   </Td>
+                  {showInstructorColumn && (
+                    <Td>{course.instructorName ?? <Dash>—</Dash>}</Td>
+                  )}
                   <Td>
                     {course.enrollmentCount != null ? (
                       course.enrollmentCount.toLocaleString("pt-BR")

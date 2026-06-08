@@ -18,7 +18,14 @@ const makeRepo = (overrides = {}) => ({
   create: vi.fn().mockImplementation((d) => Promise.resolve({ id: 'course-1', ...d })),
   findById: vi.fn().mockResolvedValue(makeCourse()),
   findWithModulesAndLessons: vi.fn().mockResolvedValue(makeCourse()),
-  findByInstructorId: vi.fn().mockResolvedValue([makeCourse()]),
+  findByInstructorId: vi.fn().mockResolvedValue({ rows: [makeCourse()], total: 1 }),
+  findAllWithInstructor: vi.fn().mockResolvedValue({
+    rows: [
+      { ...makeCourse(), instructorName: 'Instrutor A' },
+      { ...makeCourse({ id: 'course-2', instructorId: 'user-2' }), instructorName: 'Instrutor B' },
+    ],
+    total: 2,
+  }),
   update: vi.fn().mockImplementation((id, d) => Promise.resolve({ id, ...d })),
   softDelete: vi.fn().mockResolvedValue(undefined),
   slugExists: vi.fn().mockResolvedValue(false),
@@ -29,6 +36,12 @@ const makeRepo = (overrides = {}) => ({
     publishedCount: 2,
     avgRating: 4.8,
     newEnrollmentsThisMonth: 10,
+  }),
+  getGlobalStats: vi.fn().mockResolvedValue({
+    totalStudents: 500,
+    publishedCount: 20,
+    avgRating: 4.5,
+    newEnrollmentsThisMonth: 80,
   }),
   ...overrides,
 });
@@ -152,27 +165,51 @@ describe('CoursesService', () => {
     });
   });
 
-  describe('getInstructorStats', () => {
-    it('returns aggregated stats for instructor with courses and students', async () => {
-      // Arrange
-      repo.getInstructorStats.mockResolvedValue({
-        totalStudents: 150,
-        publishedCount: 2,
-        avgRating: 4.8,
-        newEnrollmentsThisMonth: 10,
-      });
+  describe('findMine', () => {
+    it('calls findByInstructorId for instrutor role', async () => {
+      // Arrange / Act
+      await service.findMine(instructor, 1, 20);
+      // Assert
+      expect(repo.findByInstructorId).toHaveBeenCalledWith('user-1', 1, 20);
+      expect(repo.findAllWithInstructor).not.toHaveBeenCalled();
+    });
 
+    it('calls findAllWithInstructor for admin role', async () => {
+      // Arrange / Act
+      await service.findMine(admin, 1, 20);
+      // Assert
+      expect(repo.findAllWithInstructor).toHaveBeenCalledWith(1, 20);
+      expect(repo.findByInstructorId).not.toHaveBeenCalled();
+    });
+
+    it('returns courses from multiple instructors with instructorName for admin', async () => {
+      // Arrange / Act
+      const result = await service.findMine(admin, 1, 20);
+      // Assert
+      expect(result.rows).toHaveLength(2);
+      expect(result.rows[0]).toHaveProperty('instructorName', 'Instrutor A');
+      expect(result.rows[1]).toHaveProperty('instructorName', 'Instrutor B');
+    });
+  });
+
+  describe('getInstructorStats', () => {
+    it('calls getInstructorStats repo for instrutor role', async () => {
       // Act
       const result = await service.getInstructorStats(instructor);
-
       // Assert
       expect(repo.getInstructorStats).toHaveBeenCalledWith('user-1');
-      expect(result).toEqual({
-        totalStudents: 150,
-        publishedCount: 2,
-        avgRating: 4.8,
-        newEnrollmentsThisMonth: 10,
-      });
+      expect(repo.getGlobalStats).not.toHaveBeenCalled();
+      expect(result).toEqual({ totalStudents: 150, publishedCount: 2, avgRating: 4.8, newEnrollmentsThisMonth: 10 });
+    });
+
+    it('calls getGlobalStats repo for admin role', async () => {
+      // Act
+      const result = await service.getInstructorStats(admin);
+      // Assert
+      expect(repo.getGlobalStats).toHaveBeenCalled();
+      expect(repo.getInstructorStats).not.toHaveBeenCalled();
+      expect(result.totalStudents).toBe(500);
+      expect(result.publishedCount).toBe(20);
     });
 
     it('returns zeroed stats for instructor with no courses', async () => {

@@ -20,7 +20,7 @@ const Main = styled.main`
   flex-direction: column;
 `;
 
-export default async function InstructorLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -29,19 +29,16 @@ export default async function InstructorLayout({
   const me = await fetchMe(cookieHeader);
 
   if (!me) redirect("/login");
-  if (me.role !== "instrutor" && me.role !== "admin") redirect("/");
-
-  const isAdmin = me.role === "admin";
-  const roleLabel = isAdmin ? "Administrador" : "Instrutor";
+  if (me.role !== "admin") redirect("/");
 
   return (
     <SidebarSlotProvider>
       <Wrapper data-theme="dark">
         <InstructorSidebar
           userName={me.name}
-          userRole={roleLabel}
+          userRole="Administrador"
           avatarUrl={me.avatarUrl ?? undefined}
-          isAdmin={isAdmin}
+          isAdmin={true}
         />
         <Main>{children}</Main>
       </Wrapper>

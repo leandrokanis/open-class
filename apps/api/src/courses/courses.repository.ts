@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq, isNull, and, not, sql, count, asc, desc, avg } from 'drizzle-orm';
-import { courses, modules, lessons, enrollments, type NewCourse } from '@open-class/db';
+import { courses, modules, lessons, enrollments, users, type NewCourse } from '@open-class/db';
 import type { Db } from '../db';
 
 @Injectable()
@@ -137,6 +137,70 @@ export class CoursesRepository {
       .select({ value: count() })
       .from(enrollments)
       .innerJoin(instructorCourses, eq(enrollments.courseId, instructorCourses.id))
+      .where(sql`${enrollments.enrolledAt} >= ${startOfMonth}`);
+
+    return {
+      totalStudents: Number(studentsRow.value ?? 0),
+      publishedCount: Number(publishedRow.value ?? 0),
+      avgRating: ratingRow.value !== null ? Number(ratingRow.value) : null,
+      newEnrollmentsThisMonth: Number(enrollmentsRow.value ?? 0),
+    };
+  }
+
+  async findAllWithInstructor(page: number, limit: number) {
+    const offset = (page - 1) * limit;
+    const where = isNull(courses.deletedAt);
+
+    const rows = await this.db
+      .select({
+        id: courses.id,
+        title: courses.title,
+        slug: courses.slug,
+        status: courses.status,
+        thumbnailUrl: courses.thumbnailUrl,
+        rating: courses.rating,
+        level: courses.level,
+        updatedAt: courses.updatedAt,
+        createdAt: courses.createdAt,
+        instructorId: courses.instructorId,
+        instructorName: users.name,
+      })
+      .from(courses)
+      .innerJoin(users, eq(courses.instructorId, users.id))
+      .where(where)
+      .orderBy(desc(courses.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const [{ value: total }] = await this.db
+      .select({ value: count() })
+      .from(courses)
+      .where(where);
+
+    return { rows, total: Number(total) };
+  }
+
+  async getGlobalStats() {
+    const [studentsRow] = await this.db
+      .select({ value: sql<number>`COUNT(DISTINCT ${enrollments.studentId})` })
+      .from(enrollments)
+      .innerJoin(courses, and(eq(enrollments.courseId, courses.id), isNull(courses.deletedAt)));
+
+    const [publishedRow] = await this.db
+      .select({ value: count() })
+      .from(courses)
+      .where(and(eq(courses.status, 'published'), isNull(courses.deletedAt)));
+
+    const [ratingRow] = await this.db
+      .select({ value: avg(courses.rating) })
+      .from(courses)
+      .where(isNull(courses.deletedAt));
+
+    const startOfMonth = sql`date_trunc('month', now())`;
+    const [enrollmentsRow] = await this.db
+      .select({ value: count() })
+      .from(enrollments)
+      .innerJoin(courses, and(eq(enrollments.courseId, courses.id), isNull(courses.deletedAt)))
       .where(sql`${enrollments.enrolledAt} >= ${startOfMonth}`);
 
     return {

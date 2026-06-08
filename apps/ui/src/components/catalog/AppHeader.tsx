@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { logout } from "@/lib/auth";
 import { useUser } from "@/hooks/useUser";
+import { usePlatformConfig } from "@/lib/platform-config/usePlatformConfig";
 import { Sidebar } from "./Sidebar";
 
 const HeaderMobile = styled.header`
@@ -63,11 +64,18 @@ const LogoText = styled.span`
   }
 `;
 
-const LogoDesktop = styled.div`
+const LogoDesktop = styled(Link)`
   display: flex;
   align-items: center;
   gap: 8px;
   margin-right: 32px;
+  text-decoration: none;
+`;
+
+const LogoImg = styled.img`
+  height: 28px;
+  width: auto;
+  object-fit: contain;
 `;
 
 const AvatarButton = styled.button`
@@ -252,6 +260,7 @@ export function AppHeader() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { user, clear } = useUser();
+  const config = usePlatformConfig();
   const router = useRouter();
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -280,7 +289,7 @@ export function AppHeader() {
         <IconBtn onClick={() => setSidebarOpen(true)} aria-label="Abrir menu">
           <HamburgerIcon />
         </IconBtn>
-        <LogoText>Open Class</LogoText>
+        <LogoText>{config.platformName}</LogoText>
         {user ? (
           <AvatarButton onClick={() => setSidebarOpen(true)} aria-label="Abrir menu do usuário">
             <AvatarContent name={user.name} avatarUrl={user.avatarUrl} />
@@ -292,11 +301,17 @@ export function AppHeader() {
       <MobileSpacer />
 
       <HeaderDesktop>
-        <LogoDesktop>
-          <div style={{ color: "var(--color-primary)", display: "flex" }}>
-            <GridIcon />
-          </div>
-          <LogoText>Open Class</LogoText>
+        <LogoDesktop href="/">
+          {config.logoUrl ? (
+            <LogoImg src={config.logoUrl} alt={config.platformName} />
+          ) : (
+            <>
+              <div style={{ color: "var(--color-primary)", display: "flex" }}>
+                <GridIcon />
+              </div>
+              <LogoText>{config.platformName}</LogoText>
+            </>
+          )}
         </LogoDesktop>
         <NavLinks>
           <NavLink href="/" $active={pathname === "/"}>Catálogo</NavLink>
@@ -321,6 +336,11 @@ export function AppHeader() {
               {(user.role === "instrutor" || user.role === "admin") && (
                 <DropdownItem onClick={() => { setDropdownOpen(false); router.push("/instructor"); }}>
                   Painel do instrutor
+                </DropdownItem>
+              )}
+              {user.role === "admin" && (
+                <DropdownItem onClick={() => { setDropdownOpen(false); router.push("/admin/configuracoes"); }}>
+                  Configurações da plataforma
                 </DropdownItem>
               )}
               <DropdownLogout onClick={handleLogout}>Sair</DropdownLogout>
