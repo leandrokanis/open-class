@@ -40,5 +40,5 @@ export default async function LessonIndexPage({
 
   if (!targetLessonId) notFound();
 
-  redirect(`/curso/${slug}/aula/${targetLessonId}`);
+  redirect(`/course/${slug}/lesson/${targetLessonId}`);
 }

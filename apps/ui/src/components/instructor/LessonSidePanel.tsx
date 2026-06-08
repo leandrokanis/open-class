@@ -9,7 +9,7 @@ import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/Icon';
 import { updateLesson, deleteLesson } from '@/lib/instructor';
 import type { LessonData } from '@/lib/instructor';
-import { CourseEditorContext } from '@/app/instructor/cursos/[id]/layout';
+import { CourseEditorContext } from '@/app/instructor/courses/[id]/layout';
 import YouTubePreview, { type VideoInfo } from './YouTubePreview';
 import ResourceList from './ResourceList';
 

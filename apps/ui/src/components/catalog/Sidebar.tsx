@@ -230,7 +230,7 @@ function XIcon() {
 
 const NAV_ITEMS = [
   { href: "/", label: "Catálogo", icon: HomeIcon },
-  { href: "/aprendizado", label: "Meu Aprendizado", icon: BookIcon },
+  { href: "/learning", label: "Meu Aprendizado", icon: BookIcon },
 ];
 
 interface SidebarProps {
@@ -307,7 +307,7 @@ export function Sidebar({ open, onClose, onLogout, user }: SidebarProps) {
           )}
           {user && user.role === "admin" && (
             <NavLink
-              href="/admin/configuracoes"
+              href="/admin/settings"
               $active={pathname.startsWith("/admin")}
               onClick={onClose}
             >

@@ -1,10 +1,11 @@
 import {
-  Controller, Post, Get, Body, Res, Req, UseGuards, HttpCode, HttpStatus,
+  Controller, Post, Get, Patch, Body, Res, Req, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiBearerAuth, ApiBody,
 } from '@nestjs/swagger';
+import { I18nContext } from 'nestjs-i18n';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
@@ -12,6 +13,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import {
   RegisterResponseDto,
   LoginResponseDto,
@@ -140,6 +142,22 @@ export class AuthController {
     return { data: { message: 'Senha redefinida com sucesso.' } };
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch('change-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiCookieAuth('access_token')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Define ou troca a senha do usuário autenticado' })
+  @ApiResponse({ status: 204, description: 'Senha alterada. E-mail de confirmação enviado.' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos ou senha atual obrigatória.' })
+  @ApiResponse({ status: 401, description: 'Não autenticado ou senha atual incorreta.' })
+  changePassword(
+    @Req() req: Request & { user: { id: string } },
+    @Body() dto: ChangePasswordDto,
+  ): Promise<void> {
+    return this.authService.changePassword(req.user.id, dto, I18nContext.current()?.lang);
+  }
+
   @UseGuards(GoogleAuthGuard)
   @Get('google')
   @ApiOperation({ summary: 'Iniciar login com Google OAuth (redireciona para o Google)' })
@@ -161,7 +179,7 @@ export class AuthController {
       this.authService.issueToken(req.user.id, req.user.email, req.user.role, res);
       const destination =
         req.user.role === 'aluno'
-          ? `${frontendUrl}/aprendizado`
+          ? `${frontendUrl}/learning`
           : req.user.role === 'instrutor' || req.user.role === 'admin'
             ? `${frontendUrl}/instructor`
             : frontendUrl;

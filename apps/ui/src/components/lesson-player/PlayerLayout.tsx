@@ -233,14 +233,14 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
   }));
 
   function handleLessonClick(lessonId: string) {
-    router.push(`/curso/${courseSlug}/aula/${lessonId}`);
+    router.push(`/course/${courseSlug}/lesson/${lessonId}`);
   }
 
   async function handleVideoEnded() {
     if (isCompleted(lesson.id)) return;
     await toggle(lesson.id);
     if (nextLesson) {
-      router.push(`/curso/${courseSlug}/aula/${nextLesson.id}`);
+      router.push(`/course/${courseSlug}/lesson/${nextLesson.id}`);
     }
   }
 
@@ -251,7 +251,7 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
     }
     await toggle(lesson.id);
     if (nextLesson) {
-      router.push(`/curso/${courseSlug}/aula/${nextLesson.id}`);
+      router.push(`/course/${courseSlug}/lesson/${nextLesson.id}`);
     }
   }
 

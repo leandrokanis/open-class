@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { updateLesson } from '@/lib/instructor';
 import type { LessonData } from '@/lib/instructor';
-import { CourseEditorContext } from '@/app/instructor/cursos/[id]/layout';
+import { CourseEditorContext } from '@/app/instructor/courses/[id]/layout';
 import { usePropertiesPanel } from '@/components/instructor/PropertiesPanelContext';
 import { EditorBreadcrumb } from './EditorBreadcrumb';
 import LessonSidePanel from './LessonSidePanel';
@@ -193,7 +193,7 @@ export default function LessonEditor({ lesson, sectionLabel = '', onDeleted, onU
         sectionLabel={sectionLabel}
         lessonTitle={title}
         savedAt={ctx?.savedAt ?? null}
-        previewHref={ctx?.slug ? `/curso/${ctx.slug}/aula/${lesson.id}` : null}
+        previewHref={ctx?.slug ? `/course/${ctx.slug}/lesson/${lesson.id}` : null}
         visibility={lesson.visibility === 'visible' ? 'visible' : 'draft'}
       />
 

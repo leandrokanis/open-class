@@ -106,6 +106,27 @@ export class AuthService {
     await this.usersRepository.markPasswordResetTokenUsed(record.id);
   }
 
+  async changePassword(
+    userId: string,
+    dto: { currentPassword?: string; newPassword: string },
+    lang?: string,
+  ): Promise<void> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) throw new BadRequestException('Usuário não encontrado');
+
+    if (user.passwordHash) {
+      if (!dto.currentPassword) {
+        throw new BadRequestException('Senha atual obrigatória para trocar a senha.');
+      }
+      const valid = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+      if (!valid) throw new UnauthorizedException('Senha atual incorreta.');
+    }
+
+    const newHash = await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS);
+    await this.usersRepository.updatePasswordHash(userId, newHash);
+    await this.mailService.sendPasswordChanged(user.email, lang);
+  }
+
   async findOrCreateGoogleUser(profile: Profile) {
     const email = profile.emails?.[0]?.value;
     const googleId = profile.id;

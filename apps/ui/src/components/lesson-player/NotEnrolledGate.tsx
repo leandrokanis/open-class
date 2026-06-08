@@ -61,7 +61,7 @@ export function NotEnrolledGate({ courseSlug, courseTitle }: NotEnrolledGateProp
       </IconWrap>
       <Title>Você não está matriculado neste curso</Title>
       <Desc>Para assistir às aulas de &ldquo;{courseTitle}&rdquo;, você precisa se matricular primeiro.</Desc>
-      <CourseLink href={`/curso/${courseSlug}`}>
+      <CourseLink href={`/course/${courseSlug}`}>
         Ver página do curso
         <Icon name="arrow_forward" size={16} style={{ color: "inherit" }} />
       </CourseLink>

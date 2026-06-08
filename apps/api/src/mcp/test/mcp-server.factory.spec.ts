@@ -15,6 +15,10 @@ const makeServices = (overrides: Partial<McpServices> = {}): McpServices => ({
   usersService: {
     findAll: vi.fn(),
   } as unknown as McpServices['usersService'],
+  profileService: {
+    getProfile: vi.fn(),
+    updateProfile: vi.fn(),
+  } as unknown as McpServices['profileService'],
   ...overrides,
 });
 

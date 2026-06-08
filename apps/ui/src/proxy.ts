@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PROTECTED_PATHS = ['/aprendizado', '/curso'];
+const PROTECTED_PATHS = ['/learning', '/course'];
 
 function isLessonRoute(pathname: string) {
-  return /^\/curso\/[^/]+\/aula/.test(pathname);
+  return /^\/curso\/[^/]+\/lesson/.test(pathname);
 }
 
 export function proxy(request: NextRequest) {
@@ -12,7 +12,7 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtected =
-    pathname.startsWith('/aprendizado') || isLessonRoute(pathname);
+    pathname.startsWith('/learning') || isLessonRoute(pathname);
 
   if (isProtected && !token) {
     const loginUrl = new URL('/login', request.url);
@@ -24,5 +24,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/aprendizado/:path*', '/curso/:path*/aula/:path*'],
+  matcher: ['/learning/:path*', '/course/:path*/lesson/:path*'],
 };

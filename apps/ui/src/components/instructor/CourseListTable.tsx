@@ -283,7 +283,7 @@ export function CourseListTable({ initialCourses }: CourseListTableProps) {
                     <CourseCell>
                       <Thumbnail $url={course.thumbnailUrl} />
                       <div>
-                        <CourseLink href={`/instructor/cursos/${course.id}`}>
+                        <CourseLink href={`/instructor/courses/${course.id}`}>
                           {course.title}
                         </CourseLink>
                         <CourseDate>Última edição: {formatDate(course.updatedAt)}</CourseDate>
@@ -330,11 +330,11 @@ export function CourseListTable({ initialCourses }: CourseListTableProps) {
                   <Td>{course.lessonCount ?? <Dash>—</Dash>}</Td>
                   <Td>
                     <Actions>
-                      <Button size="sm" variant="outline" onClick={() => router.push(`/instructor/cursos/${course.id}`)}>
+                      <Button size="sm" variant="outline" onClick={() => router.push(`/instructor/courses/${course.id}`)}>
                         <Icon name="edit" size={16} />
                         Editar
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => window.open(`/curso/${course.slug}`, "_blank")}>
+                      <Button size="sm" variant="ghost" onClick={() => window.open(`/course/${course.slug}`, "_blank")}>
                         <Icon name="open_in_new" size={16} />
                         Ver
                       </Button>

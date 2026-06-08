@@ -6,7 +6,7 @@ import styled, { keyframes } from 'styled-components';
 import { CourseInfoForm } from './CourseInfoForm';
 import { CourseSidePanel } from './CourseSidePanel';
 import { usePropertiesPanel } from './PropertiesPanelContext';
-import { CourseEditorContext } from '@/app/instructor/cursos/[id]/layout';
+import { CourseEditorContext } from '@/app/instructor/courses/[id]/layout';
 import { Icon } from '@/components/ui/Icon';
 import type { CourseEditorData, Category } from '@/lib/instructor';
 

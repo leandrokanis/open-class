@@ -315,7 +315,7 @@ export function AppHeader() {
         </LogoDesktop>
         <NavLinks>
           <NavLink href="/" $active={pathname === "/"}>Catálogo</NavLink>
-          <NavLink href="/aprendizado" $active={pathname.startsWith("/aprendizado")}>Meu Aprendizado</NavLink>
+          <NavLink href="/learning" $active={pathname.startsWith("/learning")}>Meu Aprendizado</NavLink>
         </NavLinks>
         <DesktopSearch>
           <input placeholder="Buscar cursos..." />
@@ -330,7 +330,7 @@ export function AppHeader() {
               <AvatarContent name={user.name} avatarUrl={user.avatarUrl} />
             </AvatarButton>
             <Dropdown $open={dropdownOpen}>
-              <DropdownItem onClick={() => { setDropdownOpen(false); router.push("/perfil"); }}>
+              <DropdownItem onClick={() => { setDropdownOpen(false); router.push("/profile"); }}>
                 Meu perfil
               </DropdownItem>
               {(user.role === "instrutor" || user.role === "admin") && (
@@ -339,7 +339,7 @@ export function AppHeader() {
                 </DropdownItem>
               )}
               {user.role === "admin" && (
-                <DropdownItem onClick={() => { setDropdownOpen(false); router.push("/admin/configuracoes"); }}>
+                <DropdownItem onClick={() => { setDropdownOpen(false); router.push("/admin/settings"); }}>
                   Configurações da plataforma
                 </DropdownItem>
               )}

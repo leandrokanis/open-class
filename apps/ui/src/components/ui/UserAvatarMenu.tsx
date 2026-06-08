@@ -110,7 +110,7 @@ export function UserAvatarMenu() {
         )}
       </AvatarButton>
       <Dropdown $open={open}>
-        <DropdownItem onClick={() => { setOpen(false); router.push("/perfil"); }}>
+        <DropdownItem onClick={() => { setOpen(false); router.push("/profile"); }}>
           Meu perfil
         </DropdownItem>
         <DropdownLogout onClick={handleLogout}>Sair</DropdownLogout>

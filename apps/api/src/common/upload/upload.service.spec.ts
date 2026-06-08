@@ -1,6 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { BadRequestException } from '@nestjs/common';
 import { UploadService } from './upload.service';
+
+vi.mock('fs/promises', () => ({ unlink: vi.fn() }));
 
 type FileFilter = (
   req: unknown,
@@ -40,5 +42,35 @@ describe('UploadService', () => {
   it('imageMulterOptions() sets a max file size limit', () => {
     const opts = service.imageMulterOptions('logos');
     expect(opts.limits?.fileSize).toBe(2 * 1024 * 1024);
+  });
+
+  describe('deleteByUrl()', () => {
+    afterEach(() => vi.clearAllMocks());
+
+    it('should delete an existing file derived from the URL', async () => {
+      const { unlink } = await import('fs/promises');
+      vi.mocked(unlink).mockResolvedValue(undefined);
+
+      process.env.APP_URL = 'http://localhost:3001';
+      const url = 'http://localhost:3001/uploads/avatars/abc.jpg';
+
+      await service.deleteByUrl(url);
+
+      expect(unlink).toHaveBeenCalledOnce();
+      const calledPath: string = vi.mocked(unlink).mock.calls[0][0] as string;
+      expect(calledPath).toContain('avatars');
+      expect(calledPath).toContain('abc.jpg');
+    });
+
+    it('should not throw when file does not exist (idempotent)', async () => {
+      const { unlink } = await import('fs/promises');
+      const err = Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+      vi.mocked(unlink).mockRejectedValue(err);
+
+      process.env.APP_URL = 'http://localhost:3001';
+      const url = 'http://localhost:3001/uploads/avatars/missing.jpg';
+
+      await expect(service.deleteByUrl(url)).resolves.not.toThrow();
+    });
   });
 });

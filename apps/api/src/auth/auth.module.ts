@@ -1,4 +1,4 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
@@ -27,7 +27,7 @@ export class AuthModule {
     return {
       module: AuthModule,
       imports: [
-        UsersModule,
+        forwardRef(() => UsersModule),
         MailModule,
         PassportModule,
         JwtModule.register({

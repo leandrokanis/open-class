@@ -364,11 +364,11 @@ export default function CurriculumPanel({
       )
     : sections;
 
-  const basePath = `/instructor/cursos/${courseId}`;
+  const basePath = `/instructor/courses/${courseId}`;
   const courseTabs = [
     { href: basePath,                       label: 'Curso',          icon: 'info' },
-    { href: `${basePath}/configuracoes`,    label: 'Configurações',  icon: 'tune' },
-    { href: `${basePath}/alunos`,           label: 'Alunos',         icon: 'group' },
+    { href: `${basePath}/settings`,    label: 'Configurações',  icon: 'tune' },
+    { href: `${basePath}/students`,           label: 'Alunos',         icon: 'group' },
   ];
 
   return (

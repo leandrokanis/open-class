@@ -266,7 +266,7 @@ export function InstructorSidebar({ userName = "Instrutor", userRole = "Instruto
         </NavLink>
         {isAdmin && (
           <>
-            <NavLink href="/admin/configuracoes" $active={pathname.startsWith("/admin")}>
+            <NavLink href="/admin/settings" $active={pathname.startsWith("/admin")}>
               <Icon name="settings" size={16} />
               Configurações
             </NavLink>
@@ -279,10 +279,10 @@ export function InstructorSidebar({ userName = "Instrutor", userRole = "Instruto
 
       <Footer ref={footerRef}>
         <Dropdown $open={open}>
-          <DropdownItem onClick={() => { setOpen(false); router.push("/perfil"); }}>
+          <DropdownItem onClick={() => { setOpen(false); router.push("/profile"); }}>
             Meu perfil
           </DropdownItem>
-          <DropdownItem onClick={() => { setOpen(false); router.push("/aprendizado"); }}>
+          <DropdownItem onClick={() => { setOpen(false); router.push("/learning"); }}>
             Meu aprendizado
           </DropdownItem>
           <DropdownLogout onClick={handleLogout}>Sair</DropdownLogout>

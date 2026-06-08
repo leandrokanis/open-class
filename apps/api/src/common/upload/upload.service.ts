@@ -3,6 +3,7 @@ import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
+import { unlink } from 'fs/promises';
 import { randomUUID } from 'crypto';
 
 const UPLOAD_ROOT = join(process.cwd(), 'uploads');
@@ -56,5 +57,24 @@ export class UploadService {
 
   thumbnailUrl(filename: string): string {
     return this.publicUrl('thumbnails', filename);
+  }
+
+  avatarUrl(filename: string): string {
+    return this.publicUrl('avatars', filename);
+  }
+
+  async deleteByUrl(url: string): Promise<void> {
+    const appUrl = process.env.APP_URL ?? 'http://localhost:3001';
+    const prefix = `${appUrl}/uploads/`;
+    if (!url.startsWith(prefix)) return;
+
+    const relativePath = url.slice(prefix.length);
+    const filePath = join(UPLOAD_ROOT, relativePath);
+
+    try {
+      await unlink(filePath);
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+    }
   }
 }

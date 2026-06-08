@@ -35,6 +35,8 @@ RUN pnpm install --frozen-lockfile --prod
 
 # Copy build artifacts
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
+# i18n JSON files are not emitted by tsc — copy them alongside the compiled output
+COPY --from=builder /app/apps/api/src/i18n/i18n ./apps/api/dist/src/i18n/i18n
 COPY --from=builder /app/packages/db/dist/src ./packages/db/dist/src
 # Migrations must land at packages/db/drizzle (matches __dirname/../../drizzle
 # resolved from packages/db/dist/src/migrate.js)

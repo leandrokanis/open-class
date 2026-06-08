@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Test } from '@nestjs/testing';
+import { I18nService } from 'nestjs-i18n';
 import { MailService } from './mail.service';
 
 vi.mock('nodemailer', () => ({
@@ -12,6 +13,10 @@ vi.mock('nodemailer', () => ({
     sendMail: vi.fn(),
   })),
 }));
+
+const mockI18n = {
+  translate: vi.fn().mockImplementation((key: string) => key),
+};
 
 describe('MailService', () => {
   let service: MailService;
@@ -27,7 +32,10 @@ describe('MailService', () => {
     } as any);
 
     const module = await Test.createTestingModule({
-      providers: [MailService],
+      providers: [
+        MailService,
+        { provide: I18nService, useValue: mockI18n },
+      ],
     }).compile();
 
     service = module.get(MailService);
@@ -188,6 +196,33 @@ describe('MailService', () => {
       expect(sendMailMock).toHaveBeenCalledWith(
         expect.objectContaining({ from: 'noreply@example.com' }),
       );
+    });
+  });
+
+  // T038 — sendPasswordChanged()
+  describe('sendPasswordChanged()', () => {
+    it('should send email to the user when SMTP is configured', async () => {
+      process.env.SMTP_HOST = 'smtp.example.com';
+      process.env.SMTP_FROM = 'noreply@example.com';
+      sendMailMock.mockResolvedValue({});
+
+      await service.sendPasswordChanged('user@example.com');
+
+      expect(sendMailMock).toHaveBeenCalledOnce();
+      expect(sendMailMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: 'noreply@example.com',
+          to: 'user@example.com',
+        }),
+      );
+    });
+
+    it('should log warning and skip sending when SMTP is not configured', async () => {
+      delete process.env.SMTP_HOST;
+
+      await service.sendPasswordChanged('user@example.com');
+
+      expect(sendMailMock).not.toHaveBeenCalled();
     });
   });
 });

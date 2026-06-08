@@ -80,7 +80,7 @@ export function LessonHeader({
     <Header>
       <TitleRow>
         <Button variant="ghost" size="sm" asChild style={{ flexShrink: 0, padding: "4px 6px", color: "var(--color-text-primary)" }}>
-          <Link href="/aprendizado" aria-label="Voltar">
+          <Link href="/learning" aria-label="Voltar">
             <Icon name="arrow_back" size={18} style={{ color: "var(--color-text-primary)" }} />
           </Link>
         </Button>

@@ -190,8 +190,8 @@ export function CourseProgressSection({
 
       <CtaButton onClick={() => {
         const target = nextLesson ?? firstLesson;
-        if (target) router.push(`/curso/${course.slug}/aula/${target.id}`);
-        else router.push("/aprendizado");
+        if (target) router.push(`/course/${course.slug}/lesson/${target.id}`);
+        else router.push("/learning");
       }}>
         {isComplete ? "Rever curso" : nextLesson ? `Continuar — Aula ${nextLesson.number}` : "Ir para o curso"}
       </CtaButton>
