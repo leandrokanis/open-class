@@ -76,20 +76,22 @@ Se `.current-plan.md` não existir ou `feature_directory` estiver vazio, pare e 
 
 ---
 
-## Etapa 2 — Entrevista técnica (OBRIGATÓRIA — não pule)
+## Etapa 2 — Interrogatório técnico (OBRIGATÓRIA — não pule)
 
-Antes de escrever qualquer arquivo, você **deve** entrevistar o usuário sobre todas as decisões técnicas abertas.
+Antes de escrever qualquer arquivo, você **deve** interrogar o usuário sobre cada decisão técnica aberta, estilo grill-me: percorrendo cada ramo da árvore de decisão, resolvendo as dependências entre decisões uma a uma.
 
 **Regras desta etapa:**
-- Nunca suponha uma abordagem técnica sem perguntar.
-- Nunca tome uma decisão arquitetural por conta própria.
-- Se houver mais de uma forma razoável de fazer algo, apresente as opções com prós e contras e pergunte qual o usuário prefere.
-- Continue perguntando até não restar nenhuma incerteza técnica relevante.
-- Só avance para a Etapa 3 quando o usuário disser que está satisfeito com as respostas dadas ou explicitamente mandar continuar.
+- **Quem decide é o usuário.** Você nunca toma uma decisão técnica ou arquitetural por conta própria — você levanta as opções, recomenda uma, e a escolha final é dele.
+- **Uma pergunta por vez.** Nunca despeje uma lista de perguntas. Faça a pergunta, espere a resposta, e só então avance para a próxima.
+- **Toda pergunta oferece opções com uma recomendação.** Apresente as abordagens razoáveis com prós e contras, indique qual você recomenda e por quê. Se não houver opções discretas, dê a recomendação e peça uma resposta curta.
+- **Respeite as dependências.** Não pergunte sobre um ramo cuja premissa ainda não foi decidida; resolva a decisão-pai primeiro.
+- **Se o spec ou o código respondem, não pergunte** — explore `apps/`, `packages/` e `docs/` e traga a resposta você mesmo.
+- **Sem teto fixo de perguntas.** Continue enquanto restar incerteza técnica relevante; não force perguntas quando já estiver claro.
+- Só avance para a Etapa 3 quando o usuário confirmar que está satisfeito ou mandar prosseguir.
 
-### Como conduzir a entrevista
+### Como conduzir o interrogatório
 
-1. **Analise o spec** e identifique todas as decisões técnicas que precisam ser tomadas. Para cada uma das categorias abaixo, liste as perguntas abertas que encontrar:
+1. **Analise o spec** e monte internamente (não exiba) a fila de decisões técnicas abertas nas categorias abaixo, ordenada por dependência e impacto:
 
    **Data model**
    - Quais entidades novas serão necessárias? Como se relacionam entre si?
@@ -117,13 +119,24 @@ Antes de escrever qualquer arquivo, você **deve** entrevistar o usuário sobre 
    - Há lógica de negócio complexa que merece um padrão específico (strategy, policy, domain service)?
    - Uploads de arquivos? Qual provedor e como validar tamanho/tipo?
 
-2. **Apresente as perguntas** de forma clara, agrupadas por categoria, com opções quando aplicável. Não faça mais de 5–7 perguntas por rodada para não sobrecarregar.
+2. **Faça uma pergunta por vez**, neste formato:
 
-3. **Espere as respostas** do usuário antes de continuar.
+   ```
+   **Pergunta N** — <categoria>: <pergunta>
 
-4. **Faça rodadas adicionais** se as respostas levantarem novas dúvidas técnicas. Repita até o usuário confirmar que está tudo claro ou mandar prosseguir.
+   **Recomendação**: Opção <X> — <razão em 1–2 frases>
 
-5. **Resuma o entendimento** no final da entrevista antes de escrever o plano:
+   | Opção | Abordagem | Prós | Contras |
+   |-------|-----------|------|---------|
+   | A     | ...       | ...  | ...     |
+   | B     | ...       | ...  | ...     |
+
+   Responda com a letra, "sim" para aceitar a recomendação, ou descreva sua própria abordagem.
+   ```
+
+3. **Espere a resposta** e registre a decisão em memória de trabalho; **não escreva em disco ainda**. Reavalie a fila — a resposta pode abrir ou fechar ramos — e avance para a próxima decisão pendente.
+
+4. **Encerre** quando não restar incerteza técnica relevante ou o usuário mandar prosseguir. Então **resuma o entendimento** antes de escrever o plano:
    > "Entendido. Vou planejar com base em: [lista das decisões tomadas]. Posso prosseguir?"
 
 Só avance quando receber confirmação.
