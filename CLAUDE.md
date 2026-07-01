@@ -26,7 +26,7 @@ Use as skills `oc-*` para desenvolvimento orientado a spec neste projeto:
 | `/oc-tasks` | Gera `tasks.md` com tarefas ordenadas e caminhos de arquivo exatos |
 | `/oc-implement` | Executa tasks com TDD (red → green → refactor); atualiza Swagger ao fim |
 | `/oc-pr` | Abre PR com título conventional commits e `Closes #<issue>` |
-| `/oc-ship` | Executa todo o fluxo acima de ponta a ponta sem interrupção |
+| `/autopilot` | Roda o fluxo completo de ponta a ponta de forma totalmente autônoma, aceitando automaticamente a recomendação em todos os interrogatórios (sem interação) |
 
 ### Fluxo individual
 
@@ -42,7 +42,7 @@ Use as skills `oc-*` para desenvolvimento orientado a spec neste projeto:
 ### Fluxo completo
 
 ```
-/oc-ship <descrição>      →  faz tudo acima de uma vez (a partir do specify)
+/autopilot <ideia>        →  fluxo completo sem interação, aceitando todas as recomendações
 ```
 
 ### Contexto ativo
