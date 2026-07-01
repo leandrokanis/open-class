@@ -66,11 +66,13 @@ Se `tasks:` estiver vazio em `.current-plan.md`, pare e oriente a rodar `/oc-tas
 
 ## Etapa 2 — Planejar com o usuário (OBRIGATÓRIO antes de escrever código)
 
-Antes de qualquer implementação, confirme com o usuário:
+Antes de planejar, ancore-se na linguagem do projeto: consulte o **Glossário** (seção 14 do `docs/prd.md`) para que nomes de teste e vocabulário das interfaces usem os termos do domínio, e **respeite os ADRs** relevantes em `docs/decisions/` da área que você vai tocar — não contrarie uma decisão aceita.
 
-1. **Quais comportamentos testar**: com base nos cenários BDD do `plan.md` e critérios de aceite do `spec.md`, liste os comportamentos que vão virar testes e pergunte se a lista está correta ou se algum deve ser priorizado/ignorado.
+Depois confirme com o usuário:
 
-2. **Como serão as interfaces públicas**: para cada service ou guard que receberá testes, mostre como você imagina a assinatura dos métodos e pergunte se está alinhado com o que o usuário espera.
+1. **Quais comportamentos testar**: com base nos cenários BDD do `plan.md` e critérios de aceite do `spec.md`, liste os comportamentos que vão virar testes. **Você não consegue testar tudo** — confirme com o usuário exatamente quais comportamentos importam mais e concentre o esforço em caminhos críticos e lógica complexa, não em todo edge case imaginável. Pergunte se a lista está correta ou se algo deve ser priorizado/ignorado.
+
+2. **Como serão as interfaces públicas**: para cada service ou guard que receberá testes, mostre como você imagina a assinatura dos métodos e pergunte se está alinhado. Projete para **testabilidade** e prefira **módulos profundos** — interface pequena e simples escondendo implementação rica — em vez de espalhar complexidade por muitos métodos rasos que vazam detalhes.
 
 3. **Estratégia de mock**: identifique as dependências externas (repositórios, outros services, clientes HTTP) e confirme quais devem ser mockadas — apenas as que cruzam fronteiras reais (banco, rede, filesystem). Nunca mock colaboradores internos do mesmo módulo.
 
@@ -169,8 +171,10 @@ Checklist antes de avançar:
 
 Só refatore depois de estar no GREEN. Perguntas para guiar:
 
-- Há duplicação com outro método?
-- O nome do método/variável comunica a intenção?
+- Há duplicação com outro método? (extraia)
+- Dá para **aprofundar o módulo** — mover complexidade para trás de uma interface simples?
+- Algum princípio SOLID se aplica **naturalmente** aqui (sem over-engineering)?
+- O nome do método/variável comunica a intenção (usando o vocabulário do glossário)?
 - A função tem mais de uma responsabilidade?
 - Um early return simplificaria o fluxo?
 - O que esse código revela sobre o código existente?

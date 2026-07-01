@@ -26,19 +26,19 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-100y}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GOOGLE_CALLBACK_URL: https://api.picgama.online/api/auth/google/callback
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:41701/api/auth/google/callback}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-}
       SMTP_SECURE: ${SMTP_SECURE:-false}
-      FRONTEND_URL: https://picgama.online
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:41700}
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
-      APP_URL: https://api.picgama.online
+      APP_URL: ${APP_URL:-http://localhost:41701}
       NODE_ENV: production
-      COOKIE_SECURE: "true"
-      COOKIE_DOMAIN: .picgama.online
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
       YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
       MCP_API_TOKEN: ${MCP_API_TOKEN:-}
     volumes:
@@ -59,7 +59,7 @@ services:
     ports:
       - "41700:3000"
     environment:
-      NEXT_PUBLIC_API_URL: https://api.picgama.online
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:41701}
       API_INTERNAL_URL: http://api:3001
     depends_on:
       api:

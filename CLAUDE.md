@@ -20,18 +20,18 @@ Use as skills `oc-*` para desenvolvimento orientado a spec neste projeto:
 
 | Skill | O que faz |
 |-------|-----------|
-| `/oc-clarify` | Elucida uma ideia nova via perguntas guiadas e gera entrada no `docs/prd.md`; precede o specify |
+| `/oc-idea` | Faz triagem da ideia (épico/feature/US/tarefa/bug), interroga estilo grill-me até entendimento completo, registra no `docs/prd.md` quando aplicável e abre a issue no GitHub; precede o specify |
 | `/oc-specify` | Cria `specs/<issue>-<name>/spec.md`; atualiza C4 se novos atores/sistemas |
 | `/oc-plan` | Cria `plan.md` com data model, contratos e cenários BDD; cria ADRs se houver decisão arquitetural |
 | `/oc-tasks` | Gera `tasks.md` com tarefas ordenadas e caminhos de arquivo exatos |
 | `/oc-implement` | Executa tasks com TDD (red → green → refactor); atualiza Swagger ao fim |
 | `/oc-pr` | Abre PR com título conventional commits e `Closes #<issue>` |
-| `/oc-ship` | Executa todo o fluxo acima de ponta a ponta sem interrupção |
+| `/autopilot` | Roda o fluxo completo de ponta a ponta de forma totalmente autônoma, aceitando automaticamente a recomendação em todos os interrogatórios (sem interação) |
 
 ### Fluxo individual
 
 ```
-/oc-clarify <ideia>       →  entrada no prd.md + issue no GitHub
+/oc-idea <ideia>          →  triagem + interrogatório + entrada no prd.md + issue no GitHub
 /oc-specify <descrição>   →  spec.md
 /oc-plan                  →  plan.md + ADRs + C4
 /oc-tasks                 →  tasks.md
@@ -42,7 +42,7 @@ Use as skills `oc-*` para desenvolvimento orientado a spec neste projeto:
 ### Fluxo completo
 
 ```
-/oc-ship <descrição>      →  faz tudo acima de uma vez (a partir do specify)
+/autopilot <ideia>        →  fluxo completo sem interação, aceitando todas as recomendações
 ```
 
 ### Contexto ativo
