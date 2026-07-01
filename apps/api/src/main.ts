@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { RequestMethod } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { I18nValidationPipe } from 'nestjs-i18n';
+import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
 import { runMigrations } from '@open-class/db';
 import { AppModule } from './app.module';
@@ -21,6 +22,9 @@ async function bootstrap() {
       { path: 'oauth/token', method: RequestMethod.POST },
     ],
   });
+  // Security headers. CSP is disabled so the Swagger UI (/docs) and the
+  // static uploads (/uploads) keep working — see ADR-023.
+  app.use(helmet({ contentSecurityPolicy: false }));
   app.use(cookieParser());
 
   const allowedOrigins = (process.env.FRONTEND_URL ?? 'http://localhost:3000')

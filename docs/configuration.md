@@ -28,7 +28,7 @@ overrides) are documented in the [deployment guide](./deployment.md#environment)
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `JWT_SECRET` | Yes | `change-me-to-a-random-string-of-at-least-32-chars` | 🔒 Secret used to sign JWT session tokens. **Always override in production.** |
+| `JWT_SECRET` | Yes | `change-me-to-a-random-string-of-at-least-32-chars` | 🔒 Secret used to sign JWT session tokens. **Required in production**: the API refuses to start when `NODE_ENV=production` and `JWT_SECRET` is missing or left at the example value (`dev-secret-change-in-production`). See [ADR-023](./decisions/023-security-headers-and-secret-fail-fast.md). |
 | `JWT_EXPIRES_IN` | No | `7d` | Session token lifetime (e.g. `7d`, `24h`, `100y`). |
 
 ## Google OAuth (optional)
