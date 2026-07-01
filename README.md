@@ -1,5 +1,8 @@
 # Open Class
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./CHANGELOG.md)
+
 **A self-hosted, open source LMS for communities that believe education should be free.**
 
 Open Class is a lightweight learning management system designed to run on a homelab. No vendor lock-in, no licensing fees, no hosted video — just a clean platform for organizing and sharing knowledge via YouTube embeds.
@@ -254,10 +257,15 @@ git checkout -b feat/your-feature
 git commit -m "feat(lessons): add transcript support"
 ```
 
-See [`docs/contributing/commit-messages.md`](./docs/contributing/commit-messages.md) for commit conventions.
+Read [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full workflow and
+[`docs/contributing/commit-messages.md`](./docs/contributing/commit-messages.md) for
+commit conventions. By participating you agree to the
+[Code of Conduct](./CODE_OF_CONDUCT.md). To report a vulnerability, see
+[`SECURITY.md`](./SECURITY.md).
 
 ---
 
 ## License
 
-MIT — do whatever you want, just don't sell it as a closed product.
+Licensed under the [MIT License](./LICENSE) — do whatever you want, just don't sell
+it as a closed product.
