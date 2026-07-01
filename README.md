@@ -45,7 +45,17 @@ Open Class is for communities, independent educators, and non-profits who want:
 
 ---
 
-## Getting Started
+## Documentation
+
+| Guide | What it covers |
+|-------|----------------|
+| [Deployment](./docs/deployment.md) | Run a production instance with `docker-compose.prod.yml` |
+| [Configuration](./docs/configuration.md) | Every environment variable, grouped by area |
+| [Upgrade](./docs/upgrade.md) | Update an existing instance to a newer version |
+
+---
+
+## Quickstart (local)
 
 ### Prerequisites
 
@@ -65,27 +75,8 @@ cd open-class
 cp .env.example .env
 ```
 
-Edit `.env` and set at minimum:
-
-```env
-JWT_SECRET=change-me-in-production
-
-# Optional: enables Google login
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_CALLBACK_URL=http://localhost:41701/auth/google/callback
-
-# Optional: enables automatic lesson duration detection
-YOUTUBE_API_KEY=
-
-# Optional: outbound email
-SMTP_HOST=
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASS=
-SMTP_FROM=
-SMTP_SECURE=false
-```
+Edit `.env` and set at minimum a `JWT_SECRET`. See the
+[configuration reference](./docs/configuration.md) for every available setting.
 
 ### 3. Start
 
@@ -100,6 +91,9 @@ docker compose up -d
 | Swagger | http://localhost:41701/api/docs |
 
 The first user to register automatically becomes `admin`.
+
+> Running this in production? Follow the [deployment guide](./docs/deployment.md)
+> instead — it uses the pre-built images and hardened production settings.
 
 ---
 
@@ -120,7 +114,7 @@ pnpm install
 docker compose up db -d
 
 # Apply migrations
-cd packages/db && pnpm drizzle-kit migrate && cd ../..
+cd packages/db && pnpm db:migrate && cd ../..
 
 # Run everything in dev mode
 pnpm dev
@@ -139,8 +133,11 @@ open-class/
 │   └── db/           # Drizzle schema + migrations (shared by API)
 └── docs/
     ├── prd.md
-    ├── architecture/  # C4 diagrams
-    └── decisions/     # Architecture Decision Records (ADRs)
+    ├── deployment.md    # Production deploy guide
+    ├── configuration.md # Environment variable reference
+    ├── upgrade.md       # Upgrade guide
+    ├── architecture/    # C4 diagrams
+    └── decisions/       # Architecture Decision Records (ADRs)
 ```
 
 ### Running tests
@@ -155,25 +152,11 @@ cd apps/api && pnpm test:watch
 
 ---
 
-## Configuration reference
+## Configuration
 
-All configuration is done via environment variables. See the full reference in [`docker-compose.yml`](./docker-compose.yml).
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `JWT_SECRET` | `change-me-in-production` | Secret for signing JWT tokens. **Change this.** |
-| `JWT_EXPIRES_IN` | `100y` | Token expiry |
-| `ALLOW_REGISTRATION` | `true` | Set to `false` to disable new signups |
-| `DB_PORT` | `54170` | Host port for PostgreSQL |
-| `API_PORT` | `41701` | Host port for the API |
-| `UI_PORT` | `41700` | Host port for the UI |
-| `YOUTUBE_API_KEY` | — | Enables duration auto-detection on lesson save |
-| `GOOGLE_CLIENT_ID` | — | Enables Google OAuth login |
-| `COOKIE_SECURE` | `false` | Set to `true` when serving over HTTPS |
-| `FRONTEND_URL` | `http://localhost:41700` | CORS allowed origins (comma-separated) |
-| `MCP_API_TOKEN` | — | Static Bearer token for programmatic MCP clients. Optional — OAuth 2.0 is the primary auth method. |
-| `OAUTH_TOKEN_TTL` | — | OAuth access token lifetime in seconds (default: `3600`) |
-| `APP_URL` | — | Public API base URL used to build OAuth endpoint URIs |
+All configuration is done via environment variables. See the full
+[configuration reference](./docs/configuration.md) for every variable, its
+default, and whether it is required.
 
 ---
 
@@ -232,14 +215,6 @@ Healthcheck (no auth required): `GET http://your-host:41701/mcp/health`
 | `GET /oauth/authorize` | Consent screen — shows login form if not authenticated |
 | `POST /oauth/token` | Exchange authorization code for access token |
 
-### Environment variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `APP_URL` | Yes (production) | Public base URL of the API, e.g. `https://api.example.com`. Used to build OAuth endpoint URIs. |
-| `MCP_API_TOKEN` | No | Static Bearer token for programmatic MCP access (backward compat). If unset and no OAuth token is provided, the request is rejected with 401. |
-| `OAUTH_TOKEN_TTL` | No | OAuth access token lifetime in seconds. Default: `3600`. |
-
 ### Available resources and tools
 
 | Type | Name | Description |
@@ -251,15 +226,18 @@ Healthcheck (no auth required): `GET http://your-host:41701/mcp/health`
 | Tool | `create-course` | Create a draft course assigned to an instructor |
 | Tool | `get-progress` | Get a student's progress across all enrolled courses |
 
+For the environment variables that configure the MCP server, see the
+[configuration reference](./docs/configuration.md#mcp-server).
+
 ---
 
 ## Roadmap
 
-- [ ] Admin panel — user management, course moderation, platform settings
+- [x] Admin panel — user management, course moderation, platform settings
+- [x] i18n support
 - [ ] Student certificates
 - [ ] Course ratings and reviews
 - [ ] Email notifications for enrollment
-- [ ] i18n support
 - [ ] Mobile app
 
 ---
