@@ -21,6 +21,7 @@ import { AdminModule } from './admin/admin.module';
 import { CategoriesModule } from './categories/categories.module';
 import { McpModule } from './mcp/mcp.module';
 import { McpOAuthModule } from './mcp-oauth/mcp-oauth.module';
+import { resolveJwtSecret } from './config/security-config';
 
 @Module({
   imports: [
@@ -40,7 +41,7 @@ import { McpOAuthModule } from './mcp-oauth/mcp-oauth.module';
       serveRoot: '/uploads',
     }),
     AuthModule.register({
-      jwtSecret: process.env.JWT_SECRET ?? 'dev-secret-change-in-production',
+      jwtSecret: resolveJwtSecret(process.env),
       jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
       googleClientId: process.env.GOOGLE_CLIENT_ID,
       googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,

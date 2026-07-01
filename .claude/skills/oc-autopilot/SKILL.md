@@ -1,7 +1,7 @@
 ---
-name: "autopilot"
-description: "Executa o fluxo completo do open-class de ponta a ponta de forma totalmente autônoma, sem interação: aceita automaticamente a recomendação em todo interrogatório, entrevista e gate de validação das sub-skills oc-*. Vai de idea/specify até o PR sem parar, exceto em erro irrecuperável. Use quando o usuário quiser rodar tudo em piloto automático, sem responder perguntas."
-argument-hint: "Descreva a ideia ou feature que quer levar do zero ao PR"
+name: "oc-autopilot"
+description: "Executa o fluxo completo do open-class de ponta a ponta de forma totalmente autônoma, sem interação: aceita automaticamente a recomendação em todo interrogatório, entrevista e gate de validação das sub-skills oc-*. Vai de idea/specify até o PR sem parar, exceto em erro irrecuperável. Quando não recebe descrição, lê a issue a partir da branch atual. Use quando o usuário quiser rodar tudo em piloto automático, sem responder perguntas."
+argument-hint: "Descreva a ideia/feature — ou deixe vazio para partir da issue da branch atual"
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -12,10 +12,16 @@ disable-model-invocation: false
 $ARGUMENTS
 ```
 
-A descrição da ideia/feature vem de `$ARGUMENTS`. Nunca peça para o usuário repetir.
+O ponto de partida vem de `$ARGUMENTS` **ou**, quando vazio, da issue apontada pela
+branch atual. Nunca peça para o usuário repetir.
 
-Se `$ARGUMENTS` estiver vazio **e** a branch atual não apontar para uma issue já
-existente, pare e peça uma descrição — não há de onde partir.
+**Resolva a fonte de verdade antes de tudo** (ver Etapa 0.1 abaixo):
+
+- Se `$ARGUMENTS` tiver texto → é uma ideia crua; siga pela Fase A (cria issue).
+- Se `$ARGUMENTS` estiver vazio → **leia a issue da branch atual** e use o corpo dela
+  como descrição que alimenta todo o pipeline.
+- Só pare pedindo descrição se `$ARGUMENTS` estiver vazio **e** a branch não apontar
+  para nenhuma issue existente — aí não há de onde partir.
 
 ---
 
@@ -63,15 +69,40 @@ Se o output estiver vazio, prossiga.
 
 ---
 
+## Etapa 0.1 — Resolver a fonte de verdade (issue da branch)
+
+Antes de escolher a fase, determine de onde vem a descrição que vai alimentar o
+pipeline:
+
+1. Rode `git branch --show-current` para obter o nome da branch.
+2. Extraia o **número da issue** do nome da branch. Ignore prefixos como `feat/`,
+   `fix/`, `chore/`, `feature/` e pegue o primeiro grupo de dígitos. Exemplos:
+   - `32-checklist-owasp-top` → `32`
+   - `feat/42-student-reviews` → `42`
+   - `feature/42/video-progress` → `42`
+3. **Se `$ARGUMENTS` estiver vazio:**
+   - Se achou um número → **leia a issue**: `gh issue view <n> --json number,title,body`.
+     Use `title` + `body` como a **descrição de referência** do pipeline (o que
+     `oc-specify`, `oc-plan` etc. recebem no lugar de `$ARGUMENTS`). Registre no log
+     de decisões: "Partindo da issue #<n>: <título>".
+   - Se **não** achou número na branch → pare: não há de onde partir. Peça uma
+     descrição ou que o usuário troque para a branch da issue.
+4. **Se `$ARGUMENTS` tiver texto:**
+   - Use `$ARGUMENTS` como descrição de referência. A issue será criada na Fase A.
+
+Chame a descrição resolvida acima de **`DESCRIÇÃO`** — é ela que substitui
+`$ARGUMENTS` em todas as invocações das sub-skills a partir daqui.
+
+---
+
 ## Fase A — Ideia e branch (condicional)
 
-Detecte o ponto de partida:
+Com base na Etapa 0.1:
 
-1. Rode `git branch --show-current` e verifique se o nome contém um número de issue
-   que existe no GitHub (`gh issue view <n>`).
-2. **Se já estiver numa branch de issue existente** → pule a Fase A e vá direto para
-   a Fase B (Specify). O contexto já existe.
-3. **Se não houver branch de issue** (você recebeu uma ideia crua em `$ARGUMENTS`):
+1. **Se já estiver numa branch de issue existente** (`$ARGUMENTS` vazio e issue lida
+   da branch) → pule a Fase A e vá direto para a Fase B (Specify). O contexto já
+   existe em `DESCRIÇÃO`.
+2. **Se você recebeu uma ideia crua em `$ARGUMENTS`** (sem branch de issue):
    1. Invoque `/oc-idea $ARGUMENTS`, aceitando todas as recomendações do
       interrogatório de triagem e clarificação. Isso registra no PRD (quando
       aplicável) e cria a issue no GitHub.
@@ -79,7 +110,7 @@ Detecte o ponto de partida:
       `git checkout -b <numero-issue>-<short-name>`
    3. Só então prossiga para a Fase B.
 
-Imprima: `✓ [A] Ideia triada e branch pronta` (ou `✓ [A] Branch de issue já existente — pulando`).
+Imprima: `✓ [A] Ideia triada e branch pronta` (ou `✓ [A] Issue #<n> lida da branch — pulando triagem`).
 
 ---
 
@@ -95,9 +126,9 @@ interno. Após cada etapa, imprima uma linha de progresso:
 
 ### 1/5 — Specify
 
-Invoque `/oc-specify $ARGUMENTS` (ou sem argumentos se já veio da Fase A / branch
-existente). Aceite todas as recomendações da entrevista de requisitos.
-Aguarde `spec.md` e `.current-plan.md` escritos em disco.
+Invoque `/oc-specify` com a `DESCRIÇÃO` resolvida na Etapa 0.1 (ou sem argumentos se
+o próprio `oc-specify` for extrair a issue da branch). Aceite todas as recomendações
+da entrevista de requisitos. Aguarde `spec.md` e `.current-plan.md` escritos em disco.
 
 ### 2/5 — Plan
 
@@ -126,7 +157,7 @@ Invoque `/oc-pr`. Aguarde a URL do PR ser retornada.
 Só interrompa o piloto automático se:
 
 - `main` avançou (Etapa 0) e exige rebase.
-- `$ARGUMENTS` vazio e nenhuma issue na branch (nada de onde partir).
+- `$ARGUMENTS` vazio e nenhuma issue na branch — nada de onde partir (Etapa 0.1).
 - `spec.md` acabaria com ambiguidade estrutural que nenhuma recomendação resolve.
 - Testes falham após 2 tentativas de correção no `oc-implement` — cole a saída.
 - Migration falha ao ser aplicada.
