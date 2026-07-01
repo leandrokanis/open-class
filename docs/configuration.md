@@ -54,8 +54,8 @@ use the bundled MailHog service (`docker compose up mailhog -d`, UI at
 | `SMTP_PORT` | No | `587` | SMTP server port. |
 | `SMTP_USER` | For password reset | — | SMTP username. |
 | `SMTP_PASS` | For password reset | — | 🔒 SMTP password. |
-| `SMTP_FROM` | No | — | From address for outbound email. Also read by the Compose files. |
-| `SMTP_SECURE` | No | `false` | Set to `true` for implicit TLS (port 465). Also read by the Compose files. |
+| `SMTP_FROM` | No | `noreply@example.com` | From address for outbound email. |
+| `SMTP_SECURE` | No | `false` | Set to `true` for implicit TLS (port 465). |
 
 ## YouTube
 

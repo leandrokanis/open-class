@@ -46,9 +46,18 @@ JWT_SECRET=<a-strong-random-string-32-chars-or-more>
 # Recommended
 ALLOW_REGISTRATION=true
 
+# Public URLs — set these to your own domain when serving over HTTPS.
+# They default to localhost, which only works for a same-host test.
+APP_URL=https://api.example.com
+FRONTEND_URL=https://example.com
+NEXT_PUBLIC_API_URL=https://api.example.com
+COOKIE_DOMAIN=.example.com
+COOKIE_SECURE=true
+
 # Optional integrations (leave blank to disable)
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
+GOOGLE_CALLBACK_URL=https://api.example.com/api/auth/google/callback
 YOUTUBE_API_KEY=
 SMTP_HOST=
 SMTP_USER=
@@ -65,10 +74,11 @@ openssl rand -base64 24   # POSTGRES_PASSWORD
 For the full list of application settings (OAuth, SMTP, white-label, MCP, …), see
 the [configuration reference](./configuration.md).
 
-> ⚠️ **Domain values are baked into `docker-compose.prod.yml`.** The published
-> file ships with example public URLs (`APP_URL`, `FRONTEND_URL`,
-> `GOOGLE_CALLBACK_URL`, `COOKIE_DOMAIN` pointing at `picgama.online`). Edit those
-> to match your own domain before going live, or override them via your `.env`.
+> ⚠️ **Set your public URLs before going live.** `docker-compose.prod.yml` reads
+> `APP_URL`, `FRONTEND_URL`, `NEXT_PUBLIC_API_URL`, `GOOGLE_CALLBACK_URL` and
+> `COOKIE_DOMAIN` from the environment and falls back to **localhost** defaults.
+> Those defaults only work for a same-host smoke test — set the variables above to
+> your real domain (and keep `COOKIE_SECURE=true` behind HTTPS) for a real deploy.
 
 ### <a name="environment"></a>Deployment-only variables
 
