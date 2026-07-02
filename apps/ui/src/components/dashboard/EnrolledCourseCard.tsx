@@ -214,7 +214,7 @@ export function EnrolledCourseCard({ enrollment, featured }: EnrolledCourseCardP
     <Card $featured={featured}>
       <Thumbnail $gradient={gradient} $featured={featured}>
         {course.thumbnailUrl ? (
-          <ThumbImg src={course.thumbnailUrl} alt={course.title} fill />
+          <ThumbImg src={course.thumbnailUrl} alt={course.title} fill unoptimized />
         ) : null}
       </Thumbnail>
 
