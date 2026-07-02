@@ -22,6 +22,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { McpModule } from './mcp/mcp.module';
 import { McpOAuthModule } from './mcp-oauth/mcp-oauth.module';
 import { resolveJwtSecret } from './config/security-config';
+import { setUploadsCrossOriginHeaders } from './config/static-assets-config';
 
 @Module({
   imports: [
@@ -39,6 +40,9 @@ import { resolveJwtSecret } from './config/security-config';
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
+      serveStaticOptions: {
+        setHeaders: setUploadsCrossOriginHeaders,
+      },
     }),
     AuthModule.register({
       jwtSecret: resolveJwtSecret(process.env),
