@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import Link from "next/link";
+import Image from "next/image";
 import type { CourseListItem } from "@/lib/catalog";
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
@@ -47,6 +48,11 @@ const Thumbnail = styled.div<{ $gradient: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+`;
+
+const ThumbImg = styled(Image)`
+  object-fit: cover;
 `;
 
 const CategoryBadge = styled.span`
@@ -196,6 +202,9 @@ export function CourseCard({ course }: CourseCardProps) {
   return (
     <Card href={`/course/${course.slug}`}>
       <Thumbnail $gradient={gradient}>
+        {course.thumbnailUrl && (
+          <ThumbImg src={course.thumbnailUrl} alt={course.title} fill />
+        )}
         {course.category && (
           <CategoryBadge>{course.category.name}</CategoryBadge>
         )}
