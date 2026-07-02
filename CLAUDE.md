@@ -21,6 +21,8 @@ Use as skills `oc-*` para desenvolvimento orientado a spec neste projeto:
 | Skill | O que faz |
 |-------|-----------|
 | `/oc-idea` | Faz triagem da ideia (épico/feature/US/tarefa/bug), interroga estilo grill-me até entendimento completo, registra no `docs/prd.md` quando aplicável e abre a issue no GitHub; precede o specify |
+| `/oc-bug` | Interroga comportamento atual e esperado, passos para reproduzir e impacto, depois abre issue com label `bug` no GitHub |
+| `/oc-debug` | Debuga um bug de forma colaborativa com o desenvolvedor: hipóteses → instrumentação → causa raiz → fix mínimo + teste de regressão. Quatro checkpoints obrigatórios. |
 | `/oc-specify` | Cria `specs/<issue>-<name>/spec.md`; atualiza C4 se novos atores/sistemas |
 | `/oc-plan` | Cria `plan.md` com data model, contratos e cenários BDD; cria ADRs se houver decisão arquitetural |
 | `/oc-tasks` | Gera `tasks.md` com tarefas ordenadas e caminhos de arquivo exatos |
