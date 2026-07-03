@@ -49,6 +49,8 @@ interface CurriculumPanelProps {
   showHeader?: boolean;
   /** moduleId → extras desbloqueadas para o aluno */
   extrasUnlockedByModule?: Record<string, boolean>;
+  /** moduleId → data de liberação do cronograma da turma (US-24) */
+  moduleLocks?: Record<string, string>;
 }
 
 export function CurriculumPanel({
@@ -61,6 +63,7 @@ export function CurriculumPanel({
   onLessonClick,
   showHeader = true,
   extrasUnlockedByModule = {},
+  moduleLocks = {},
 }: CurriculumPanelProps) {
   const activeModuleId = modules.find((m) => m.lessons.some((l) => l.id === activeLessonId))?.id;
 
@@ -83,6 +86,7 @@ export function CurriculumPanel({
           onLessonClick={onLessonClick}
           defaultOpen={module.id === activeModuleId}
           extrasUnlocked={extrasUnlockedByModule[module.id] ?? false}
+          lockedUntil={moduleLocks[module.id] ?? null}
         />
       ))}
     </Panel>

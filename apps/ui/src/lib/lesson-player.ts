@@ -119,3 +119,25 @@ export async function toggleLessonProgress(lessonId: string, isCompleted: boolea
   });
   if (!res.ok) throw new Error("Failed to update progress");
 }
+
+// ── Cronograma de turma (US-24) ────────────────────────────────────────────────
+
+export interface MyCohortLite {
+  id: string;
+  courseId: string;
+  name: string;
+  closedAt: string | null;
+  schedule: Array<{ moduleId: string; availableFrom: string }>;
+}
+
+/** Turma do aluno para este curso (ou null). Locks de módulo derivam do cronograma. */
+export async function fetchMyCohortForCourse(courseId: string): Promise<MyCohortLite | null> {
+  try {
+    const res = await fetch(`${CLIENT_API_URL}/api/cohorts/me`, { credentials: "include" });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { data: MyCohortLite[] };
+    return (json.data ?? []).find((c) => c.courseId === courseId) ?? null;
+  } catch {
+    return null;
+  }
+}

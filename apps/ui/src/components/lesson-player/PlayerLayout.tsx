@@ -8,6 +8,7 @@ import { useLessonProgress } from "@/hooks/useLessonProgress";
 import {
   fetchExtrasStatus,
   postExtrasCelebration,
+  fetchMyCohortForCourse,
   type LessonDetail,
   type LessonResource,
   type ModuleExtrasStatus,
@@ -193,9 +194,14 @@ interface FlatLesson {
 function buildFlatList(
   modules: CourseModule[],
   extrasUnlockedByModule: Record<string, boolean>,
+  moduleLocks: Record<string, string>,
 ): FlatLesson[] {
-  return modules.flatMap((m) =>
-    m.lessons
+  const now = new Date();
+  return modules.flatMap((m) => {
+    // Módulos com liberação futura ficam fora da navegação sequencial (US-24)
+    const lockedUntil = moduleLocks[m.id];
+    if (lockedUntil && new Date(lockedUntil) > now) return [];
+    return m.lessons
       // Extras bloqueadas ficam fora da navegação sequencial (US-20)
       .filter((l) => !l.isExtra || extrasUnlockedByModule[m.id])
       .map((l) => ({
@@ -204,8 +210,8 @@ function buildFlatList(
         durationSeconds: l.duration ?? null,
         position: l.order,
         moduleId: m.id,
-      })),
-  );
+      }));
+  });
 }
 
 function formatDuration(seconds: number): string {
@@ -256,6 +262,21 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
     [extrasStatus],
   );
 
+  // Cronograma de turma: moduleId → data de liberação futura (US-24)
+  const [moduleLocks, setModuleLocks] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let cancelled = false;
+    fetchMyCohortForCourse(courseId).then((cohort) => {
+      if (cancelled || !cohort || cohort.closedAt) return;
+      const locks: Record<string, string> = {};
+      for (const entry of cohort.schedule) {
+        locks[entry.moduleId] = entry.availableFrom;
+      }
+      setModuleLocks(locks);
+    });
+    return () => { cancelled = true; };
+  }, [courseId]);
+
   async function handleCloseCelebration() {
     const moduleId = celebrating?.moduleId;
     setCelebrating(null);
@@ -267,7 +288,7 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
     }
   }
 
-  const flatLessons = buildFlatList(modules, extrasUnlockedByModule);
+  const flatLessons = buildFlatList(modules, extrasUnlockedByModule, moduleLocks);
   const currentIndex = flatLessons.findIndex((l) => l.id === lesson.id);
   const prevLesson = currentIndex > 0 ? flatLessons[currentIndex - 1] : null;
   const nextLesson = currentIndex >= 0 && currentIndex < flatLessons.length - 1 ? flatLessons[currentIndex + 1] : null;
@@ -366,6 +387,7 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
                   onLessonClick={handleLessonClick}
                   showHeader={false}
                   extrasUnlockedByModule={extrasUnlockedByModule}
+                  moduleLocks={moduleLocks}
                 />
               }
               description={lesson.description}
@@ -409,6 +431,7 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
             onLessonClick={handleLessonClick}
             showHeader={true}
             extrasUnlockedByModule={extrasUnlockedByModule}
+            moduleLocks={moduleLocks}
           />
         </Sidebar>
       </OuterLayout>

@@ -17,6 +17,7 @@ const makeRepo = (overrides = {}) => ({
   compactGroup: vi.fn().mockResolvedValue(undefined),
   countExtraUnlockedStudents: vi.fn().mockResolvedValue(0),
   isExtraUnlockedFor: vi.fn().mockResolvedValue(false),
+  findCohortModuleLock: vi.fn().mockResolvedValue(null),
   moveToModule: vi.fn().mockResolvedValue({ id: 'lesson-1', moduleId: 'module-2', position: 1 }),
   ...overrides,
 });
@@ -333,6 +334,69 @@ describe('LessonsService', () => {
       await expect(
         service.extraUnlocksCount('module-1', 'outro-user', 'instrutor'),
       ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('findById com cronograma de turma (US-24)', () => {
+    const regularLesson = {
+      id: 'lesson-1', moduleId: 'module-1', visibility: 'visible', isExtra: false, resources: [],
+    };
+    const FUTURE = new Date(Date.now() + 7 * 24 * 3600 * 1000);
+    const PAST = new Date(Date.now() - 7 * 24 * 3600 * 1000);
+
+    it('nega aula de módulo ainda não liberado para aluno de turma', async () => {
+      const repo = makeRepo({
+        findByIdWithResources: vi.fn().mockResolvedValue(regularLesson),
+        findCohortModuleLock: vi.fn().mockResolvedValue({ availableFrom: FUTURE, cohortClosed: false }),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      await expect(service.findById('lesson-1', 'aluno', 'student-1'))
+        .rejects.toThrow(ForbiddenException);
+      expect(repo.findCohortModuleLock).toHaveBeenCalledWith('student-1', 'module-1');
+    });
+
+    it('libera aula de módulo com data atingida', async () => {
+      const repo = makeRepo({
+        findByIdWithResources: vi.fn().mockResolvedValue(regularLesson),
+        findCohortModuleLock: vi.fn().mockResolvedValue({ availableFrom: PAST, cohortClosed: false }),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      const result = await service.findById('lesson-1', 'aluno', 'student-1');
+      expect(result.id).toBe('lesson-1');
+    });
+
+    it('turma encerrada libera módulos regulares mesmo com data futura', async () => {
+      const repo = makeRepo({
+        findByIdWithResources: vi.fn().mockResolvedValue(regularLesson),
+        findCohortModuleLock: vi.fn().mockResolvedValue({ availableFrom: FUTURE, cohortClosed: true }),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      const result = await service.findById('lesson-1', 'aluno', 'student-1');
+      expect(result.id).toBe('lesson-1');
+    });
+
+    it('aluno on demand (sem turma) não é afetado', async () => {
+      const repo = makeRepo({
+        findByIdWithResources: vi.fn().mockResolvedValue(regularLesson),
+        findCohortModuleLock: vi.fn().mockResolvedValue(null),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      const result = await service.findById('lesson-1', 'aluno', 'student-1');
+      expect(result.id).toBe('lesson-1');
+    });
+
+    it('instrutor não passa pela checagem de cronograma', async () => {
+      const repo = makeRepo({
+        findByIdWithResources: vi.fn().mockResolvedValue(regularLesson),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      await service.findById('lesson-1', 'instrutor', 'user-1');
+      expect(repo.findCohortModuleLock).not.toHaveBeenCalled();
     });
   });
 

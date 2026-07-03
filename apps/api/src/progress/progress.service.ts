@@ -20,6 +20,12 @@ export class ProgressService {
       if (!unlocked) throw new ForbiddenException(t('progress.extra_locked'));
     }
 
+    // Cronograma de turma: módulo ainda não liberado bloqueia a marcação (US-24)
+    const lock = await this.repo.findCohortModuleLock(studentId, lesson.moduleId);
+    if (lock && !lock.cohortClosed && lock.availableFrom && lock.availableFrom > new Date()) {
+      throw new ForbiddenException(t('cohorts.module_locked'));
+    }
+
     const progress = await this.repo.upsertProgress(studentId, lessonId, isCompleted);
     return {
       lessonId:    progress.lessonId,
