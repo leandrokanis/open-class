@@ -9,7 +9,6 @@ import { updateLesson } from '@/lib/instructor';
 import type { LessonData } from '@/lib/instructor';
 import { CourseEditorContext } from '@/app/instructor/courses/[id]/layout';
 import { usePropertiesPanel } from '@/components/instructor/PropertiesPanelContext';
-import { EditorBreadcrumb } from './EditorBreadcrumb';
 import LessonSidePanel from './LessonSidePanel';
 import type { VideoInfo } from './YouTubePreview';
 
@@ -114,6 +113,21 @@ export default function LessonEditor({ lesson, sectionLabel = '', onDeleted, onU
     return () => setHasPanel(false);
   }, [setHasPanel]);
 
+  // Alimenta a barra do topo global com o contexto da aula (breadcrumb + status);
+  // limpa ao sair da aula para a barra voltar ao modo padrão.
+  const setActiveLesson = ctx?.setActiveLesson;
+  const slug = ctx?.slug;
+  useEffect(() => {
+    if (!setActiveLesson) return;
+    setActiveLesson({
+      sectionLabel,
+      title,
+      visibility: lesson.visibility === 'visible' ? 'visible' : 'draft',
+      previewHref: slug ? `/course/${slug}/lesson/${lesson.id}` : null,
+    });
+    return () => setActiveLesson(null);
+  }, [setActiveLesson, slug, sectionLabel, title, lesson.visibility, lesson.id]);
+
   useEffect(() => {
     isInitialMount.current = true;
     const d = secondsToMinSec(lesson.duration);
@@ -189,14 +203,7 @@ export default function LessonEditor({ lesson, sectionLabel = '', onDeleted, onU
 
   return (
     <EditorOuter>
-      <EditorBreadcrumb
-        sectionLabel={sectionLabel}
-        lessonTitle={title}
-        savedAt={ctx?.savedAt ?? null}
-        previewHref={ctx?.slug ? `/course/${ctx.slug}/lesson/${lesson.id}` : null}
-        visibility={lesson.visibility === 'visible' ? 'visible' : 'draft'}
-      />
-
+      {/* A barra de contexto da aula foi fundida na barra global do curso (CourseTopBar). */}
       <ScrollArea>
         <TitleInput
           value={title}

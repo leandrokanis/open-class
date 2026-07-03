@@ -44,6 +44,13 @@ const PropertiesAside = styled.aside`
   top: 0;
 `;
 
+export interface ActiveLesson {
+  sectionLabel: string;
+  title: string;
+  visibility: 'visible' | 'draft';
+  previewHref: string | null;
+}
+
 export const CourseEditorContext = React.createContext<{
   courseId: string;
   slug: string;
@@ -52,6 +59,9 @@ export const CourseEditorContext = React.createContext<{
   setCourseName: (name: string) => void;
   notifySaved: () => void;
   savedAt: Date | null;
+  /** Aula sendo editada agora (só na página de Aulas); alimenta a barra do topo. */
+  activeLesson: ActiveLesson | null;
+  setActiveLesson: (lesson: ActiveLesson | null) => void;
 } | null>(null);
 
 function PropertiesSlot() {
@@ -70,18 +80,20 @@ export default function CourseEditorLayout({ children }: CourseEditorLayoutProps
   const [slug, setSlugState] = useState("");
   const [courseName, setCourseNameState] = useState("");
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [activeLesson, setActiveLessonState] = useState<ActiveLesson | null>(null);
 
   const setSlug = useCallback((s: string) => setSlugState(s), []);
   const setCourseName = useCallback((n: string) => setCourseNameState(n), []);
   const notifySaved = useCallback(() => setSavedAt(new Date()), []);
+  const setActiveLesson = useCallback((l: ActiveLesson | null) => setActiveLessonState(l), []);
 
   return (
-    <CourseEditorContext.Provider value={{ courseId, slug, setSlug, courseName, setCourseName, notifySaved, savedAt }}>
+    <CourseEditorContext.Provider value={{ courseId, slug, setSlug, courseName, setCourseName, notifySaved, savedAt, activeLesson, setActiveLesson }}>
       <CourseCurriculumProvider courseId={courseId}>
         <PropertiesPanelProvider>
           <EditorWrapper>
             <EditorMain>
-              <CourseTopBar courseId={courseId} courseName={courseName} slug={slug} />
+              <CourseTopBar courseId={courseId} courseName={courseName} slug={slug} activeLesson={activeLesson} savedAt={savedAt} />
               <ScrollArea>{children}</ScrollArea>
             </EditorMain>
             <PropertiesSlot />
