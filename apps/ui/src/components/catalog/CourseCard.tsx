@@ -83,20 +83,6 @@ const DurationBadge = styled.span`
   backdrop-filter: blur(4px);
 `;
 
-const PlayIcon = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  svg {
-    margin-left: 3px;
-  }
-`;
-
 const Content = styled.div`
   padding: 12px;
   flex: 1;
@@ -203,16 +189,11 @@ export function CourseCard({ course }: CourseCardProps) {
     <Card href={`/course/${course.slug}`}>
       <Thumbnail $gradient={gradient}>
         {course.thumbnailUrl && (
-          <ThumbImg src={course.thumbnailUrl} alt={course.title} fill />
+          <ThumbImg src={course.thumbnailUrl} alt={course.title} fill unoptimized />
         )}
         {course.category && (
           <CategoryBadge>{course.category.name}</CategoryBadge>
         )}
-        <PlayIcon>
-          <svg width="16" height="18" viewBox="0 0 16 18" fill="none">
-            <path d="M1 1l14 8-14 8V1z" fill="white" />
-          </svg>
-        </PlayIcon>
         {course.totalDurationMinutes > 0 && (
           <DurationBadge>{formatDuration(course.totalDurationMinutes)}</DurationBadge>
         )}

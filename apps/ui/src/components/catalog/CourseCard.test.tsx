@@ -19,17 +19,31 @@ const baseCourse: CourseListItem = {
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
+const THUMBNAIL_URL = "https://api.picgama.online/uploads/thumbnails/abc.jpg";
+
 describe("CourseCard", () => {
-  it("renders the thumbnail image when thumbnailUrl is present", () => {
-    render(
-      <CourseCard
-        course={{ ...baseCourse, thumbnailUrl: "https://cdn.example.com/react.jpg" }}
-      />,
+  it("renders the API thumbnail directly, not through the Next image optimizer", () => {
+    const { container } = render(
+      <CourseCard course={{ ...baseCourse, thumbnailUrl: THUMBNAIL_URL }} />,
+    );
+    const img = container.querySelector("img");
+
+    // The upload host (api.picgama.online) is not in next.config images.remotePatterns,
+    // so the optimizer (/_next/image) returns 400 in production and the image breaks (#83).
+    // The card must fetch the asset directly, exactly like EnrolledCourseCard on /learning.
+    expect(img).not.toBeNull();
+    expect(img!.getAttribute("src")).toBe(THUMBNAIL_URL);
+    expect(img!.getAttribute("src")).not.toContain("/_next/image");
+    expect(img!.getAttribute("srcset") ?? "").not.toContain("/_next/image");
+  });
+
+  it("does not overlay a play icon on the thumbnail", () => {
+    const { container } = render(
+      <CourseCard course={{ ...baseCourse, thumbnailUrl: THUMBNAIL_URL }} />,
     );
 
-    const img = screen.getByRole("img", { name: baseCourse.title });
-    expect(img).toBeInTheDocument();
-    expect(img.getAttribute("src")).toContain("react.jpg");
+    // The play triangle path must not be rendered over the thumbnail (#83).
+    expect(container.querySelector('path[d="M1 1l14 8-14 8V1z"]')).toBeNull();
   });
 
   it("does not render an image when thumbnailUrl is null", () => {
