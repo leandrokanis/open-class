@@ -99,11 +99,14 @@ export class CohortProgressSummaryDto {
   @ApiProperty({ example: 18 }) enrolledCount!: number;
   @ApiProperty({ example: 12 }) seatsLeft!: number;
   @ApiProperty({ example: 47.5, description: 'Percentual médio de conclusão da turma' }) avgCompletion!: number;
+  @ApiProperty({ example: 11, description: 'Alunos com acesso nos últimos 7 dias' }) activeCount!: number;
+  @ApiProperty({ example: 4, description: 'Alunos que concluíram o curso (100%)' }) completedCount!: number;
 }
 
 export class CohortStudentProgressDto {
   @ApiProperty({ example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' }) id!: string;
   @ApiProperty({ example: 'Ana Souza' }) name!: string;
+  @ApiPropertyOptional({ nullable: true, example: 'http://localhost:3001/uploads/avatars/ana.jpg' }) avatarUrl!: string | null;
   @ApiProperty({ example: 80 }) progressPct!: number;
   @ApiPropertyOptional({ nullable: true, example: 'Componentes e props' }) lastLessonTitle!: string | null;
   @ApiPropertyOptional({ nullable: true, example: '2026-07-01T12:00:00.000Z' }) lastAccessAt!: Date | null;

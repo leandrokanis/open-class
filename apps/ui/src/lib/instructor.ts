@@ -167,10 +167,17 @@ export async function closeCohort(id: string): Promise<CohortData | null> {
 }
 
 export interface CohortProgress {
-  summary: { enrolledCount: number; seatsLeft: number; avgCompletion: number };
+  summary: {
+    enrolledCount: number;
+    seatsLeft: number;
+    avgCompletion: number;
+    activeCount: number;
+    completedCount: number;
+  };
   students: Array<{
     id: string;
     name: string;
+    avatarUrl: string | null;
     progressPct: number;
     lastLessonTitle: string | null;
     lastAccessAt: string | null;

@@ -161,6 +161,7 @@ export class CohortsService {
       return {
         id: s.id,
         name: s.name,
+        avatarUrl: s.avatarUrl ?? null,
         progressPct,
         lastLessonTitle: s.lastLessonTitle,
         lastAccessAt: s.lastAccessAt,
@@ -178,6 +179,8 @@ export class CohortsService {
         enrolledCount: students.length,
         seatsLeft: Math.max(0, cohort.seats - students.length),
         avgCompletion,
+        activeCount: students.filter((s) => !s.inactive).length,
+        completedCount: students.filter((s) => s.progressPct >= 100).length,
       },
       students,
       modules: moduleRows,
