@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/Icon';
 import { updateLesson, deleteLesson } from '@/lib/instructor';
@@ -186,9 +187,13 @@ export default function LessonSidePanel({
   const ctx = useContext(CourseEditorContext);
   const [visible, setVisible] = useState(lesson.visibility === 'visible');
   const [toggling, setToggling] = useState(false);
+  const [isExtra, setIsExtra] = useState(lesson.isExtra);
+  const [togglingExtra, setTogglingExtra] = useState(false);
 
   useEffect(() => {
     setVisible(lesson.visibility === 'visible');
+    setIsExtra(lesson.isExtra);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lesson.id]);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -203,6 +208,19 @@ export default function LessonSidePanel({
       ctx?.notifySaved();
     }
     setToggling(false);
+  }
+
+  async function handleToggleExtra(next: boolean) {
+    setTogglingExtra(true);
+    setIsExtra(next);
+    const updated = await updateLesson(lesson.id, { isExtra: next });
+    if (updated) {
+      onUpdated(updated);
+      ctx?.notifySaved();
+    } else {
+      setIsExtra(!next);
+    }
+    setTogglingExtra(false);
   }
 
   async function handleConfirmDelete() {
@@ -285,6 +303,24 @@ export default function LessonSidePanel({
             <DurationLabel>seg</DurationLabel>
           </DurationRow>
         </Field>
+      </Card>
+
+      <Card>
+        <VisibilityTitleRow>
+          <VisibilityTitle>Aula extra</VisibilityTitle>
+          <Switch
+            id="lesson-is-extra"
+            checked={isExtra}
+            onCheckedChange={handleToggleExtra}
+            disabled={togglingExtra}
+            aria-label="Marcar como aula extra"
+          />
+        </VisibilityTitleRow>
+        <VisibilityDesc>
+          {isExtra
+            ? 'Conteúdo bônus: fica bloqueada até o aluno concluir todas as aulas normais do módulo. Não conta para o progresso nem para a duração do curso.'
+            : 'Aula normal do currículo: conta para o progresso e para a duração do curso.'}
+        </VisibilityDesc>
       </Card>
 
       <Card>

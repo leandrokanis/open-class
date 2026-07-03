@@ -40,6 +40,7 @@ export interface LessonData {
   duration: number | null;
   visibility: 'visible' | 'hidden';
   position: number;
+  isExtra: boolean;
   resources: Resource[];
   contentType: string;
   createdAt: string;
@@ -230,6 +231,15 @@ export async function reorderModules(courseId: string, ids: string[]): Promise<b
   return res.ok;
 }
 
+export async function fetchExtraUnlocks(moduleId: string): Promise<number | null> {
+  const res = await fetch(`${API_PUBLIC}/api/modules/${moduleId}/extra-unlocks`, {
+    credentials: 'include',
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.data?.unlockedStudents ?? 0;
+}
+
 export async function reorderLessons(moduleId: string, ids: string[]): Promise<boolean> {
   const res = await fetch(`${API_PUBLIC}/api/modules/${moduleId}/lessons/reorder`, {
     method: 'PUT',
@@ -318,7 +328,7 @@ export async function createLesson(
 
 export async function updateLesson(
   id: string,
-  data: { title?: string; youtubeUrl?: string; description?: string; isVisible?: boolean; duration?: number },
+  data: { title?: string; youtubeUrl?: string; description?: string; isVisible?: boolean; duration?: number; isExtra?: boolean },
 ): Promise<LessonData | null> {
   const res = await fetch(`${API_PUBLIC}/api/lessons/${id}`, {
     method: 'PATCH',

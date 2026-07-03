@@ -81,6 +81,21 @@ const DraftTag = styled.span`
   letter-spacing: 0.02em;
 `;
 
+const ExtraTag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  border-radius: 10px;
+  padding: 1px 7px;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+`;
+
 const InlineInput = styled(Input)`
   flex: 1;
   min-width: 0;
@@ -355,6 +370,12 @@ export default function LessonRow({ lesson, selected, onClick, onRenamed, onDele
               {lesson.title}
             </Title>
             <Meta>
+              {lesson.isExtra && (
+                <ExtraTag title="Aula extra — desbloqueada ao concluir as aulas normais do módulo">
+                  <Icon name="star" size={11} />
+                  Extra
+                </ExtraTag>
+              )}
               {visibility === 'hidden' && (
                 <DraftTag title="Rascunho">
                   <Icon name="edit_document" size={11} />

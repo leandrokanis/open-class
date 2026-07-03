@@ -29,6 +29,9 @@ export class LessonDto {
   @ApiProperty({ example: true })
   isVisible!: boolean;
 
+  @ApiProperty({ example: false, description: 'Aula extra (bônus) do módulo' })
+  isExtra!: boolean;
+
   @ApiProperty({ example: '2026-05-16T18:00:00.000Z' })
   createdAt!: Date;
 
@@ -54,4 +57,14 @@ export class LessonWithResourcesResponseDto {
 export class LessonListResponseDto {
   @ApiProperty({ type: [LessonDto] })
   data!: LessonDto[];
+}
+
+export class ExtraUnlocksDto {
+  @ApiProperty({ example: 7, description: 'Alunos matriculados que já desbloquearam as aulas extras do módulo' })
+  unlockedStudents!: number;
+}
+
+export class ExtraUnlocksResponseDto {
+  @ApiProperty({ type: ExtraUnlocksDto })
+  data!: ExtraUnlocksDto;
 }

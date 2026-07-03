@@ -13,7 +13,7 @@ import { ReorderLessonsDto } from './dto/reorder-lessons.dto';
 import { VisibilityDto } from '../courses/dto/visibility.dto';
 import { MoveLessonDto } from './dto/move-lesson.dto';
 import {
-  LessonResponseDto, LessonListResponseDto, LessonWithResourcesResponseDto,
+  LessonResponseDto, LessonListResponseDto, LessonWithResourcesResponseDto, ExtraUnlocksResponseDto,
 } from './dto/lesson-response.dto';
 import { ReorderResponseDto } from '../modules/dto/module-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -136,6 +136,25 @@ export class LessonsController {
     @Req() req: Request & { user: { id: string; role: string } },
   ) {
     await this.service.delete(id, req.user.id, req.user.role);
+  }
+
+  @Get('modules/:moduleId/extra-unlocks')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Instrutor, Role.Admin)
+  @ApiCookieAuth('access_token')
+  @ApiBearerAuth()
+  @ApiParam({ name: 'moduleId', description: 'ID do módulo', type: String })
+  @ApiOperation({ summary: 'Contar alunos que já desbloquearam as aulas extras do módulo' })
+  @ApiResponse({ status: 200, description: 'Contagem de desbloqueios.', type: ExtraUnlocksResponseDto })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @ApiResponse({ status: 403, description: 'Sem acesso ao curso.' })
+  @ApiResponse({ status: 404, description: 'Módulo não encontrado.' })
+  async extraUnlocks(
+    @Param('moduleId') moduleId: string,
+    @Req() req: Request & { user: { id: string; role: string } },
+  ) {
+    const data = await this.service.extraUnlocksCount(moduleId, req.user.id, req.user.role);
+    return { data };
   }
 
   @Put('modules/:moduleId/lessons/reorder')

@@ -28,7 +28,8 @@ export class LessonsService {
       videoId = info.videoId;
       durationSeconds = info.durationSeconds;
     }
-    const position = await this.repo.nextPosition(moduleId);
+    const isExtra = dto.isExtra ?? false;
+    const position = await this.repo.nextPosition(moduleId, isExtra);
     return this.repo.insert({
       moduleId,
       title: dto.title,
@@ -38,6 +39,7 @@ export class LessonsService {
       duration: durationSeconds,
       position,
       visibility: 'hidden',
+      isExtra,
     });
   }
 
@@ -73,7 +75,14 @@ export class LessonsService {
       duration = dto.duration;
     }
 
-    return this.repo.update(id, {
+    // Troca de grupo (normal ↔ extra): vai para o fim do grupo de destino
+    // e o grupo de origem é compactado (US-21)
+    const groupChanged = dto.isExtra !== undefined && dto.isExtra !== lesson.isExtra;
+    const groupFields = groupChanged
+      ? { isExtra: dto.isExtra, position: await this.repo.nextPosition(lesson.moduleId, dto.isExtra) }
+      : {};
+
+    const updated = await this.repo.update(id, {
       title: dto.title,
       description: dto.description,
       youtubeUrl: dto.youtubeUrl,
@@ -82,7 +91,13 @@ export class LessonsService {
       ...(dto.isVisible !== undefined
         ? { visibility: dto.isVisible ? 'visible' : 'hidden' }
         : {}),
+      ...groupFields,
     });
+
+    if (groupChanged) {
+      await this.repo.compactGroup(lesson.moduleId, lesson.isExtra);
+    }
+    return updated;
   }
 
   async move(id: string, dto: MoveLessonDto, userId: string, userRole: string) {
@@ -109,10 +124,23 @@ export class LessonsService {
 
   async reorder(moduleId: string, ids: string[], userId: string, userRole: string) {
     await this.assertModuleOwnership(moduleId, userId, userRole);
-    const currentIds = await this.repo.findAllIdsByModule(moduleId);
-    this.assertSameSet(currentIds, ids, t('lessons.reorder_label'));
+    // Reordenação é por grupo: o conjunto submetido deve ser exatamente
+    // as aulas normais OU as aulas extras do módulo (US-21)
+    const normals = await this.repo.findGroupIds(moduleId, false);
+    const extras = await this.repo.findGroupIds(moduleId, true);
+    if (!this.isSameSet(normals, ids) && !this.isSameSet(extras, ids)) {
+      throw new UnprocessableEntityException(
+        t('lessons.reorder_set_mismatch', { label: t('lessons.reorder_label') }),
+      );
+    }
     await Promise.all(ids.map((id, i) => this.repo.updatePosition(id, i + 1)));
     return { reordered: ids.length };
+  }
+
+  async extraUnlocksCount(moduleId: string, userId: string, userRole: string) {
+    await this.assertModuleOwnership(moduleId, userId, userRole);
+    const unlockedStudents = await this.repo.countExtraUnlockedStudents(moduleId);
+    return { unlockedStudents };
   }
 
   async assertLessonOwnership(lessonId: string, userId: string, userRole: string) {
@@ -131,11 +159,9 @@ export class LessonsService {
     }
   }
 
-  private assertSameSet(current: string[], incoming: string[], label: string) {
+  private isSameSet(current: string[], incoming: string[]): boolean {
     const currentSet = new Set(current);
     const incomingSet = new Set(incoming);
-    if (currentSet.size !== incomingSet.size || ![...currentSet].every((id) => incomingSet.has(id))) {
-      throw new UnprocessableEntityException(t('lessons.reorder_set_mismatch', { label }));
-    }
+    return currentSet.size === incomingSet.size && [...currentSet].every((id) => incomingSet.has(id));
   }
 }
