@@ -15,6 +15,8 @@ const makeRepo = () => ({
   create: vi.fn(),
   findCourseBasicById: vi.fn(),
   findStudentEmailById: vi.fn(),
+  findCourseAccessMode: vi.fn().mockResolvedValue('on_demand'),
+  hasCohortEnrollment: vi.fn().mockResolvedValue(false),
 });
 
 const makeProgressRepo = () => ({
@@ -93,6 +95,36 @@ describe('EnrollmentsService', () => {
 
       const result = await service.enroll('student-1', 'course-1');
 
+      expect(result).toBe(fakeRow);
+    });
+  });
+
+  describe('enroll() com turmas (US-23)', () => {
+    it('recusa matrícula on demand em curso somente-turma', async () => {
+      repo.findCourseAccessMode.mockResolvedValue('cohort');
+      const { UnprocessableEntityException } = await import('@nestjs/common');
+
+      await expect(service.enroll('student-1', 'course-1'))
+        .rejects.toThrow(UnprocessableEntityException);
+      expect(repo.create).not.toHaveBeenCalled();
+    });
+
+    it('recusa matrícula on demand para aluno já em turma do curso', async () => {
+      repo.hasCohortEnrollment.mockResolvedValue(true);
+
+      await expect(service.enroll('student-1', 'course-1'))
+        .rejects.toThrow(ConflictException);
+      expect(repo.create).not.toHaveBeenCalled();
+    });
+
+    it('mantém fluxo normal em curso both sem vínculo de turma', async () => {
+      repo.findCourseAccessMode.mockResolvedValue('both');
+      const fakeRow = { id: 'enroll-new', studentId: 'student-1', courseId: 'course-1', status: 'active', enrolledAt: new Date() };
+      repo.create.mockResolvedValue(fakeRow);
+      repo.findStudentEmailById.mockResolvedValue(null);
+      repo.findCourseBasicById.mockResolvedValue(null);
+
+      const result = await service.enroll('student-1', 'course-1');
       expect(result).toBe(fakeRow);
     });
   });

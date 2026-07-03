@@ -29,6 +29,11 @@ const makeRepo = (overrides: Record<string, unknown> = {}) => ({
   findSchedule: vi.fn().mockResolvedValue([]),
   replaceSchedule: vi.fn().mockResolvedValue(undefined),
   findModuleIdsByCourse: vi.fn().mockResolvedValue(['module-1', 'module-2']),
+  hasCohortEnrollmentInCourse: vi.fn().mockResolvedValue(false),
+  hasBaseEnrollment: vi.fn().mockResolvedValue(false),
+  enrollTransaction: vi.fn().mockResolvedValue('ok'),
+  findPublicByCourse: vi.fn().mockResolvedValue([]),
+  findByStudent: vi.fn().mockResolvedValue([]),
   ...overrides,
 });
 
@@ -160,6 +165,88 @@ describe('CohortsService', () => {
       await expect(
         service.setSchedule('cohort-1', [], 'outro-user', 'instrutor'),
       ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('enrollStudent (US-23)', () => {
+    it('inscreve aluno em turma aberta e cria matrícula base', async () => {
+      // Act
+      const result = await service.enrollStudent('cohort-1', 'student-1');
+
+      // Assert
+      expect(repo.enrollTransaction).toHaveBeenCalledWith('cohort-1', 'student-1', 'course-1', 30);
+      expect(result.status).toBe('aberta');
+    });
+
+    it('lança 422 fora do período de inscrições', async () => {
+      repo.findById.mockResolvedValue({ ...baseCohort, enrollmentStart: TOMORROW, enrollmentEnd: NEXT_WEEK });
+      await expect(service.enrollStudent('cohort-1', 'student-1'))
+        .rejects.toThrow(UnprocessableEntityException);
+      expect(repo.enrollTransaction).not.toHaveBeenCalled();
+    });
+
+    it('lança 422 para turma encerrada manualmente', async () => {
+      repo.findById.mockResolvedValue({ ...baseCohort, closedAt: YESTERDAY });
+      await expect(service.enrollStudent('cohort-1', 'student-1'))
+        .rejects.toThrow(UnprocessableEntityException);
+    });
+
+    it('lança 409 quando turma está esgotada', async () => {
+      repo.enrollTransaction.mockResolvedValue('full');
+      const { ConflictException } = await import('@nestjs/common');
+      await expect(service.enrollStudent('cohort-1', 'student-1'))
+        .rejects.toThrow(ConflictException);
+    });
+
+    it('lança 409 se já está em turma do mesmo curso', async () => {
+      repo.hasCohortEnrollmentInCourse.mockResolvedValue(true);
+      const { ConflictException } = await import('@nestjs/common');
+      await expect(service.enrollStudent('cohort-1', 'student-1'))
+        .rejects.toThrow(ConflictException);
+      expect(repo.enrollTransaction).not.toHaveBeenCalled();
+    });
+
+    it('lança 409 se já tem matrícula on demand no curso', async () => {
+      repo.hasBaseEnrollment.mockResolvedValue(true);
+      const { ConflictException } = await import('@nestjs/common');
+      await expect(service.enrollStudent('cohort-1', 'student-1'))
+        .rejects.toThrow(ConflictException);
+      expect(repo.enrollTransaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('listPublic (US-23)', () => {
+    it('deriva esgotada e seatsLeft; exclui encerradas', async () => {
+      // Arrange
+      repo.findPublicByCourse.mockResolvedValue([
+        { ...baseCohort, id: 'c-aberta', enrolledCount: 10 },
+        { ...baseCohort, id: 'c-cheia', seats: 10, enrolledCount: 10 },
+        { ...baseCohort, id: 'c-agendada', enrollmentStart: TOMORROW, enrollmentEnd: NEXT_WEEK, enrolledCount: 0 },
+        { ...baseCohort, id: 'c-fechada', closedAt: YESTERDAY, enrolledCount: 3 },
+      ]);
+
+      // Act
+      const result = await service.listPublic('course-1');
+
+      // Assert
+      expect(result.map((c: { id: string }) => c.id)).toEqual(['c-aberta', 'c-cheia', 'c-agendada']);
+      expect(result[0]).toMatchObject({ status: 'aberta', seatsLeft: 20 });
+      expect(result[1]).toMatchObject({ status: 'esgotada', seatsLeft: 0 });
+      expect(result[2]).toMatchObject({ status: 'agendada' });
+    });
+  });
+
+  describe('myCohorts (US-23)', () => {
+    it('retorna turmas do aluno com curso e cronograma', async () => {
+      repo.findByStudent.mockResolvedValue([
+        { ...baseCohort, course: { title: 'Curso A', slug: 'curso-a' }, schedule: [] },
+      ]);
+
+      const result = await service.myCohorts('student-1');
+
+      expect(repo.findByStudent).toHaveBeenCalledWith('student-1');
+      expect(result[0].status).toBe('aberta');
+      expect(result[0].course.slug).toBe('curso-a');
     });
   });
 

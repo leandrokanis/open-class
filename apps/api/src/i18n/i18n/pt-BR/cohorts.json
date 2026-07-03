@@ -2,5 +2,9 @@
   "not_found": "Turma não encontrada.",
   "no_permission": "Você não tem permissão para gerenciar turmas deste curso.",
   "invalid_period": "Período de inscrições inválido: o início deve ser anterior ao fim.",
-  "module_not_in_course": "Um ou mais módulos não pertencem ao curso desta turma."
+  "module_not_in_course": "Um ou mais módulos não pertencem ao curso desta turma.",
+  "not_open": "As inscrições desta turma não estão abertas.",
+  "full": "Turma esgotada: não há vagas disponíveis.",
+  "already_in_course_cohort": "Você já está matriculado em uma turma deste curso.",
+  "already_on_demand": "Você já tem matrícula on demand neste curso."
 }

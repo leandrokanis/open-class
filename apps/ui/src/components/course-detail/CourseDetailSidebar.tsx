@@ -4,6 +4,7 @@ import styled from "styled-components";
 import Link from "next/link";
 import type { CourseDetail, CourseModule } from "@/lib/course-detail";
 import { CourseProgressSection } from "./CourseProgressSection";
+import { CohortOffers } from "./CohortOffers";
 
 const LEVEL_LABELS: Record<string, string> = {
   beginner: "Iniciante",
@@ -185,6 +186,16 @@ export function CourseDetailSidebar({
           onCompletedLessonsLoaded={onCompletedLessonsLoaded}
         />
       </Card>
+
+      {/* Turmas do curso (US-23) — exibidas quando o curso aceita acesso via turma */}
+      {course.accessMode !== "on_demand" && (
+        <>
+          <Divider />
+          <Card>
+            <CohortOffers courseId={course.id} />
+          </Card>
+        </>
+      )}
 
       <Divider />
 

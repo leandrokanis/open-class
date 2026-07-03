@@ -7,6 +7,8 @@ import {
   modules,
   lessons,
   users,
+  cohorts,
+  cohortEnrollments,
   type EnrollmentStatus,
 } from '@open-class/db';
 import type { Db } from '../db';
@@ -115,5 +117,25 @@ export class EnrollmentsRepository {
       .where(eq(users.id, studentId))
       .limit(1);
     return row?.email ?? null;
+  }
+
+  /** Modo de acesso do curso (US-22). */
+  async findCourseAccessMode(courseId: string): Promise<'on_demand' | 'cohort' | 'both' | null> {
+    const [row] = await this.db
+      .select({ accessMode: courses.accessMode })
+      .from(courses)
+      .where(eq(courses.id, courseId))
+      .limit(1);
+    return row?.accessMode ?? null;
+  }
+
+  /** O aluno está vinculado a alguma turma deste curso? (US-23) */
+  async hasCohortEnrollment(studentId: string, courseId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ n: count() })
+      .from(cohortEnrollments)
+      .innerJoin(cohorts, eq(cohorts.id, cohortEnrollments.cohortId))
+      .where(and(eq(cohortEnrollments.studentId, studentId), eq(cohorts.courseId, courseId)));
+    return Number(row?.n ?? 0) > 0;
   }
 }

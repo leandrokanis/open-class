@@ -87,3 +87,36 @@ export async function fetchRecentActivity(
   if (!res.ok) return [];
   return res.json() as Promise<RecentActivityItem[]>;
 }
+
+// ── Turmas (Epic 7 — US-23) ────────────────────────────────────────────────────
+
+export interface MyCohortScheduleItem {
+  moduleId: string;
+  moduleTitle: string;
+  modulePosition: number;
+  availableFrom: string;
+}
+
+export interface MyCohort {
+  id: string;
+  courseId: string;
+  name: string;
+  enrollmentStart: string;
+  enrollmentEnd: string;
+  seats: number;
+  closedAt: string | null;
+  status: 'agendada' | 'aberta' | 'encerrada';
+  enrolledAt: string;
+  course: { title: string; slug: string; thumbnailUrl: string | null };
+  schedule: MyCohortScheduleItem[];
+}
+
+export async function fetchMyCohorts(cookie: string): Promise<MyCohort[]> {
+  const res = await fetch(`${API_URL}/api/cohorts/me`, {
+    headers: authHeaders(cookie),
+    cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  const json = (await res.json()) as { data: MyCohort[] };
+  return json.data ?? [];
+}

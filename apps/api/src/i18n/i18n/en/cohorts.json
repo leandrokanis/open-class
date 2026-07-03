@@ -2,5 +2,9 @@
   "not_found": "Cohort not found.",
   "no_permission": "You do not have permission to manage cohorts of this course.",
   "invalid_period": "Invalid enrollment period: start must be before end.",
-  "module_not_in_course": "One or more modules do not belong to this cohort's course."
+  "module_not_in_course": "One or more modules do not belong to this cohort's course.",
+  "not_open": "This cohort is not open for enrollment.",
+  "full": "Cohort is full: no seats available.",
+  "already_in_course_cohort": "You are already enrolled in a cohort of this course.",
+  "already_on_demand": "You already have an on-demand enrollment in this course."
 }

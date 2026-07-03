@@ -1,6 +1,7 @@
 import { pgTable, uuid, varchar, integer, timestamp, primaryKey, index } from 'drizzle-orm/pg-core';
 import { courses } from './courses';
 import { modules } from './modules';
+import { users } from './users';
 
 // Turma de um curso: período de inscrições, vagas e cronograma de liberação
 // de módulos (Epic 7 — US-22). Status é derivado (closedAt/período), não persistido.
@@ -30,6 +31,20 @@ export const cohortModuleSchedules = pgTable(
   (table) => [primaryKey({ columns: [table.cohortId, table.moduleId] })],
 );
 
+export const cohortEnrollments = pgTable(
+  'cohort_enrollments',
+  {
+    cohortId:   uuid('cohort_id').notNull().references(() => cohorts.id, { onDelete: 'cascade' }),
+    studentId:  uuid('student_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    enrolledAt: timestamp('enrolled_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.cohortId, table.studentId] }),
+    index('idx_cohort_enrollments_student').on(table.studentId),
+  ],
+);
+
 export type Cohort               = typeof cohorts.$inferSelect;
 export type NewCohort            = typeof cohorts.$inferInsert;
 export type CohortModuleSchedule = typeof cohortModuleSchedules.$inferSelect;
+export type CohortEnrollment     = typeof cohortEnrollments.$inferSelect;

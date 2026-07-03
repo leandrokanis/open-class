@@ -1,4 +1,6 @@
 {
   "already_enrolled": "Student already enrolled in this course.",
-  "not_enrolled": "Student not enrolled in this course."
+  "not_enrolled": "Student not enrolled in this course.",
+  "cohort_only": "This course only accepts enrollment through a cohort.",
+  "already_in_cohort": "You are enrolled in a cohort of this course; on-demand access is unavailable."
 }
