@@ -15,7 +15,7 @@ const ScrollArea = styled.div`
   overflow-y: auto;
   padding: 40px 48px;
   width: 100%;
-  max-width: 720px;
+  max-width: 860px;
   margin-inline: auto;
 `;
 

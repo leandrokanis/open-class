@@ -11,7 +11,7 @@ import { CohortTabs } from '@/components/instructor/cohorts/CohortTabs';
 const Page = styled.div`
   padding: 24px 32px 48px;
   width: 100%;
-  max-width: 900px;
+  max-width: 860px;
   margin-inline: auto;
 `;
 

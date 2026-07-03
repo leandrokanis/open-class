@@ -15,7 +15,7 @@ const Page = styled.div`
   flex-direction: column;
   gap: 24px;
   width: 100%;
-  max-width: 720px;
+  max-width: 860px;
   margin-inline: auto;
 `;
 
