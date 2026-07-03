@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, and, count, sql, desc, asc } from 'drizzle-orm';
+import { eq, and, count, sql, desc, asc, isNull } from 'drizzle-orm';
 import {
   lessonProgress,
   lessons,
@@ -88,6 +88,8 @@ export class ProgressRepository {
         eq(lessons.visibility, 'visible'),
         // Extras não contam para o percentual: só aulas normais determinam 100% (US-20)
         eq(lessons.isExtra, false),
+        // Exclusivas de turma também ficam fora do percentual (US-25)
+        isNull(lessons.cohortId),
       ));
 
     const { completed, total } = rows[0] ?? { completed: 0, total: 0 };
@@ -110,6 +112,7 @@ export class ProgressRepository {
         eq(lessons.moduleId, moduleId),
         eq(lessons.visibility, 'visible'),
         eq(lessons.isExtra, false),
+        isNull(lessons.cohortId),
       ));
     const { completed, total } = rows[0] ?? { completed: 0, total: 0 };
     return Number(completed) === Number(total);
@@ -120,9 +123,9 @@ export class ProgressRepository {
     const rows = await this.db
       .select({
         moduleId: modules.id,
-        extrasCount: sql<number>`COUNT(*) FILTER (WHERE ${lessons.isExtra} = true AND ${lessons.visibility} = 'visible')`,
-        normalsTotal: sql<number>`COUNT(*) FILTER (WHERE ${lessons.isExtra} = false AND ${lessons.visibility} = 'visible')`,
-        normalsCompleted: sql<number>`COUNT(*) FILTER (WHERE ${lessons.isExtra} = false AND ${lessons.visibility} = 'visible' AND ${lessonProgress.isCompleted} = true)`,
+        extrasCount: sql<number>`COUNT(*) FILTER (WHERE ${lessons.isExtra} = true AND ${lessons.visibility} = 'visible' AND ${lessons.cohortId} IS NULL)`,
+        normalsTotal: sql<number>`COUNT(*) FILTER (WHERE ${lessons.isExtra} = false AND ${lessons.visibility} = 'visible' AND ${lessons.cohortId} IS NULL)`,
+        normalsCompleted: sql<number>`COUNT(*) FILTER (WHERE ${lessons.isExtra} = false AND ${lessons.visibility} = 'visible' AND ${lessons.cohortId} IS NULL AND ${lessonProgress.isCompleted} = true)`,
         celebrated: sql<boolean>`bool_or(${extraUnlockCelebrations.studentId} IS NOT NULL)`,
       })
       .from(modules)

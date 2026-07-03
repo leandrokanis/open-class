@@ -28,6 +28,15 @@ export class LessonsService {
       videoId = info.videoId;
       durationSeconds = info.durationSeconds;
     }
+    // Aula exclusiva de turma: a turma precisa pertencer ao curso do módulo (US-25)
+    if (dto.cohortId) {
+      const mod = await this.modulesRepo.findById(moduleId);
+      const cohortCourseId = await this.repo.findCohortCourseId(dto.cohortId);
+      if (!cohortCourseId || cohortCourseId !== mod?.courseId) {
+        throw new UnprocessableEntityException(t('cohorts.module_not_in_course'));
+      }
+    }
+
     const isExtra = dto.isExtra ?? false;
     const position = await this.repo.nextPosition(moduleId, isExtra);
     return this.repo.insert({
@@ -40,13 +49,15 @@ export class LessonsService {
       position,
       visibility: 'hidden',
       isExtra,
+      cohortId: dto.cohortId ?? null,
     });
   }
 
   async findByModule(moduleId: string, userRole?: string) {
     const all = await this.repo.findByModule(moduleId);
     if (userRole === 'instrutor' || userRole === 'admin') return all;
-    return all.filter((l) => l.visibility === 'visible');
+    // Exclusivas de turma ficam fora da listagem pública (US-25)
+    return all.filter((l) => l.visibility === 'visible' && !l.cohortId);
   }
 
   async findById(id: string, userRole?: string, userId?: string) {
@@ -55,6 +66,12 @@ export class LessonsService {
     const isStaff = userRole === 'instrutor' || userRole === 'admin';
     if (lesson.visibility !== 'visible' && !isStaff) {
       throw new NotFoundException(t('lessons.not_found'));
+    }
+    // Aula exclusiva de turma: só para matriculados na turma, e só enquanto ativa (US-25)
+    if (lesson.cohortId && !isStaff) {
+      const access = userId ? await this.repo.findCohortAccess(userId, lesson.cohortId) : null;
+      if (!access) throw new NotFoundException(t('lessons.not_found'));
+      if (access.closed) throw new ForbiddenException(t('cohorts.exclusive_closed'));
     }
     // Extra bloqueada para quem ainda não concluiu as normais do módulo (US-20)
     if (lesson.isExtra && !isStaff) {

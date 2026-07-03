@@ -41,6 +41,7 @@ export interface LessonData {
   visibility: 'visible' | 'hidden';
   position: number;
   isExtra: boolean;
+  cohortId: string | null;
   resources: Resource[];
   contentType: string;
   createdAt: string;
@@ -405,7 +406,7 @@ export async function deleteModule(courseId: string, id: string): Promise<boolea
 
 export async function createLesson(
   moduleId: string,
-  data: { title: string; youtubeUrl?: string; description?: string },
+  data: { title: string; youtubeUrl?: string; description?: string; cohortId?: string },
 ): Promise<LessonData | null> {
   const res = await fetch(`${API_PUBLIC}/api/modules/${moduleId}/lessons`, {
     method: 'POST',
