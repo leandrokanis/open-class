@@ -7,7 +7,8 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
-    "test:e2e": "turbo test:e2e"
+    "test:e2e": "turbo test:e2e",
+    "seed": "pnpm --filter @open-class/db seed"
   },
   "devDependencies": {
     "turbo": "^2.9.14"
