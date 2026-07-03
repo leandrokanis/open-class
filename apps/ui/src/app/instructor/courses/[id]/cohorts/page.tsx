@@ -15,7 +15,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useCourseCurriculum } from '@/components/instructor/CourseCurriculumContext';
 import {
   fetchCohorts, createCohort, updateCohort, closeCohort, setCohortSchedule, fetchCohort,
-  updateCourse,
+  updateCourse, createLesson,
   type CohortData, type CohortScheduleEntry,
 } from '@/lib/instructor';
 
@@ -207,6 +207,12 @@ export default function CohortsPage() {
   const [scheduleDraft, setScheduleDraft] = useState<Record<string, string>>({});
   const [savingSchedule, setSavingSchedule] = useState(false);
 
+  // Aulas exclusivas de turma (US-25)
+  const { dispatch } = useCourseCurriculum();
+  const [exclusivesFor, setExclusivesFor] = useState<string | null>(null);
+  const [excForm, setExcForm] = useState({ moduleId: '', title: '', youtubeUrl: '' });
+  const [savingExclusive, setSavingExclusive] = useState(false);
+
   const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
   useEffect(() => {
@@ -333,6 +339,38 @@ export default function CohortsPage() {
     [sections],
   );
 
+  const exclusivesByCohort = useMemo(() => {
+    const map: Record<string, Array<{ id: string; title: string; moduleTitle: string }>> = {};
+    for (const mod of sortedSections) {
+      for (const lesson of mod.lessons ?? []) {
+        if (!lesson.cohortId) continue;
+        (map[lesson.cohortId] ??= []).push({ id: lesson.id, title: lesson.title, moduleTitle: mod.title });
+      }
+    }
+    return map;
+  }, [sortedSections]);
+
+  async function handleCreateExclusive() {
+    if (!exclusivesFor || !excForm.moduleId || !excForm.title.trim()) {
+      toast.error('Escolha o módulo e informe o título da aula exclusiva.');
+      return;
+    }
+    setSavingExclusive(true);
+    const lesson = await createLesson(excForm.moduleId, {
+      title: excForm.title.trim(),
+      ...(excForm.youtubeUrl.trim() ? { youtubeUrl: excForm.youtubeUrl.trim() } : {}),
+      cohortId: exclusivesFor,
+    });
+    setSavingExclusive(false);
+    if (!lesson) {
+      toast.error('Erro ao criar a aula exclusiva.');
+      return;
+    }
+    dispatch({ type: 'ADD_LESSON', moduleId: excForm.moduleId, lesson });
+    setExcForm({ moduleId: '', title: '', youtubeUrl: '' });
+    toast.success('Aula exclusiva criada (em rascunho). Publique-a no currículo.');
+  }
+
   if (loading) {
     return <Page><CardDesc>Carregando turmas...</CardDesc></Page>;
   }
@@ -382,6 +420,14 @@ export default function CohortsPage() {
                   <Icon name="calendar_month" size={14} />
                   Cronograma
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setExclusivesFor(exclusivesFor === cohort.id ? null : cohort.id)}
+                >
+                  <Icon name="star" size={14} />
+                  Exclusivas
+                </Button>
                 <Button size="sm" variant="outline" onClick={() => openEdit(cohort)}>
                   Editar
                 </Button>
@@ -396,6 +442,58 @@ export default function CohortsPage() {
               <span>Inscrições: {formatPeriod(cohort.enrollmentStart, cohort.enrollmentEnd)}</span>
               <span>{cohort.seats} vagas</span>
             </CohortMeta>
+
+            {exclusivesFor === cohort.id && (
+              <ScheduleGrid>
+                <CardDesc>
+                  Aulas exclusivas desta turma: não aparecem no on demand nem em outras
+                  turmas, e ficam inacessíveis após o encerramento.
+                </CardDesc>
+                {(exclusivesByCohort[cohort.id] ?? []).map((lesson) => (
+                  <ScheduleRow key={lesson.id}>
+                    <ModuleName>
+                      <Icon name="star" size={12} style={{ verticalAlign: -2, marginRight: 6 }} />
+                      {lesson.title}
+                    </ModuleName>
+                    <CardDesc>{lesson.moduleTitle}</CardDesc>
+                  </ScheduleRow>
+                ))}
+                {(exclusivesByCohort[cohort.id] ?? []).length === 0 && (
+                  <CardDesc>Nenhuma aula exclusiva ainda.</CardDesc>
+                )}
+                <ScheduleRow>
+                  <Select
+                    value={excForm.moduleId || undefined}
+                    onValueChange={(v) => setExcForm((p) => ({ ...p, moduleId: v }))}
+                  >
+                    <SelectTrigger aria-label="Módulo da aula exclusiva">
+                      <SelectValue placeholder="Escolha o módulo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortedSections.map((mod) => (
+                        <SelectItem key={mod.id} value={mod.id}>{mod.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    placeholder="Título da aula exclusiva"
+                    value={excForm.title}
+                    onChange={(e) => setExcForm((p) => ({ ...p, title: e.target.value }))}
+                  />
+                </ScheduleRow>
+                <ScheduleRow>
+                  <Input
+                    placeholder="Link do YouTube (opcional)"
+                    type="url"
+                    value={excForm.youtubeUrl}
+                    onChange={(e) => setExcForm((p) => ({ ...p, youtubeUrl: e.target.value }))}
+                  />
+                  <Button size="sm" onClick={handleCreateExclusive} disabled={savingExclusive}>
+                    {savingExclusive ? 'Criando...' : 'Adicionar exclusiva'}
+                  </Button>
+                </ScheduleRow>
+              </ScheduleGrid>
+            )}
 
             {scheduleFor === cohort.id && (
               <ScheduleGrid>

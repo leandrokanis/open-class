@@ -70,6 +70,31 @@ export class LessonsRepository {
     await Promise.all(ids.map((id, i) => this.updatePosition(id, i + 1)));
   }
 
+  /** Curso ao qual a turma pertence (validação de aula exclusiva — US-25). */
+  async findCohortCourseId(cohortId: string): Promise<string | null> {
+    const rows = await this.db.execute(sql`
+      SELECT course_id AS "courseId" FROM cohorts WHERE id = ${cohortId} LIMIT 1
+    `);
+    const first = (rows as unknown as { rows?: Array<{ courseId: string }> }).rows?.[0]
+      ?? (rows as unknown as Array<{ courseId: string }>)[0];
+    return first?.courseId ?? null;
+  }
+
+  /** O aluno está na turma? A turma está encerrada? (acesso a exclusivas — US-25) */
+  async findCohortAccess(studentId: string, cohortId: string) {
+    const rows = await this.db.execute(sql`
+      SELECT (c.closed_at IS NOT NULL) AS "closed"
+      FROM cohort_enrollments ce
+      JOIN cohorts c ON c.id = ce.cohort_id
+      WHERE ce.cohort_id = ${cohortId} AND ce.student_id = ${studentId}
+      LIMIT 1
+    `);
+    const first = (rows as unknown as { rows?: Array<{ closed: boolean }> }).rows?.[0]
+      ?? (rows as unknown as Array<{ closed: boolean }>)[0];
+    if (!first) return null;
+    return { enrolled: true, closed: Boolean(first.closed) };
+  }
+
   /**
    * Lock de cronograma de turma para um módulo (US-24).
    * null → aluno não está em turma do curso deste módulo.
@@ -100,9 +125,10 @@ export class LessonsRepository {
   async isExtraUnlockedFor(studentId: string, moduleId: string): Promise<boolean> {
     const rows = await this.db.execute(sql`
       SELECT
-        count(*) FILTER (WHERE l.is_extra = false AND l.visibility = 'visible') AS total,
+        count(*) FILTER (WHERE l.is_extra = false AND l.visibility = 'visible' AND l.cohort_id IS NULL) AS total,
         count(*) FILTER (
-          WHERE l.is_extra = false AND l.visibility = 'visible' AND lp.is_completed = true
+          WHERE l.is_extra = false AND l.visibility = 'visible' AND l.cohort_id IS NULL
+            AND lp.is_completed = true
         ) AS completed
       FROM lessons l
       LEFT JOIN lesson_progress lp
@@ -127,6 +153,7 @@ export class LessonsRepository {
       normals AS (
         SELECT id FROM lessons
         WHERE module_id = ${moduleId} AND is_extra = false AND visibility = 'visible'
+          AND cohort_id IS NULL
       ),
       enrolled AS (
         SELECT e.student_id FROM enrollments e

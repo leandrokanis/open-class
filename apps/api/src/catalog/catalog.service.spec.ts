@@ -38,6 +38,7 @@ const makeRepo = (overrides = {}) => ({
     { id: 'cat-1', name: 'Web', slug: 'web', description: null, iconUrl: null },
   ]),
   getStats: vi.fn().mockResolvedValue({ totalCourses: 12, totalInstructors: 6, percentFree: 100 }),
+  findStudentCohortForCourse: vi.fn().mockResolvedValue(null),
   ...overrides,
 });
 
@@ -226,6 +227,53 @@ describe('CatalogService', () => {
       repo.getStats.mockResolvedValue({ totalCourses: 0, totalInstructors: 0, percentFree: 100 });
       const result = await service.getStats();
       expect(result.percentFree).toBe(100);
+    });
+  });
+
+  describe('getBySlug com aulas exclusivas (US-25)', () => {
+    const modulesWithExclusives = [{
+      id: 'm1', title: 'Mod 1', description: null, position: 1,
+      lessons: [
+        { id: 'l-reg', title: 'Regular', contentType: 'video', duration: 60, position: 1, isExtra: false, cohortId: null },
+        { id: 'l-exc-1', title: 'Exclusiva T1', contentType: 'video', duration: 60, position: 2, isExtra: false, cohortId: 'cohort-1' },
+        { id: 'l-exc-2', title: 'Exclusiva T2', contentType: 'video', duration: 60, position: 3, isExtra: false, cohortId: 'cohort-2' },
+      ],
+    }];
+
+    beforeEach(() => {
+      repo.findBySlug.mockResolvedValue({
+        id: 'c1', title: 'React Basics', slug: 'react-basics', shortDescription: null,
+        description: null, level: 'beginner', accessMode: 'both', thumbnailUrl: null,
+        category: null, instructor: { id: 'inst-1', name: 'Alice' },
+        modules: modulesWithExclusives, status: 'published',
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+      });
+    });
+
+    it('visitante não vê aulas exclusivas', async () => {
+      const result = await service.getBySlug('react-basics');
+      expect(result.modules[0].lessons.map((l) => l.id)).toEqual(['l-reg']);
+    });
+
+    it('aluno da turma vê as exclusivas da própria turma (turma ativa)', async () => {
+      repo.findStudentCohortForCourse.mockResolvedValue({ cohortId: 'cohort-1', closed: false });
+
+      const result = await service.getBySlug('react-basics', 'student-1', 'aluno');
+
+      expect(result.modules[0].lessons.map((l) => l.id)).toEqual(['l-reg', 'l-exc-1']);
+    });
+
+    it('turma encerrada esconde as exclusivas do aluno', async () => {
+      repo.findStudentCohortForCourse.mockResolvedValue({ cohortId: 'cohort-1', closed: true });
+
+      const result = await service.getBySlug('react-basics', 'student-1', 'aluno');
+
+      expect(result.modules[0].lessons.map((l) => l.id)).toEqual(['l-reg']);
+    });
+
+    it('dono do curso vê todas as exclusivas', async () => {
+      const result = await service.getBySlug('react-basics', 'inst-1', 'instrutor');
+      expect(result.modules[0].lessons.map((l) => l.id)).toEqual(['l-reg', 'l-exc-1', 'l-exc-2']);
     });
   });
 });

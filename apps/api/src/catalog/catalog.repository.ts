@@ -84,6 +84,8 @@ export class CatalogRepository {
         eq(lessons.visibility, 'visible'),
         // Extras ficam fora da contagem e do tempo total estimado (US-20)
         eq(lessons.isExtra, false),
+        // Exclusivas de turma também não entram nos agregados públicos (US-25)
+        isNull(lessons.cohortId),
       ))
       .where(and(eq(modules.visibility, 'visible'), isNull(courses.deletedAt)))
       .groupBy(courses.id)
@@ -175,6 +177,21 @@ export class CatalogRepository {
       })
       .from(categories)
       .orderBy(asc(categories.position));
+  }
+
+  /** Turma do aluno neste curso (para exibição de aulas exclusivas — US-25). */
+  async findStudentCohortForCourse(studentId: string, courseId: string) {
+    const rows = await this.db.execute(sql`
+      SELECT c.id AS "cohortId", (c.closed_at IS NOT NULL) AS "closed"
+      FROM cohort_enrollments ce
+      JOIN cohorts c ON c.id = ce.cohort_id
+      WHERE ce.student_id = ${studentId} AND c.course_id = ${courseId}
+      LIMIT 1
+    `);
+    const first = (rows as unknown as { rows?: Array<{ cohortId: string; closed: boolean }> }).rows?.[0]
+      ?? (rows as unknown as Array<{ cohortId: string; closed: boolean }>)[0];
+    if (!first) return null;
+    return { cohortId: first.cohortId, closed: Boolean(first.closed) };
   }
 
   async getStats(): Promise<CatalogStats> {

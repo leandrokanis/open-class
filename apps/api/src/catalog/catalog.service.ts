@@ -93,6 +93,16 @@ export class CatalogService {
       throw new NotFoundException(t('courses.not_found'));
     }
 
+    // Aulas exclusivas de turma: visíveis só para o aluno da turma ativa (US-25).
+    // Dono/admin vê todas; visitante/aluno de fora não vê nenhuma.
+    let visibleCohortId: string | null = null;
+    if (!isOwner && !isAdmin && requesterId) {
+      const myCohort = await this.repo.findStudentCohortForCourse(requesterId, course.id);
+      if (myCohort && !myCohort.closed) visibleCohortId = myCohort.cohortId;
+    }
+    const canSeeExclusive = (lessonCohortId: string | null) =>
+      lessonCohortId === null || isOwner || isAdmin || lessonCohortId === visibleCohortId;
+
     const detail: CatalogDetailDto = {
       id: course.id,
       title: course.title,
@@ -111,14 +121,17 @@ export class CatalogService {
         title: m.title,
         description: m.description ?? null,
         order: m.position,
-        lessons: (m.lessons ?? []).map((l) => ({
-          id: l.id,
-          title: l.title,
-          contentType: l.contentType,
-          duration: l.duration ?? null,
-          order: l.position,
-          isExtra: l.isExtra,
-        })),
+        lessons: (m.lessons ?? [])
+          .filter((l) => canSeeExclusive(l.cohortId ?? null))
+          .map((l) => ({
+            id: l.id,
+            title: l.title,
+            contentType: l.contentType,
+            duration: l.duration ?? null,
+            order: l.position,
+            isExtra: l.isExtra,
+            cohortId: l.cohortId ?? null,
+          })),
       })),
       createdAt: course.createdAt,
     };
