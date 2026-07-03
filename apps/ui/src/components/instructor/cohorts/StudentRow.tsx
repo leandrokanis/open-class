@@ -6,9 +6,11 @@ import { relativeTime } from './relativeTime';
 
 export type StudentProgress = CohortProgress['students'][number];
 
+// Colunas determinísticas: larguras fixas para barra e acesso, e minmax(0,1fr)
+// para nome/última aula (permite o ellipsis). Assim todas as linhas alinham.
 const Row = styled.div`
   display: grid;
-  grid-template-columns: 1fr 140px 1fr auto;
+  grid-template-columns: minmax(0, 1fr) 140px minmax(0, 1fr) 96px;
   align-items: center;
   gap: 16px;
   padding: 10px 4px;
@@ -17,7 +19,7 @@ const Row = styled.div`
   &:last-child { border-bottom: none; }
 
   @media (max-width: 720px) {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) 96px;
     gap: 8px;
   }
 `;
@@ -102,6 +104,8 @@ const Access = styled.span<{ $warn?: boolean }>`
   font-size: 12px;
   color: ${({ $warn }) => ($warn ? 'var(--color-destructive)' : 'var(--color-text-tertiary)')};
   white-space: nowrap;
+  justify-self: end;
+  font-variant-numeric: tabular-nums;
 `;
 
 function initials(name: string): string {
