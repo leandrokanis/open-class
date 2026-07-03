@@ -47,7 +47,9 @@ const Content = styled(SelectPrimitive.Content)`
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  z-index: 50;
+  /* Acima do Dialog (z-index 51): o Select é portalizado no body e, com
+     z menor, o dropdown abria atrás do modal. */
+  z-index: 60;
   min-width: var(--radix-select-trigger-width);
 `;
 
