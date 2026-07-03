@@ -68,11 +68,11 @@ describe('lessons table', () => {
 
   it('stores nullable duration', async () => {
     const res = await query(
-      `INSERT INTO lessons (module_id, title, content_type, position, duration)
-       VALUES ($1, $2, $3, $4, $5) RETURNING duration`,
+      `INSERT INTO lessons (module_id, title, content_type, position, duration_seconds)
+       VALUES ($1, $2, $3, $4, $5) RETURNING duration_seconds`,
       [moduleId, 'Timed Lesson', 'video', 20, 300],
     );
-    expect(res.rows[0].duration).toBe(300);
+    expect(res.rows[0].duration_seconds).toBe(300);
   });
 
   it('rejects non-existent module_id', async () => {
