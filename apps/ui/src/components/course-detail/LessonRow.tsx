@@ -31,13 +31,12 @@ const Duration = styled.span`
   flex-shrink: 0;
 `;
 
-const ExtraTag = styled.span`
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-primary);
-  flex-shrink: 0;
+const MaskedTitle = styled.span`
+  font-size: 14px;
+  font-style: italic;
+  color: var(--color-text-tertiary);
+  flex: 1;
+  line-height: 1.4;
 `;
 
 interface LessonRowProps {
@@ -48,7 +47,7 @@ export function LessonRow({ lesson }: LessonRowProps) {
   const isExtra = lesson.isExtra ?? false;
   return (
     <Row
-      title={isExtra ? "Aula extra — desbloqueada ao concluir as aulas normais do módulo" : undefined}
+      title={isExtra ? "Conteúdo bônus — desbloqueado ao concluir as aulas do módulo" : undefined}
       style={isExtra ? { opacity: 0.7 } : undefined}
     >
       <Icon
@@ -56,10 +55,16 @@ export function LessonRow({ lesson }: LessonRowProps) {
         size={18}
         style={{ color: "var(--color-text-tertiary)", flexShrink: 0 }}
       />
-      <LessonTitle>{lesson.title}</LessonTitle>
-      {isExtra && <ExtraTag>Extra</ExtraTag>}
-      {lesson.duration != null && lesson.duration > 0 && (
-        <Duration>{formatDuration(lesson.duration)}</Duration>
+      {isExtra ? (
+        // Título e duração escondidos para preservar a surpresa da aula bônus
+        <MaskedTitle>Conteúdo bônus bloqueado</MaskedTitle>
+      ) : (
+        <>
+          <LessonTitle>{lesson.title}</LessonTitle>
+          {lesson.duration != null && lesson.duration > 0 && (
+            <Duration>{formatDuration(lesson.duration)}</Duration>
+          )}
+        </>
       )}
     </Row>
   );
