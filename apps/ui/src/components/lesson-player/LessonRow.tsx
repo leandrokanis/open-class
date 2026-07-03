@@ -72,6 +72,16 @@ const ExtraMark = styled.span`
   flex-shrink: 0;
 `;
 
+const MaskedTitle = styled.span`
+  font-size: 14px;
+  font-style: italic;
+  color: var(--color-text-tertiary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
 interface LessonRowProps {
   lesson: { id: string; title: string; durationSeconds: number | null; isExtra?: boolean };
   isCompleted: boolean;
@@ -81,6 +91,9 @@ interface LessonRowProps {
 }
 
 export function LessonRow({ lesson, isCompleted, isActive, onClick, locked = false }: LessonRowProps) {
+  // Extra bloqueada: esconde título e duração para preservar a surpresa (curiosidade)
+  const masked = locked && (lesson.isExtra ?? false);
+
   const iconName = locked
     ? "lock"
     : isCompleted
@@ -100,18 +113,24 @@ export function LessonRow({ lesson, isCompleted, isActive, onClick, locked = fal
       $isActive={isActive}
       onClick={locked ? undefined : onClick}
       aria-disabled={locked}
-      title={locked ? "Aula extra bloqueada — conclua as aulas normais do módulo" : undefined}
+      title={masked ? "Conteúdo bônus — conclua as aulas do módulo para desbloquear" : undefined}
       style={locked ? { cursor: "not-allowed", opacity: 0.55 } : undefined}
     >
       <IconSlot>
         <Icon name={iconName} size={20} fill={!locked && (isCompleted || isActive)} style={{ color: iconColor }} />
       </IconSlot>
-      <Title $isCompleted={isCompleted && !locked} $isActive={isActive && !locked}>
-        {lesson.title}
-      </Title>
-      {lesson.isExtra && <ExtraMark>Extra</ExtraMark>}
-      {lesson.durationSeconds != null && lesson.durationSeconds > 0 && (
-        <Duration>{formatDuration(lesson.durationSeconds)}</Duration>
+      {masked ? (
+        <MaskedTitle>Conteúdo bônus bloqueado</MaskedTitle>
+      ) : (
+        <>
+          <Title $isCompleted={isCompleted && !locked} $isActive={isActive && !locked}>
+            {lesson.title}
+          </Title>
+          {lesson.isExtra && <ExtraMark>Extra</ExtraMark>}
+          {lesson.durationSeconds != null && lesson.durationSeconds > 0 && (
+            <Duration>{formatDuration(lesson.durationSeconds)}</Duration>
+          )}
+        </>
       )}
     </Row>
   );
