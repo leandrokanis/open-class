@@ -181,6 +181,18 @@ const ConfirmBtn = styled.button`
   font-family: inherit;
 `;
 
+const PrimaryBtn = styled.button`
+  padding: 9px 20px;
+  border-radius: var(--radius-btn);
+  border: none;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+`;
+
 /* ─── Helpers ─── */
 
 interface FlatLesson {
@@ -342,6 +354,9 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
     await toggle(lesson.id);
   }
 
+  // Modal de incentivo ao clicar numa aula extra ainda bloqueada
+  const [lockedInfo, setLockedInfo] = useState<{ moduleTitle: string; remaining: number } | null>(null);
+
   return (
     <Page>
       {/* Navbar fixa — desktop only */}
@@ -388,6 +403,7 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
                   showHeader={false}
                   extrasUnlockedByModule={extrasUnlockedByModule}
                   moduleLocks={moduleLocks}
+                  onLockedExtraClick={setLockedInfo}
                 />
               }
               description={lesson.description}
@@ -432,6 +448,7 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
             showHeader={true}
             extrasUnlockedByModule={extrasUnlockedByModule}
             moduleLocks={moduleLocks}
+            onLockedExtraClick={setLockedInfo}
           />
         </Sidebar>
       </OuterLayout>
@@ -469,6 +486,22 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
         </CelebrationList>
         <DialogActions>
           <ConfirmBtn onClick={handleCloseCelebration}>Ver aulas extras</ConfirmBtn>
+        </DialogActions>
+      </Dialog>
+
+      {/* Incentivo ao clicar numa aula extra ainda bloqueada (US-20) */}
+      <Dialog
+        open={lockedInfo !== null}
+        onOpenChange={(o) => { if (!o) setLockedInfo(null); }}
+        title="🔒 Conteúdo bônus bloqueado"
+        description={
+          lockedInfo && lockedInfo.remaining > 0
+            ? `Falta${lockedInfo.remaining > 1 ? "m" : ""} ${lockedInfo.remaining} aula${lockedInfo.remaining > 1 ? "s" : ""} para desbloquear o bônus de "${lockedInfo.moduleTitle}". Conclua o módulo e o conteúdo extra é liberado automaticamente!`
+            : `Conclua todas as aulas de "${lockedInfo?.moduleTitle}" para desbloquear o conteúdo bônus. Ele é liberado automaticamente!`
+        }
+      >
+        <DialogActions>
+          <PrimaryBtn onClick={() => setLockedInfo(null)}>Continuar assistindo</PrimaryBtn>
         </DialogActions>
       </Dialog>
     </Page>

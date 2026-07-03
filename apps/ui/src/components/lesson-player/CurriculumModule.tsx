@@ -84,6 +84,8 @@ interface CurriculumModuleProps {
   extrasUnlocked?: boolean;
   /** Data de liberação do módulo no cronograma da turma; null = liberado (US-24) */
   lockedUntil?: string | null;
+  /** Clique numa extra ainda bloqueada: abre o modal de incentivo */
+  onLockedExtraClick?: (info: { moduleTitle: string; remaining: number }) => void;
 }
 
 function formatDuration(seconds: number): string {
@@ -114,6 +116,7 @@ export function CurriculumModule({
   defaultOpen = false,
   extrasUnlocked = false,
   lockedUntil = null,
+  onLockedExtraClick,
 }: CurriculumModuleProps) {
   const [open, setOpen] = useState(defaultOpen);
 
@@ -177,6 +180,15 @@ export function CurriculumModule({
                   isActive={lesson.id === activeLessonId}
                   onClick={() => onLessonClick(lesson.id)}
                   locked={!extrasUnlocked || isModuleLocked}
+                  // Extra travada por progresso (não por cronograma): clique abre incentivo
+                  onLockedClick={
+                    !extrasUnlocked && !isModuleLocked
+                      ? () => onLockedExtraClick?.({
+                          moduleTitle: module.title,
+                          remaining: totalLessons - completedCount,
+                        })
+                      : undefined
+                  }
                 />
               ))}
             </>
