@@ -149,7 +149,9 @@ export function CourseCurriculumProvider({ courseId, children }: Props) {
     <CurriculumPanel
       courseId={courseId}
       sections={sections}
-      selectedLessonId={selectedLessonId}
+      // A aula só fica destacada na árvore quando estamos na página de Aulas;
+      // ao navegar para outra área (ex: Turmas) o destaque não deve persistir.
+      selectedLessonId={pathname === aulasPath ? selectedLessonId : null}
       autoEditLessonId={autoEditLessonId}
       onSelectLesson={handleSelectLesson}
       onAddLesson={handleAddLesson}

@@ -376,6 +376,11 @@ export default function CurriculumPanel({
     { href: `${basePath}/cohorts`,          label: 'Turmas',         icon: 'groups' },
   ];
 
+  // "Curso" é o basePath (prefixo de todas as subpáginas), então casa exato;
+  // os demais casam também nas subpáginas (ex: Turmas em /cohorts/[id]).
+  const isTabActive = (href: string) =>
+    href === basePath ? pathname === basePath : pathname === href || pathname.startsWith(`${href}/`);
+
   return (
     <Panel>
       <CourseTabs>
@@ -383,7 +388,7 @@ export default function CurriculumPanel({
           <CourseTab
             key={tab.href}
             href={tab.href}
-            $active={pathname === tab.href}
+            $active={isTabActive(tab.href)}
           >
             <Icon name={tab.icon} size={14} />
             {tab.label}
