@@ -10,7 +10,7 @@ import { CreateCohortDto } from './dto/create-cohort.dto';
 import { UpdateCohortDto } from './dto/update-cohort.dto';
 import { SetScheduleDto } from './dto/set-schedule.dto';
 import {
-  CohortResponseDto, CohortListResponseDto, CohortWithScheduleResponseDto,
+  CohortResponseDto, CohortListResponseDto, CohortWithScheduleResponseDto, CohortProgressResponseDto,
 } from './dto/cohort-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard, Roles, Role } from '../common';
@@ -69,6 +69,21 @@ export class CohortsController {
     @Req() req: Request & { user: AuthUser },
   ) {
     const data = await this.service.findById(id, req.user.id, req.user.role);
+    return { data };
+  }
+
+  @Get('cohorts/:id/progress')
+  @ApiParam({ name: 'id', description: 'ID da turma', type: String })
+  @ApiOperation({ summary: 'Painel de progresso da turma: resumo, alunos e módulos' })
+  @ApiResponse({ status: 200, description: 'Progresso agregado da turma.', type: CohortProgressResponseDto })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @ApiResponse({ status: 403, description: 'Sem acesso ao curso.' })
+  @ApiResponse({ status: 404, description: 'Turma não encontrada.' })
+  async getProgress(
+    @Param('id') id: string,
+    @Req() req: Request & { user: AuthUser },
+  ) {
+    const data = await this.service.getProgress(id, req.user.id, req.user.role);
     return { data };
   }
 

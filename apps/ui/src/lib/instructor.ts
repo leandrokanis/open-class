@@ -166,6 +166,26 @@ export async function closeCohort(id: string): Promise<CohortData | null> {
   return json.data;
 }
 
+export interface CohortProgress {
+  summary: { enrolledCount: number; seatsLeft: number; avgCompletion: number };
+  students: Array<{
+    id: string;
+    name: string;
+    progressPct: number;
+    lastLessonTitle: string | null;
+    lastAccessAt: string | null;
+    inactive: boolean;
+  }>;
+  modules: Array<{ moduleId: string; title: string; position: number; completedCount: number }>;
+}
+
+export async function fetchCohortProgress(id: string): Promise<CohortProgress | null> {
+  const res = await fetch(`${API_PUBLIC}/api/cohorts/${id}/progress`, { credentials: 'include' });
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.data;
+}
+
 export async function setCohortSchedule(
   id: string,
   entries: CohortScheduleEntry[],

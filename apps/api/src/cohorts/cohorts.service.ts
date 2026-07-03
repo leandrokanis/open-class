@@ -143,6 +143,47 @@ export class CohortsService {
     return rows.map((c) => ({ ...c, status: this.statusOf(c) }));
   }
 
+  // ── Painel de progresso da turma (US-26) ──────────────────────────────────
+
+  async getProgress(cohortId: string, userId: string, userRole: string) {
+    const cohort = await this.repo.findById(cohortId);
+    if (!cohort) throw new NotFoundException(t('cohorts.not_found'));
+    await this.assertCourseOwnership(cohort.courseId, userId, userRole);
+
+    const [studentRows, moduleRows] = await Promise.all([
+      this.repo.findCohortStudentsProgress(cohortId, cohort.courseId),
+      this.repo.findCohortModuleCompletion(cohortId, cohort.courseId),
+    ]);
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000);
+    const students = studentRows.map((s) => {
+      const progressPct = s.total === 0 ? 0 : Math.round((s.completed / s.total) * 1000) / 10;
+      return {
+        id: s.id,
+        name: s.name,
+        progressPct,
+        lastLessonTitle: s.lastLessonTitle,
+        lastAccessAt: s.lastAccessAt,
+        // Inativo: sem qualquer atividade nos últimos 7 dias (ou nunca acessou)
+        inactive: !s.lastAccessAt || s.lastAccessAt < sevenDaysAgo,
+      };
+    });
+
+    const avgCompletion = students.length === 0
+      ? 0
+      : Math.round((students.reduce((acc, s) => acc + s.progressPct, 0) / students.length) * 10) / 10;
+
+    return {
+      summary: {
+        enrolledCount: students.length,
+        seatsLeft: Math.max(0, cohort.seats - students.length),
+        avgCompletion,
+      },
+      students,
+      modules: moduleRows,
+    };
+  }
+
   statusOf(cohort: CohortLike, now: Date = new Date()): CohortStatus {
     if (cohort.closedAt) return 'encerrada';
     if (now < cohort.enrollmentStart) return 'agendada';
