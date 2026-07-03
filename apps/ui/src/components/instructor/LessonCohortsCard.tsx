@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { toast } from 'sonner';
-import { Switch } from '@/components/ui/switch';
 import { Icon } from '@/components/ui/Icon';
+import { MultiSelect, type MultiSelectOption } from '@/components/ui/multi-select';
 import {
   fetchCohorts, fetchLessonCohorts, setLessonCohorts, type CohortData,
 } from '@/lib/instructor';
@@ -37,53 +37,15 @@ const Desc = styled.p`
   color: var(--color-text-secondary);
 `;
 
-const List = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-`;
-
-const Row = styled.label`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
-  cursor: pointer;
-  border-top: 1px solid var(--color-border);
-
-  &:first-of-type { border-top: none; }
-`;
-
-const CohortInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-`;
-
-const CohortName = styled.span`
-  font-size: 13px;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const CohortMeta = styled.span<{ $closed: boolean }>`
-  font-size: 11px;
-  color: ${({ $closed }) => ($closed ? 'var(--color-text-tertiary)' : 'var(--color-text-secondary)')};
-`;
-
 const Empty = styled.p`
   font-size: 12px;
   color: var(--color-text-tertiary);
 `;
 
-function cohortMeta(c: CohortData): { label: string; closed: boolean } {
-  if (c.closedAt || c.status === 'encerrada') return { label: 'Encerrada', closed: true };
+function cohortHint(c: CohortData): string {
+  if (c.closedAt || c.status === 'encerrada') return 'Encerrada';
   const start = new Date(c.enrollmentStart).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  return { label: `Inscrições desde ${start}`, closed: false };
+  return `Inscrições desde ${start}`;
 }
 
 interface LessonCohortsCardProps {
@@ -109,8 +71,12 @@ export default function LessonCohortsCard({ lessonId, courseId, onChanged }: Les
     return () => { cancelled = true; };
   }, [courseId, lessonId]);
 
-  async function toggle(cohortId: string, on: boolean) {
-    const next = on ? [...selected, cohortId] : selected.filter((id) => id !== cohortId);
+  const options = useMemo<MultiSelectOption[]>(
+    () => cohorts.map((c) => ({ value: c.id, label: c.name, hint: cohortHint(c) })),
+    [cohorts],
+  );
+
+  async function handleChange(next: string[]) {
     const previous = selected;
     setSelected(next); // otimista
     setSaving(true);
@@ -138,35 +104,28 @@ export default function LessonCohortsCard({ lessonId, courseId, onChanged }: Les
       </TitleRow>
       <Desc>
         {selected.length === 0
-          ? 'Aula regular: visível para todos os alunos do curso. Ative turmas abaixo para torná-la exclusiva.'
+          ? 'Aula regular: visível para todos os alunos do curso. Escolha turmas abaixo para torná-la exclusiva.'
           : 'Aula exclusiva: só aparece para os alunos das turmas selecionadas, e some do acesso on demand e das demais turmas.'}
       </Desc>
 
       {loading ? (
         <Empty>Carregando turmas...</Empty>
-      ) : cohorts.length === 0 ? (
-        <Empty>Este curso ainda não tem turmas. Crie uma turma para tornar a aula exclusiva.</Empty>
       ) : (
-        <List>
-          {cohorts.map((c) => {
-            const meta = cohortMeta(c);
-            return (
-              <Row key={c.id} htmlFor={`cohort-${c.id}`}>
-                <CohortInfo>
-                  <CohortName>{c.name}</CohortName>
-                  <CohortMeta $closed={meta.closed}>{meta.label}</CohortMeta>
-                </CohortInfo>
-                <Switch
-                  id={`cohort-${c.id}`}
-                  checked={selected.includes(c.id)}
-                  onCheckedChange={(on) => toggle(c.id, on)}
-                  disabled={saving}
-                  aria-label={`Tornar exclusiva da turma ${c.name}`}
-                />
-              </Row>
-            );
-          })}
-        </List>
+        <MultiSelect
+          options={options}
+          selected={selected}
+          onChange={handleChange}
+          disabled={saving || options.length === 0}
+          placeholder="Nenhuma turma (aula regular)"
+          emptyMessage="Este curso ainda não tem turmas. Crie uma turma para tornar a aula exclusiva."
+          summarize={(sel) =>
+            sel.length === 0
+              ? 'Nenhuma turma (aula regular)'
+              : sel.length === 1
+                ? cohorts.find((c) => c.id === sel[0])?.name ?? '1 turma'
+                : `${sel.length} turmas`
+          }
+        />
       )}
     </Card>
   );
