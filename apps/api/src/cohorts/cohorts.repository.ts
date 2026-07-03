@@ -131,6 +131,91 @@ export class CohortsRepository {
     return rows.map((r) => ({ ...r, enrolledCount: Number(r.enrolledCount ?? 0) }));
   }
 
+  /**
+   * Progresso individual dos alunos da turma (US-26): concluídas/total de aulas
+   * regulares visíveis do curso + última atividade registrada.
+   */
+  async findCohortStudentsProgress(cohortId: string, courseId: string) {
+    const rows = await this.db.execute(sql`
+      WITH regulars AS (
+        SELECT l.id FROM lessons l
+        JOIN modules m ON m.id = l.module_id
+        WHERE m.course_id = ${courseId} AND m.visibility = 'visible'
+          AND l.visibility = 'visible' AND l.is_extra = false AND l.cohort_id IS NULL
+      ),
+      total AS (SELECT count(*)::int AS n FROM regulars)
+      SELECT u.id, u.name,
+        (SELECT count(*)::int FROM lesson_progress lp
+          JOIN regulars r ON r.id = lp.lesson_id
+          WHERE lp.student_id = u.id AND lp.is_completed = true) AS completed,
+        (SELECT n FROM total) AS total,
+        last_act.title AS "lastLessonTitle",
+        last_act.updated_at AS "lastAccessAt"
+      FROM cohort_enrollments ce
+      JOIN users u ON u.id = ce.student_id
+      LEFT JOIN LATERAL (
+        SELECT l.title, lp.updated_at
+        FROM lesson_progress lp
+        JOIN lessons l ON l.id = lp.lesson_id
+        JOIN modules m ON m.id = l.module_id
+        WHERE lp.student_id = u.id AND m.course_id = ${courseId}
+        ORDER BY lp.updated_at DESC
+        LIMIT 1
+      ) last_act ON true
+      WHERE ce.cohort_id = ${cohortId}
+      ORDER BY u.name
+    `);
+    const list = (rows as unknown as { rows?: Array<Record<string, unknown>> }).rows
+      ?? (rows as unknown as Array<Record<string, unknown>>);
+    return (list ?? []).map((r) => ({
+      id: String(r.id),
+      name: String(r.name),
+      completed: Number(r.completed ?? 0),
+      total: Number(r.total ?? 0),
+      lastLessonTitle: (r.lastLessonTitle as string | null) ?? null,
+      lastAccessAt: r.lastAccessAt ? new Date(r.lastAccessAt as string) : null,
+    }));
+  }
+
+  /** Quantos alunos da turma concluíram cada módulo (aulas regulares visíveis) — US-26. */
+  async findCohortModuleCompletion(cohortId: string, courseId: string) {
+    const rows = await this.db.execute(sql`
+      SELECT m.id AS "moduleId", m.title, m.position,
+        count(*) FILTER (
+          WHERE (
+            SELECT count(*) FROM lessons l
+            WHERE l.module_id = m.id AND l.visibility = 'visible'
+              AND l.is_extra = false AND l.cohort_id IS NULL
+          ) > 0
+          AND (
+            SELECT count(*) FROM lessons l
+            WHERE l.module_id = m.id AND l.visibility = 'visible'
+              AND l.is_extra = false AND l.cohort_id IS NULL
+          ) = (
+            SELECT count(*) FROM lesson_progress lp
+            JOIN lessons l ON l.id = lp.lesson_id
+            WHERE l.module_id = m.id AND l.visibility = 'visible'
+              AND l.is_extra = false AND l.cohort_id IS NULL
+              AND lp.student_id = ce.student_id AND lp.is_completed = true
+          )
+        )::int AS "completedCount"
+      FROM modules m
+      CROSS JOIN cohort_enrollments ce
+      WHERE m.course_id = ${courseId} AND m.visibility = 'visible'
+        AND ce.cohort_id = ${cohortId}
+      GROUP BY m.id, m.title, m.position
+      ORDER BY m.position
+    `);
+    const list = (rows as unknown as { rows?: Array<Record<string, unknown>> }).rows
+      ?? (rows as unknown as Array<Record<string, unknown>>);
+    return (list ?? []).map((r) => ({
+      moduleId: String(r.moduleId),
+      title: String(r.title),
+      position: Number(r.position ?? 0),
+      completedCount: Number(r.completedCount ?? 0),
+    }));
+  }
+
   /** Turmas em que o aluno está matriculado, com curso e cronograma. */
   async findByStudent(studentId: string) {
     const rows = await this.db

@@ -94,3 +94,36 @@ export class MyCohortListResponseDto {
   @ApiProperty({ type: [MyCohortDto] })
   data!: MyCohortDto[];
 }
+
+export class CohortProgressSummaryDto {
+  @ApiProperty({ example: 18 }) enrolledCount!: number;
+  @ApiProperty({ example: 12 }) seatsLeft!: number;
+  @ApiProperty({ example: 47.5, description: 'Percentual médio de conclusão da turma' }) avgCompletion!: number;
+}
+
+export class CohortStudentProgressDto {
+  @ApiProperty({ example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' }) id!: string;
+  @ApiProperty({ example: 'Ana Souza' }) name!: string;
+  @ApiProperty({ example: 80 }) progressPct!: number;
+  @ApiPropertyOptional({ nullable: true, example: 'Componentes e props' }) lastLessonTitle!: string | null;
+  @ApiPropertyOptional({ nullable: true, example: '2026-07-01T12:00:00.000Z' }) lastAccessAt!: Date | null;
+  @ApiProperty({ example: false, description: 'Sem acesso nos últimos 7 dias' }) inactive!: boolean;
+}
+
+export class CohortModuleCompletionDto {
+  @ApiProperty({ example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' }) moduleId!: string;
+  @ApiProperty({ example: 'Fundamentos' }) title!: string;
+  @ApiProperty({ example: 1 }) position!: number;
+  @ApiProperty({ example: 9, description: 'Alunos da turma que concluíram o módulo' }) completedCount!: number;
+}
+
+export class CohortProgressDto {
+  @ApiProperty({ type: CohortProgressSummaryDto }) summary!: CohortProgressSummaryDto;
+  @ApiProperty({ type: [CohortStudentProgressDto] }) students!: CohortStudentProgressDto[];
+  @ApiProperty({ type: [CohortModuleCompletionDto] }) modules!: CohortModuleCompletionDto[];
+}
+
+export class CohortProgressResponseDto {
+  @ApiProperty({ type: CohortProgressDto })
+  data!: CohortProgressDto;
+}

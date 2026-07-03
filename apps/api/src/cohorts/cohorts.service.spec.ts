@@ -34,6 +34,8 @@ const makeRepo = (overrides: Record<string, unknown> = {}) => ({
   enrollTransaction: vi.fn().mockResolvedValue('ok'),
   findPublicByCourse: vi.fn().mockResolvedValue([]),
   findByStudent: vi.fn().mockResolvedValue([]),
+  findCohortStudentsProgress: vi.fn().mockResolvedValue([]),
+  findCohortModuleCompletion: vi.fn().mockResolvedValue([]),
   ...overrides,
 });
 
@@ -247,6 +249,49 @@ describe('CohortsService', () => {
       expect(repo.findByStudent).toHaveBeenCalledWith('student-1');
       expect(result[0].status).toBe('aberta');
       expect(result[0].course.slug).toBe('curso-a');
+    });
+  });
+
+  describe('getProgress (US-26)', () => {
+    it('monta summary, alunos com inatividade e conclusão por módulo', async () => {
+      // Arrange — NOW = 2026-07-03; inativo = sem acesso há 7+ dias
+      const eightDaysAgo = new Date('2026-06-25T12:00:00Z');
+      const twoDaysAgo = new Date('2026-07-01T12:00:00Z');
+      repo.findCohortStudentsProgress.mockResolvedValue([
+        { id: 'u1', name: 'Ana',   completed: 8,  total: 10, lastLessonTitle: 'Aula 8', lastAccessAt: twoDaysAgo },
+        { id: 'u2', name: 'Bruno', completed: 2,  total: 10, lastLessonTitle: 'Aula 2', lastAccessAt: eightDaysAgo },
+        { id: 'u3', name: 'Caio',  completed: 0,  total: 10, lastLessonTitle: null,     lastAccessAt: null },
+      ]);
+      repo.findCohortModuleCompletion.mockResolvedValue([
+        { moduleId: 'm1', title: 'Mod 1', position: 1, completedCount: 2 },
+        { moduleId: 'm2', title: 'Mod 2', position: 2, completedCount: 0 },
+      ]);
+
+      // Act
+      const result = await service.getProgress('cohort-1', 'user-1', 'instrutor');
+
+      // Assert
+      expect(result.summary).toEqual({ enrolledCount: 3, seatsLeft: 27, avgCompletion: 33.3 });
+      expect(result.students[0]).toMatchObject({ id: 'u1', progressPct: 80, inactive: false });
+      expect(result.students[1]).toMatchObject({ id: 'u2', progressPct: 20, inactive: true });
+      expect(result.students[2]).toMatchObject({ id: 'u3', progressPct: 0, inactive: true });
+      expect(result.modules).toHaveLength(2);
+    });
+
+    it('turma sem alunos → summary zerado sem divisão por zero', async () => {
+      const result = await service.getProgress('cohort-1', 'user-1', 'instrutor');
+      expect(result.summary).toEqual({ enrolledCount: 0, seatsLeft: 30, avgCompletion: 0 });
+    });
+
+    it('lança Forbidden para não-dono', async () => {
+      await expect(service.getProgress('cohort-1', 'outro-user', 'instrutor'))
+        .rejects.toThrow(ForbiddenException);
+    });
+
+    it('lança NotFound para turma inexistente', async () => {
+      repo.findById.mockResolvedValue(null);
+      await expect(service.getProgress('cohort-x', 'user-1', 'instrutor'))
+        .rejects.toThrow(NotFoundException);
     });
   });
 

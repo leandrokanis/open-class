@@ -15,8 +15,8 @@ import { Icon } from '@/components/ui/Icon';
 import { useCourseCurriculum } from '@/components/instructor/CourseCurriculumContext';
 import {
   fetchCohorts, createCohort, updateCohort, closeCohort, setCohortSchedule, fetchCohort,
-  updateCourse, createLesson,
-  type CohortData, type CohortScheduleEntry,
+  updateCourse, createLesson, fetchCohortProgress,
+  type CohortData, type CohortScheduleEntry, type CohortProgress,
 } from '@/lib/instructor';
 
 const Page = styled.div`
@@ -156,6 +156,41 @@ const ModalFooter = styled.div`
   margin-top: 20px;
 `;
 
+const StudentsTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+
+  th {
+    text-align: left;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-tertiary);
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  td {
+    padding: 7px 8px;
+    color: var(--color-text-primary);
+    border-bottom: 1px solid var(--color-border);
+  }
+`;
+
+const InactiveTag = styled.span`
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-destructive);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  padding: 1px 7px;
+`;
+
 const Empty = styled.div`
   padding: 28px;
   text-align: center;
@@ -212,6 +247,21 @@ export default function CohortsPage() {
   const [exclusivesFor, setExclusivesFor] = useState<string | null>(null);
   const [excForm, setExcForm] = useState({ moduleId: '', title: '', youtubeUrl: '' });
   const [savingExclusive, setSavingExclusive] = useState(false);
+
+  // Painel de progresso (US-26)
+  const [progressFor, setProgressFor] = useState<string | null>(null);
+  const [progress, setProgress] = useState<CohortProgress | null>(null);
+
+  async function toggleProgress(cohortId: string) {
+    if (progressFor === cohortId) {
+      setProgressFor(null);
+      return;
+    }
+    setProgressFor(cohortId);
+    setProgress(null);
+    const data = await fetchCohortProgress(cohortId);
+    setProgress(data);
+  }
 
   const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -416,6 +466,10 @@ export default function CohortsPage() {
               <CohortName>{cohort.name}</CohortName>
               <StatusBadge $status={cohort.status}>{STATUS_LABEL[cohort.status]}</StatusBadge>
               <Actions>
+                <Button size="sm" variant="outline" onClick={() => toggleProgress(cohort.id)}>
+                  <Icon name="monitoring" size={14} />
+                  Progresso
+                </Button>
                 <Button size="sm" variant="outline" onClick={() => openSchedule(cohort.id)}>
                   <Icon name="calendar_month" size={14} />
                   Cronograma
@@ -442,6 +496,66 @@ export default function CohortsPage() {
               <span>Inscrições: {formatPeriod(cohort.enrollmentStart, cohort.enrollmentEnd)}</span>
               <span>{cohort.seats} vagas</span>
             </CohortMeta>
+
+            {progressFor === cohort.id && (
+              <ScheduleGrid>
+                {!progress ? (
+                  <CardDesc>Carregando progresso...</CardDesc>
+                ) : (
+                  <>
+                    <CohortMeta>
+                      <span><b>{progress.summary.enrolledCount}</b> inscritos</span>
+                      <span><b>{progress.summary.seatsLeft}</b> vagas restantes</span>
+                      <span><b>{progress.summary.avgCompletion}%</b> de conclusão média</span>
+                    </CohortMeta>
+
+                    {progress.students.length > 0 && (
+                      <StudentsTable>
+                        <thead>
+                          <tr>
+                            <th>Aluno</th>
+                            <th>Progresso</th>
+                            <th>Última aula</th>
+                            <th>Acesso</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {progress.students.map((s) => (
+                            <tr key={s.id}>
+                              <td>
+                                {s.name}
+                                {s.inactive && <InactiveTag title="Sem acesso nos últimos 7 dias">inativo</InactiveTag>}
+                              </td>
+                              <td>{s.progressPct}%</td>
+                              <td>{s.lastLessonTitle ?? '—'}</td>
+                              <td>
+                                {s.lastAccessAt
+                                  ? new Date(s.lastAccessAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+                                  : 'nunca'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </StudentsTable>
+                    )}
+
+                    {progress.modules.length > 0 && (
+                      <>
+                        <CardDesc>Conclusões por módulo</CardDesc>
+                        {progress.modules.map((m) => (
+                          <ScheduleRow key={m.moduleId}>
+                            <ModuleName>{m.title}</ModuleName>
+                            <CardDesc>
+                              {m.completedCount} de {progress.summary.enrolledCount} concluíram
+                            </CardDesc>
+                          </ScheduleRow>
+                        ))}
+                      </>
+                    )}
+                  </>
+                )}
+              </ScheduleGrid>
+            )}
 
             {exclusivesFor === cohort.id && (
               <ScheduleGrid>
