@@ -116,6 +116,7 @@ export class CatalogService {
           contentType: l.contentType,
           duration: l.duration ?? null,
           order: l.position,
+          isExtra: l.isExtra,
         })),
       })),
       createdAt: course.createdAt,

@@ -64,6 +64,13 @@
       "when": 1782950400000,
       "tag": "0008_lessons_is_extra",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1782950500000,
+      "tag": "0009_extra_unlock_celebrations",
+      "breakpoints": true
     }
   ]
 }

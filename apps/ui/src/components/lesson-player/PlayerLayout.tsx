@@ -1,11 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { Dialog, DialogClose } from "@/components/ui/dialog";
 import { useLessonProgress } from "@/hooks/useLessonProgress";
-import type { LessonDetail, LessonResource } from "@/lib/lesson-player";
+import {
+  fetchExtrasStatus,
+  postExtrasCelebration,
+  type LessonDetail,
+  type LessonResource,
+  type ModuleExtrasStatus,
+} from "@/lib/lesson-player";
 import type { CourseModule } from "@/lib/course-detail";
 import { YouTubeEmbed } from "./YouTubeEmbed";
 import { LessonHeader } from "./LessonHeader";
@@ -129,6 +135,20 @@ const Sidebar = styled.aside`
   }
 `;
 
+const CelebrationList = styled.ul`
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const CelebrationItem = styled.li`
+  font-size: 14px;
+  color: var(--color-text-primary);
+`;
+
 const DialogActions = styled.div`
   display: flex;
   justify-content: flex-end;
@@ -170,15 +190,21 @@ interface FlatLesson {
   moduleId: string;
 }
 
-function buildFlatList(modules: CourseModule[]): FlatLesson[] {
+function buildFlatList(
+  modules: CourseModule[],
+  extrasUnlockedByModule: Record<string, boolean>,
+): FlatLesson[] {
   return modules.flatMap((m) =>
-    m.lessons.map((l) => ({
-      id: l.id,
-      title: l.title,
-      durationSeconds: l.duration ?? null,
-      position: l.order,
-      moduleId: m.id,
-    })),
+    m.lessons
+      // Extras bloqueadas ficam fora da navegação sequencial (US-20)
+      .filter((l) => !l.isExtra || extrasUnlockedByModule[m.id])
+      .map((l) => ({
+        id: l.id,
+        title: l.title,
+        durationSeconds: l.duration ?? null,
+        position: l.order,
+        moduleId: m.id,
+      })),
   );
 }
 
@@ -210,16 +236,50 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
     lesson.id,
   );
 
-  const flatLessons = buildFlatList(modules);
+  // Status das aulas extras por módulo (desbloqueio + celebração) — US-20
+  const [extrasStatus, setExtrasStatus] = useState<ModuleExtrasStatus[]>([]);
+  const [celebrating, setCelebrating] = useState<ModuleExtrasStatus | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchExtrasStatus(courseId).then((status) => {
+      if (cancelled) return;
+      setExtrasStatus(status);
+      const eligible = status.find((s) => s.hasExtras && s.unlocked && !s.celebrated);
+      if (eligible) setCelebrating(eligible);
+    });
+    return () => { cancelled = true; };
+  }, [courseId, completedLessonIds.length]);
+
+  const extrasUnlockedByModule = useMemo(
+    () => Object.fromEntries(extrasStatus.map((s) => [s.moduleId, s.unlocked])),
+    [extrasStatus],
+  );
+
+  async function handleCloseCelebration() {
+    const moduleId = celebrating?.moduleId;
+    setCelebrating(null);
+    if (moduleId) {
+      await postExtrasCelebration(moduleId);
+      setExtrasStatus((prev) =>
+        prev.map((s) => (s.moduleId === moduleId ? { ...s, celebrated: true } : s)),
+      );
+    }
+  }
+
+  const flatLessons = buildFlatList(modules, extrasUnlockedByModule);
   const currentIndex = flatLessons.findIndex((l) => l.id === lesson.id);
   const prevLesson = currentIndex > 0 ? flatLessons[currentIndex - 1] : null;
-  const nextLesson = currentIndex < flatLessons.length - 1 ? flatLessons[currentIndex + 1] : null;
+  const nextLesson = currentIndex >= 0 && currentIndex < flatLessons.length - 1 ? flatLessons[currentIndex + 1] : null;
+  const normalFlat = modules.flatMap((m) => m.lessons.filter((l) => !l.isExtra));
   const lessonIndex = currentIndex + 1;
-  const totalLessons = flatLessons.length;
+  const totalLessons = normalFlat.length;
   const completedCount = completedLessonIds.length;
 
   const activeModule = modules.find((m) => m.id === lesson.moduleId);
   const resources = (lesson.resources ?? []) as LessonResource[];
+  const celebratingModule = celebrating ? modules.find((m) => m.id === celebrating.moduleId) : null;
+  const celebratingExtras = celebratingModule?.lessons.filter((l) => l.isExtra) ?? [];
 
   const sidebarModules = modules.map((m) => ({
     ...m,
@@ -229,6 +289,7 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
       title: l.title,
       durationSeconds: l.duration ?? null,
       position: l.order,
+      isExtra: l.isExtra ?? false,
     })),
   }));
 
@@ -304,6 +365,7 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
                   completedCount={completedCount}
                   onLessonClick={handleLessonClick}
                   showHeader={false}
+                  extrasUnlockedByModule={extrasUnlockedByModule}
                 />
               }
               description={lesson.description}
@@ -346,6 +408,7 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
             completedCount={completedCount}
             onLessonClick={handleLessonClick}
             showHeader={true}
+            extrasUnlockedByModule={extrasUnlockedByModule}
           />
         </Sidebar>
       </OuterLayout>
@@ -362,6 +425,27 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
             <CancelBtn>Cancelar</CancelBtn>
           </DialogClose>
           <ConfirmBtn onClick={handleConfirmUnmark}>Sim, desmarcar</ConfirmBtn>
+        </DialogActions>
+      </Dialog>
+
+      {/* Celebração de desbloqueio das aulas extras — uma vez por módulo (US-20) */}
+      <Dialog
+        open={celebrating !== null}
+        onOpenChange={(o) => { if (!o) void handleCloseCelebration(); }}
+        title="🎉 Aulas extras desbloqueadas!"
+        description={
+          celebratingModule
+            ? `Você concluiu todas as aulas de "${celebratingModule.title}" e desbloqueou o conteúdo bônus:`
+            : "Você desbloqueou o conteúdo bônus deste módulo:"
+        }
+      >
+        <CelebrationList>
+          {celebratingExtras.map((l) => (
+            <CelebrationItem key={l.id}>★ {l.title}</CelebrationItem>
+          ))}
+        </CelebrationList>
+        <DialogActions>
+          <ConfirmBtn onClick={handleCloseCelebration}>Ver aulas extras</ConfirmBtn>
         </DialogActions>
       </Dialog>
     </Page>

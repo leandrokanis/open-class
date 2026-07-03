@@ -9,6 +9,7 @@ export interface CourseLesson {
   duration: number | null;
   order: number;
   contentType: string;
+  isExtra?: boolean;
 }
 
 export interface CourseModule {

@@ -31,15 +31,33 @@ const Duration = styled.span`
   flex-shrink: 0;
 `;
 
+const ExtraTag = styled.span`
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  flex-shrink: 0;
+`;
+
 interface LessonRowProps {
   lesson: CourseLesson;
 }
 
 export function LessonRow({ lesson }: LessonRowProps) {
+  const isExtra = lesson.isExtra ?? false;
   return (
-    <Row>
-      <Icon name="videocam" size={18} style={{ color: "var(--color-text-tertiary)", flexShrink: 0 }} />
+    <Row
+      title={isExtra ? "Aula extra — desbloqueada ao concluir as aulas normais do módulo" : undefined}
+      style={isExtra ? { opacity: 0.7 } : undefined}
+    >
+      <Icon
+        name={isExtra ? "lock" : "videocam"}
+        size={18}
+        style={{ color: "var(--color-text-tertiary)", flexShrink: 0 }}
+      />
       <LessonTitle>{lesson.title}</LessonTitle>
+      {isExtra && <ExtraTag>Extra</ExtraTag>}
       {lesson.duration != null && lesson.duration > 0 && (
         <Duration>{formatDuration(lesson.duration)}</Duration>
       )}

@@ -1,13 +1,14 @@
 import {
-  Controller, Get, Put, Body, Param, Query, Req, UseGuards,
+  Controller, Get, Post, Put, Body, Param, Query, Req, UseGuards,
 } from '@nestjs/common';
 import {
-  ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiBearerAuth, ApiQuery,
+  ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiBearerAuth, ApiQuery, ApiParam,
 } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { ProgressService } from './progress.service';
 import { MarkLessonDto } from './dto/mark-lesson.dto';
 import { RecentActivityItemDto } from './dto/recent-activity.dto';
+import { ExtrasStatusResponseDto, CelebrationResponseDto } from './dto/extras-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard, Roles, Role } from '../common';
 interface AuthUser { id: string; email: string; role: string; }
@@ -80,6 +81,39 @@ export class ProgressController {
     @Param('courseId') courseId: string,
   ) {
     return this.progressService.getLastAccessed(req.user.id, courseId);
+  }
+
+  @Get('courses/:courseId/extras')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Aluno, Role.Instrutor)
+  @ApiParam({ name: 'courseId', description: 'ID do curso', type: String })
+  @ApiOperation({ summary: 'Status das aulas extras por módulo (aluno)' })
+  @ApiResponse({ status: 200, description: 'Status por módulo: hasExtras, unlocked, celebrated.', type: ExtrasStatusResponseDto })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @ApiResponse({ status: 403, description: 'Não matriculado no curso.' })
+  async getExtrasStatus(
+    @Req() req: Request & { user: AuthUser },
+    @Param('courseId') courseId: string,
+  ) {
+    const data = await this.progressService.getExtrasStatus(req.user.id, courseId);
+    return { data };
+  }
+
+  @Post('modules/:moduleId/extras-celebration')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Aluno, Role.Instrutor)
+  @ApiParam({ name: 'moduleId', description: 'ID do módulo', type: String })
+  @ApiOperation({ summary: 'Registrar celebração de desbloqueio das extras (uma vez por módulo)' })
+  @ApiResponse({ status: 201, description: 'Celebração registrada (idempotente).', type: CelebrationResponseDto })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @ApiResponse({ status: 403, description: 'Não matriculado no curso.' })
+  @ApiResponse({ status: 404, description: 'Módulo não encontrado.' })
+  async celebrateExtras(
+    @Req() req: Request & { user: AuthUser },
+    @Param('moduleId') moduleId: string,
+  ) {
+    const data = await this.progressService.celebrateExtras(req.user.id, moduleId);
+    return { data };
   }
 
   @Get('recent')

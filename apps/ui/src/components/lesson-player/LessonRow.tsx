@@ -63,34 +63,53 @@ const Duration = styled.span`
   text-align: right;
 `;
 
+const ExtraMark = styled.span`
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  flex-shrink: 0;
+`;
+
 interface LessonRowProps {
-  lesson: { id: string; title: string; durationSeconds: number | null };
+  lesson: { id: string; title: string; durationSeconds: number | null; isExtra?: boolean };
   isCompleted: boolean;
   isActive: boolean;
   onClick: () => void;
+  locked?: boolean;
 }
 
-export function LessonRow({ lesson, isCompleted, isActive, onClick }: LessonRowProps) {
-  const iconName = isCompleted
-    ? "check_circle"
-    : isActive
-      ? "play_circle"
-      : "radio_button_unchecked";
+export function LessonRow({ lesson, isCompleted, isActive, onClick, locked = false }: LessonRowProps) {
+  const iconName = locked
+    ? "lock"
+    : isCompleted
+      ? "check_circle"
+      : isActive
+        ? "play_circle"
+        : "radio_button_unchecked";
 
-  const iconColor = isCompleted
+  const iconColor = isCompleted && !locked
     ? "var(--color-success)"
-    : isActive
+    : isActive && !locked
       ? "var(--color-primary)"
       : "var(--color-text-tertiary)";
 
   return (
-    <Row $isActive={isActive} onClick={onClick}>
+    <Row
+      $isActive={isActive}
+      onClick={locked ? undefined : onClick}
+      aria-disabled={locked}
+      title={locked ? "Aula extra bloqueada — conclua as aulas normais do módulo" : undefined}
+      style={locked ? { cursor: "not-allowed", opacity: 0.55 } : undefined}
+    >
       <IconSlot>
-        <Icon name={iconName} size={20} fill={isCompleted || isActive} style={{ color: iconColor }} />
+        <Icon name={iconName} size={20} fill={!locked && (isCompleted || isActive)} style={{ color: iconColor }} />
       </IconSlot>
-      <Title $isCompleted={isCompleted} $isActive={isActive}>
+      <Title $isCompleted={isCompleted && !locked} $isActive={isActive && !locked}>
         {lesson.title}
       </Title>
+      {lesson.isExtra && <ExtraMark>Extra</ExtraMark>}
       {lesson.durationSeconds != null && lesson.durationSeconds > 0 && (
         <Duration>{formatDuration(lesson.durationSeconds)}</Duration>
       )}

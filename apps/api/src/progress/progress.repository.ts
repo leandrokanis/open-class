@@ -1,11 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, and, count, sql, desc } from 'drizzle-orm';
+import { eq, and, count, sql, desc, asc } from 'drizzle-orm';
 import {
   lessonProgress,
   lessons,
   modules,
   courses,
   enrollments,
+  extraUnlockCelebrations,
   type NewLessonProgress,
 } from '@open-class/db';
 import type { Db } from '../db';
@@ -27,6 +28,7 @@ export class ProgressRepository {
         id:       lessons.id,
         title:    lessons.title,
         moduleId: lessons.moduleId,
+        isExtra:  lessons.isExtra,
         module:   { id: modules.id, courseId: modules.courseId },
       })
       .from(lessons)
@@ -81,10 +83,87 @@ export class ProgressRepository {
           eq(lessonProgress.studentId, studentId),
         ),
       )
-      .where(and(eq(modules.courseId, courseId), eq(lessons.visibility, 'visible')));
+      .where(and(
+        eq(modules.courseId, courseId),
+        eq(lessons.visibility, 'visible'),
+        // Extras não contam para o percentual: só aulas normais determinam 100% (US-20)
+        eq(lessons.isExtra, false),
+      ));
 
     const { completed, total } = rows[0] ?? { completed: 0, total: 0 };
     return { completed: Number(completed), total: Number(total) };
+  }
+
+  /** O aluno concluiu todas as aulas normais visíveis do módulo? (desbloqueio das extras) */
+  async hasCompletedAllNormals(studentId: string, moduleId: string): Promise<boolean> {
+    const rows = await this.db
+      .select({
+        completed: sql<number>`COUNT(*) FILTER (WHERE ${lessonProgress.isCompleted} = true)`,
+        total:     count(),
+      })
+      .from(lessons)
+      .leftJoin(
+        lessonProgress,
+        and(eq(lessonProgress.lessonId, lessons.id), eq(lessonProgress.studentId, studentId)),
+      )
+      .where(and(
+        eq(lessons.moduleId, moduleId),
+        eq(lessons.visibility, 'visible'),
+        eq(lessons.isExtra, false),
+      ));
+    const { completed, total } = rows[0] ?? { completed: 0, total: 0 };
+    return Number(completed) === Number(total);
+  }
+
+  /** Por módulo visível do curso: contagens para o status de extras do aluno (US-20). */
+  async getExtrasStatus(studentId: string, courseId: string) {
+    const rows = await this.db
+      .select({
+        moduleId: modules.id,
+        extrasCount: sql<number>`COUNT(*) FILTER (WHERE ${lessons.isExtra} = true AND ${lessons.visibility} = 'visible')`,
+        normalsTotal: sql<number>`COUNT(*) FILTER (WHERE ${lessons.isExtra} = false AND ${lessons.visibility} = 'visible')`,
+        normalsCompleted: sql<number>`COUNT(*) FILTER (WHERE ${lessons.isExtra} = false AND ${lessons.visibility} = 'visible' AND ${lessonProgress.isCompleted} = true)`,
+        celebrated: sql<boolean>`bool_or(${extraUnlockCelebrations.studentId} IS NOT NULL)`,
+      })
+      .from(modules)
+      .leftJoin(lessons, eq(lessons.moduleId, modules.id))
+      .leftJoin(
+        lessonProgress,
+        and(eq(lessonProgress.lessonId, lessons.id), eq(lessonProgress.studentId, studentId)),
+      )
+      .leftJoin(
+        extraUnlockCelebrations,
+        and(
+          eq(extraUnlockCelebrations.moduleId, modules.id),
+          eq(extraUnlockCelebrations.studentId, studentId),
+        ),
+      )
+      .where(and(eq(modules.courseId, courseId), eq(modules.visibility, 'visible')))
+      .groupBy(modules.id, modules.position)
+      .orderBy(asc(modules.position));
+
+    return rows.map((r) => ({
+      moduleId: r.moduleId,
+      extrasCount: Number(r.extrasCount ?? 0),
+      normalsTotal: Number(r.normalsTotal ?? 0),
+      normalsCompleted: Number(r.normalsCompleted ?? 0),
+      celebrated: Boolean(r.celebrated),
+    }));
+  }
+
+  async upsertExtrasCelebration(studentId: string, moduleId: string): Promise<void> {
+    await this.db
+      .insert(extraUnlockCelebrations)
+      .values({ studentId, moduleId })
+      .onConflictDoNothing();
+  }
+
+  async findModuleCourseId(moduleId: string): Promise<string | null> {
+    const row = await this.db.query.modules.findFirst({
+      where: eq(modules.id, moduleId),
+      columns: { courseId: true },
+    });
+    return row?.courseId ?? null;
   }
 
   async getLastAccessedLesson(studentId: string, courseId: string) {
