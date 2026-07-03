@@ -69,7 +69,8 @@ export async function fetchLessonDetail(lessonId: string, cookie?: string): Prom
     cache: "no-store",
     headers: cookie ? { Cookie: cookie } : {},
   });
-  if (res.status === 404) return null;
+  // 404: inexistente/oculta · 403: extra ou exclusiva ainda bloqueada para este usuário
+  if (res.status === 404 || res.status === 403) return null;
   if (!res.ok) throw new Error("Failed to fetch lesson");
   const json = (await res.json()) as { data: LessonDetail };
   return json.data;
