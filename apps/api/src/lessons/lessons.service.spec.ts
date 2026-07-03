@@ -19,7 +19,10 @@ const makeRepo = (overrides = {}) => ({
   isExtraUnlockedFor: vi.fn().mockResolvedValue(false),
   findCohortModuleLock: vi.fn().mockResolvedValue(null),
   findCohortCourseId: vi.fn().mockResolvedValue('course-1'),
-  findCohortAccess: vi.fn().mockResolvedValue(null),
+  findLessonCohortIds: vi.fn().mockResolvedValue([]),
+  findCohortIdsForLessons: vi.fn().mockResolvedValue({}),
+  getExclusiveAccess: vi.fn().mockResolvedValue({ cohortCount: 0, enrolledCount: 0, activeCount: 0 }),
+  setLessonCohorts: vi.fn().mockResolvedValue(undefined),
   moveToModule: vi.fn().mockResolvedValue({ id: 'lesson-1', moduleId: 'module-2', position: 1 }),
   ...overrides,
 });
@@ -339,36 +342,53 @@ describe('LessonsService', () => {
     });
   });
 
-  describe('aulas exclusivas de turma (US-25)', () => {
+  describe('aulas exclusivas de turma (US-25 many-to-many)', () => {
     const exclusiveLesson = {
       id: 'lesson-exc', moduleId: 'module-1', visibility: 'visible',
-      isExtra: false, cohortId: 'cohort-1', resources: [],
+      isExtra: false, resources: [],
     };
 
-    it('cria aula exclusiva quando a turma pertence ao curso do módulo', async () => {
-      const repo = makeRepo({ nextPosition: vi.fn().mockResolvedValue(5) });
+    it('cria aula exclusiva vinculando as turmas quando pertencem ao curso', async () => {
+      const repo = makeRepo({
+        nextPosition: vi.fn().mockResolvedValue(5),
+        insert: vi.fn().mockResolvedValue({ id: 'lesson-new', moduleId: 'module-1' }),
+      });
       service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
 
-      await service.create('module-1', { title: 'Bônus da turma', cohortId: 'cohort-1' }, 'user-1', 'instrutor');
+      await service.create('module-1', { title: 'Bônus da turma', cohortIds: ['cohort-1', 'cohort-2'] }, 'user-1', 'instrutor');
 
       expect(repo.findCohortCourseId).toHaveBeenCalledWith('cohort-1');
-      expect(repo.insert).toHaveBeenCalledWith(expect.objectContaining({ cohortId: 'cohort-1' }));
+      expect(repo.findCohortCourseId).toHaveBeenCalledWith('cohort-2');
+      expect(repo.setLessonCohorts).toHaveBeenCalledWith('lesson-new', ['cohort-1', 'cohort-2']);
     });
 
-    it('rejeita cohortId de turma de outro curso (422)', async () => {
+    it('rejeita turma de outro curso (422)', async () => {
       const repo = makeRepo({ findCohortCourseId: vi.fn().mockResolvedValue('outro-curso') });
       service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
 
       await expect(
-        service.create('module-1', { title: 'Bônus', cohortId: 'cohort-x' }, 'user-1', 'instrutor'),
+        service.create('module-1', { title: 'Bônus', cohortIds: ['cohort-x'] }, 'user-1', 'instrutor'),
       ).rejects.toThrow(UnprocessableEntityException);
       expect(repo.insert).not.toHaveBeenCalled();
     });
 
-    it('findById nega exclusiva para aluno fora da turma (404)', async () => {
+    it('setCohorts substitui a lista de turmas da aula', async () => {
+      const repo = makeRepo({
+        findById: vi.fn().mockResolvedValue({ id: 'lesson-exc', moduleId: 'module-1' }),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      const result = await service.setCohorts('lesson-exc', ['cohort-1'], 'user-1', 'instrutor');
+
+      expect(repo.setLessonCohorts).toHaveBeenCalledWith('lesson-exc', ['cohort-1']);
+      expect(result).toEqual({ lessonId: 'lesson-exc', cohortIds: ['cohort-1'] });
+    });
+
+    it('findById nega exclusiva para aluno fora de qualquer turma da aula (404)', async () => {
       const repo = makeRepo({
         findByIdWithResources: vi.fn().mockResolvedValue(exclusiveLesson),
-        findCohortAccess: vi.fn().mockResolvedValue(null),
+        findLessonCohortIds: vi.fn().mockResolvedValue(['cohort-1']),
+        getExclusiveAccess: vi.fn().mockResolvedValue({ cohortCount: 1, enrolledCount: 0, activeCount: 0 }),
       });
       service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
 
@@ -376,22 +396,24 @@ describe('LessonsService', () => {
         .rejects.toThrow(NotFoundException);
     });
 
-    it('findById entrega exclusiva para aluno da turma ativa', async () => {
+    it('findById entrega exclusiva para aluno de uma turma ativa da aula', async () => {
       const repo = makeRepo({
         findByIdWithResources: vi.fn().mockResolvedValue(exclusiveLesson),
-        findCohortAccess: vi.fn().mockResolvedValue({ enrolled: true, closed: false }),
+        findLessonCohortIds: vi.fn().mockResolvedValue(['cohort-1']),
+        getExclusiveAccess: vi.fn().mockResolvedValue({ cohortCount: 1, enrolledCount: 1, activeCount: 1 }),
       });
       service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
 
       const result = await service.findById('lesson-exc', 'aluno', 'student-1');
       expect(result.id).toBe('lesson-exc');
-      expect(repo.findCohortAccess).toHaveBeenCalledWith('student-1', 'cohort-1');
+      expect(repo.getExclusiveAccess).toHaveBeenCalledWith('student-1', 'lesson-exc');
     });
 
-    it('findById nega exclusiva após encerramento da turma (403)', async () => {
+    it('findById nega exclusiva quando só há turmas encerradas (403)', async () => {
       const repo = makeRepo({
         findByIdWithResources: vi.fn().mockResolvedValue(exclusiveLesson),
-        findCohortAccess: vi.fn().mockResolvedValue({ enrolled: true, closed: true }),
+        findLessonCohortIds: vi.fn().mockResolvedValue(['cohort-1']),
+        getExclusiveAccess: vi.fn().mockResolvedValue({ cohortCount: 1, enrolledCount: 1, activeCount: 0 }),
       });
       service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
 
@@ -402,9 +424,10 @@ describe('LessonsService', () => {
     it('findByModule esconde exclusivas de não-staff', async () => {
       const repo = makeRepo({
         findByModule: vi.fn().mockResolvedValue([
-          { id: 'l1', visibility: 'visible', cohortId: null },
-          { id: 'l2', visibility: 'visible', cohortId: 'cohort-1' },
+          { id: 'l1', visibility: 'visible' },
+          { id: 'l2', visibility: 'visible' },
         ]),
+        findCohortIdsForLessons: vi.fn().mockResolvedValue({ l2: ['cohort-1'] }),
       });
       service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
 
@@ -412,17 +435,19 @@ describe('LessonsService', () => {
       expect(result.map((l: { id: string }) => l.id)).toEqual(['l1']);
     });
 
-    it('findByModule mostra exclusivas para instrutor', async () => {
+    it('findByModule mostra exclusivas (com cohortIds) para instrutor', async () => {
       const repo = makeRepo({
         findByModule: vi.fn().mockResolvedValue([
-          { id: 'l1', visibility: 'visible', cohortId: null },
-          { id: 'l2', visibility: 'visible', cohortId: 'cohort-1' },
+          { id: 'l1', visibility: 'visible' },
+          { id: 'l2', visibility: 'visible' },
         ]),
+        findCohortIdsForLessons: vi.fn().mockResolvedValue({ l2: ['cohort-1'] }),
       });
       service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
 
       const result = await service.findByModule('module-1', 'instrutor');
       expect(result).toHaveLength(2);
+      expect(result.find((l: { id: string }) => l.id === 'l2')?.cohortIds).toEqual(['cohort-1']);
     });
   });
 

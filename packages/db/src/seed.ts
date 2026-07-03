@@ -7,7 +7,7 @@ import * as schema from './index';
 
 const {
   categories, courses, modules, lessons, users, enrollments, lessonProgress,
-  cohorts, cohortModuleSchedules, cohortEnrollments, extraUnlockCelebrations,
+  cohorts, cohortModuleSchedules, cohortEnrollments, extraUnlockCelebrations, lessonCohorts,
 } = schema;
 
 // Carrega DATABASE_URL do .env da raiz do repo quando não está no ambiente,
@@ -463,16 +463,17 @@ async function seed() {
       }).onConflictDoNothing();
     }
 
-    // aula exclusiva da turma
+    // aula exclusiva da turma (vínculo many-to-many via lesson_cohorts)
     if (cohSeed.exclusive) {
       const m = rec.modules[cohSeed.exclusive.moduleIdx];
       const vid = ytFor(ytCounter++);
-      await db.insert(lessons).values({
+      const [exclusive] = await db.insert(lessons).values({
         moduleId: m.id, title: cohSeed.exclusive.title,
         youtubeUrl: `https://www.youtube.com/watch?v=${vid}`, youtubeVideoId: vid,
         contentType: 'video', duration: cohSeed.exclusive.duration,
-        position: 100, visibility: 'visible', isExtra: false, cohortId: cohort.id,
-      });
+        position: 100, visibility: 'visible', isExtra: false,
+      }).returning({ id: lessons.id });
+      await db.insert(lessonCohorts).values({ lessonId: exclusive.id, cohortId: cohort.id });
       exclusiveCount++;
     }
 

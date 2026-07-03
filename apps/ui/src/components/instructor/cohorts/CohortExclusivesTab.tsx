@@ -92,7 +92,7 @@ export function CohortExclusivesTab({ cohortId, readOnly = false }: { cohortId: 
   const modules = useMemo(() => [...sections].sort((a, b) => a.position - b.position), [sections]);
   const exclusives = useMemo(
     () => modules.flatMap((m) =>
-      (m.lessons ?? []).filter((l) => l.cohortId === cohortId).map((l) => ({ ...l, moduleTitle: m.title }))),
+      (m.lessons ?? []).filter((l) => l.cohortIds?.includes(cohortId)).map((l) => ({ ...l, moduleTitle: m.title }))),
     [modules, cohortId],
   );
 
@@ -105,7 +105,7 @@ export function CohortExclusivesTab({ cohortId, readOnly = false }: { cohortId: 
     const lesson = await createLesson(form.moduleId, {
       title: form.title.trim(),
       ...(form.youtubeUrl.trim() ? { youtubeUrl: form.youtubeUrl.trim() } : {}),
-      cohortId,
+      cohortIds: [cohortId],
     });
     setSaving(false);
     if (!lesson) return toast.error('Erro ao criar a aula exclusiva.');

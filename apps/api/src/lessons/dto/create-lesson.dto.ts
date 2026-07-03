@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, MaxLength, IsOptional, IsBoolean, IsUrl, IsInt, Min, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, IsOptional, IsBoolean, IsUrl, IsInt, Min, IsUUID, IsArray } from 'class-validator';
 import { i18nValidationMessage } from 'nestjs-i18n';
 
 export class CreateLessonDto {
@@ -42,10 +42,12 @@ export class CreateLessonDto {
   isExtra?: boolean;
 
   @ApiPropertyOptional({
-    description: 'Turma dona da aula exclusiva (US-25); ausente = aula regular',
-    example: null,
+    description: 'Turmas às quais a aula é exclusiva (US-25); vazio/ausente = aula regular',
+    type: [String],
+    example: [],
   })
-  @IsUUID('4', { message: i18nValidationMessage('validation.is_uuid') })
+  @IsArray({ message: i18nValidationMessage('validation.is_array') })
+  @IsUUID('4', { each: true, message: i18nValidationMessage('validation.is_uuid') })
   @IsOptional()
-  cohortId?: string;
+  cohortIds?: string[];
 }

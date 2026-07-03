@@ -93,15 +93,18 @@ export class CatalogService {
       throw new NotFoundException(t('courses.not_found'));
     }
 
-    // Aulas exclusivas de turma: visíveis só para o aluno da turma ativa (US-25).
-    // Dono/admin vê todas; visitante/aluno de fora não vê nenhuma.
+    // Aulas exclusivas de turma: visíveis só para o aluno de alguma turma ativa da
+    // aula (US-25 many-to-many). Dono/admin vê todas; de fora não vê nenhuma.
     let visibleCohortId: string | null = null;
     if (!isOwner && !isAdmin && requesterId) {
       const myCohort = await this.repo.findStudentCohortForCourse(requesterId, course.id);
       if (myCohort && !myCohort.closed) visibleCohortId = myCohort.cohortId;
     }
-    const canSeeExclusive = (lessonCohortId: string | null) =>
-      lessonCohortId === null || isOwner || isAdmin || lessonCohortId === visibleCohortId;
+    const allLessonIds = (course.modules ?? []).flatMap((m) => (m.lessons ?? []).map((l) => l.id));
+    const cohortMap = await this.repo.findLessonCohortIds(allLessonIds);
+    const canSeeExclusive = (lessonCohortIds: string[]) =>
+      lessonCohortIds.length === 0 || isOwner || isAdmin
+      || (visibleCohortId !== null && lessonCohortIds.includes(visibleCohortId));
 
     const detail: CatalogDetailDto = {
       id: course.id,
@@ -122,7 +125,7 @@ export class CatalogService {
         description: m.description ?? null,
         order: m.position,
         lessons: (m.lessons ?? [])
-          .filter((l) => canSeeExclusive(l.cohortId ?? null))
+          .filter((l) => canSeeExclusive(cohortMap[l.id] ?? []))
           .map((l) => ({
             id: l.id,
             title: l.title,
@@ -130,7 +133,7 @@ export class CatalogService {
             duration: l.duration ?? null,
             order: l.position,
             isExtra: l.isExtra,
-            cohortId: l.cohortId ?? null,
+            cohortIds: cohortMap[l.id] ?? [],
           })),
       })),
       createdAt: course.createdAt,

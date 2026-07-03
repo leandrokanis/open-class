@@ -370,10 +370,10 @@ export default function LessonRow({ lesson, selected, onClick, onRenamed, onDele
               {lesson.title}
             </Title>
             <Meta>
-              {lesson.cohortId && (
+              {lesson.cohortIds?.length > 0 && (
                 <ExtraTag title="Aula exclusiva de turma — não aparece no on demand nem em outras turmas">
                   <Icon name="groups" size={11} />
-                  Turma
+                  {lesson.cohortIds.length === 1 ? 'Turma' : `${lesson.cohortIds.length} turmas`}
                 </ExtraTag>
               )}
               {lesson.isExtra && (

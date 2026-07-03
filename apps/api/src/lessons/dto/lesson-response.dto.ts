@@ -32,8 +32,8 @@ export class LessonDto {
   @ApiProperty({ example: false, description: 'Aula extra (bônus) do módulo' })
   isExtra!: boolean;
 
-  @ApiPropertyOptional({ nullable: true, example: null, description: 'Turma dona da aula exclusiva (US-25)' })
-  cohortId!: string | null;
+  @ApiPropertyOptional({ type: [String], example: [], description: 'Turmas às quais a aula é exclusiva (US-25); vazio = regular' })
+  cohortIds!: string[];
 
   @ApiProperty({ example: '2026-05-16T18:00:00.000Z' })
   createdAt!: Date;

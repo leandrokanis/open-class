@@ -141,7 +141,7 @@ export class CohortsRepository {
         SELECT l.id FROM lessons l
         JOIN modules m ON m.id = l.module_id
         WHERE m.course_id = ${courseId} AND m.visibility = 'visible'
-          AND l.visibility = 'visible' AND l.is_extra = false AND l.cohort_id IS NULL
+          AND l.visibility = 'visible' AND l.is_extra = false AND NOT EXISTS (SELECT 1 FROM lesson_cohorts lcx WHERE lcx.lesson_id = l.id)
       ),
       total AS (SELECT count(*)::int AS n FROM regulars)
       SELECT u.id, u.name, u.avatar_url AS "avatarUrl",
@@ -186,17 +186,17 @@ export class CohortsRepository {
           WHERE (
             SELECT count(*) FROM lessons l
             WHERE l.module_id = m.id AND l.visibility = 'visible'
-              AND l.is_extra = false AND l.cohort_id IS NULL
+              AND l.is_extra = false AND NOT EXISTS (SELECT 1 FROM lesson_cohorts lcx WHERE lcx.lesson_id = l.id)
           ) > 0
           AND (
             SELECT count(*) FROM lessons l
             WHERE l.module_id = m.id AND l.visibility = 'visible'
-              AND l.is_extra = false AND l.cohort_id IS NULL
+              AND l.is_extra = false AND NOT EXISTS (SELECT 1 FROM lesson_cohorts lcx WHERE lcx.lesson_id = l.id)
           ) = (
             SELECT count(*) FROM lesson_progress lp
             JOIN lessons l ON l.id = lp.lesson_id
             WHERE l.module_id = m.id AND l.visibility = 'visible'
-              AND l.is_extra = false AND l.cohort_id IS NULL
+              AND l.is_extra = false AND NOT EXISTS (SELECT 1 FROM lesson_cohorts lcx WHERE lcx.lesson_id = l.id)
               AND lp.student_id = ce.student_id AND lp.is_completed = true
           )
         )::int AS "completedCount"
