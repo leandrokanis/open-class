@@ -15,7 +15,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useCourseCurriculum } from '@/components/instructor/CourseCurriculumContext';
 import {
   fetchCohorts, createCohort, updateCohort, closeCohort, setCohortSchedule, fetchCohort,
-  updateCourse, createLesson, fetchCohortProgress,
+  createLesson, fetchCohortProgress,
   type CohortData, type CohortScheduleEntry, type CohortProgress,
 } from '@/lib/instructor';
 
@@ -230,7 +230,6 @@ export default function CohortsPage() {
 
   const [cohorts, setCohorts] = useState<CohortData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [accessMode, setAccessMode] = useState<'on_demand' | 'cohort' | 'both'>('on_demand');
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CohortData | null>(null);
@@ -263,39 +262,15 @@ export default function CohortsPage() {
     setProgress(data);
   }
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-
   useEffect(() => {
     let cancelled = false;
-    async function load() {
-      const [list, courseRes] = await Promise.all([
-        fetchCohorts(courseId),
-        fetch(`${apiBase}/api/courses/${courseId}`, { credentials: 'include' }),
-      ]);
+    fetchCohorts(courseId).then((list) => {
       if (cancelled) return;
       setCohorts(list);
-      if (courseRes.ok) {
-        const json = await courseRes.json();
-        if (json.data?.accessMode) setAccessMode(json.data.accessMode);
-      }
       setLoading(false);
-    }
-    load();
+    });
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
-
-  async function handleAccessModeChange(mode: string) {
-    const prev = accessMode;
-    setAccessMode(mode as typeof accessMode);
-    const updated = await updateCourse(courseId, { accessMode: mode as typeof accessMode });
-    if (!updated) {
-      setAccessMode(prev);
-      toast.error('Erro ao salvar o modo de acesso.');
-    } else {
-      toast.success('Modo de acesso salvo.');
-    }
-  }
 
   function openCreate() {
     setEditing(null);
@@ -435,26 +410,6 @@ export default function CohortsPage() {
         </Button>
       </PageHeader>
 
-      <Card>
-        <CardTitle>Modo de acesso do curso</CardTitle>
-        <CardDesc>
-          Define como os alunos entram no curso: no próprio ritmo (on demand), somente por
-          turmas com cronograma, ou os dois — nesse caso o aluno escolhe na inscrição.
-        </CardDesc>
-        <div style={{ maxWidth: 320 }}>
-          <Select value={accessMode} onValueChange={handleAccessModeChange}>
-            <SelectTrigger aria-label="Modo de acesso do curso">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="on_demand">Somente on demand</SelectItem>
-              <SelectItem value="cohort">Somente via turma</SelectItem>
-              <SelectItem value="both">Ambos — o aluno escolhe</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </Card>
-
       {cohorts.length === 0 ? (
         <Empty>
           Nenhuma turma ainda. Crie a primeira para oferecer o curso com cronograma e vagas limitadas.
@@ -466,27 +421,43 @@ export default function CohortsPage() {
               <CohortName>{cohort.name}</CohortName>
               <StatusBadge $status={cohort.status}>{STATUS_LABEL[cohort.status]}</StatusBadge>
               <Actions>
-                <Button size="sm" variant="outline" onClick={() => toggleProgress(cohort.id)}>
+                <Button
+                  size="sm"
+                  variant={progressFor === cohort.id ? 'default' : 'outline'}
+                  onClick={() => toggleProgress(cohort.id)}
+                >
                   <Icon name="monitoring" size={14} />
                   Progresso
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => openSchedule(cohort.id)}>
+                <Button
+                  size="sm"
+                  variant={scheduleFor === cohort.id ? 'default' : 'outline'}
+                  onClick={() => openSchedule(cohort.id)}
+                >
                   <Icon name="calendar_month" size={14} />
                   Cronograma
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant={exclusivesFor === cohort.id ? 'default' : 'outline'}
                   onClick={() => setExclusivesFor(exclusivesFor === cohort.id ? null : cohort.id)}
                 >
                   <Icon name="star" size={14} />
                   Exclusivas
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => openEdit(cohort)}>
+                <Button
+                  size="sm"
+                  variant={editing?.id === cohort.id ? 'default' : 'outline'}
+                  onClick={() => openEdit(cohort)}
+                >
                   Editar
                 </Button>
                 {cohort.status !== 'encerrada' && (
-                  <Button size="sm" variant="outline" onClick={() => setClosingCohort(cohort)}>
+                  <Button
+                    size="sm"
+                    variant={closingCohort?.id === cohort.id ? 'default' : 'outline'}
+                    onClick={() => setClosingCohort(cohort)}
+                  >
                     Encerrar
                   </Button>
                 )}
