@@ -78,6 +78,13 @@
       "when": 1782950600000,
       "tag": "0010_cohorts",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1782950700000,
+      "tag": "0011_cohort_enrollments",
+      "breakpoints": true
     }
   ]
 }

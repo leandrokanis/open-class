@@ -1,11 +1,12 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { fetchMe, fetchMyEnrollments, fetchRecentActivity } from "@/lib/dashboard";
+import { fetchMe, fetchMyEnrollments, fetchRecentActivity, fetchMyCohorts } from "@/lib/dashboard";
 import { AppHeader } from "@/components/catalog/AppHeader";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import { EnrolledCourseCard } from "@/components/dashboard/EnrolledCourseCard";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { EmptyEnrollments } from "@/components/dashboard/EmptyEnrollments";
+import { MyCohortsSection } from "@/components/dashboard/MyCohortsSection";
 import styled from "styled-components";
 
 const Page = styled.div`
@@ -61,10 +62,11 @@ const CourseList = styled.div`
 export default async function AprendizadoPage() {
   const cookieHeader = (await headers()).get("cookie") ?? "";
 
-  const [me, enrollments, recentActivity] = await Promise.all([
+  const [me, enrollments, recentActivity, myCohorts] = await Promise.all([
     fetchMe(cookieHeader),
     fetchMyEnrollments(cookieHeader),
     fetchRecentActivity(cookieHeader, 5),
+    fetchMyCohorts(cookieHeader),
   ]);
 
   if (!me) redirect("/login");
@@ -91,6 +93,7 @@ export default async function AprendizadoPage() {
       />
       <Layout>
         <Section>
+          <MyCohortsSection cohorts={myCohorts} />
           <SectionHeader>
             <SectionTitle>Em andamento</SectionTitle>
             {inProgress.length > 0 && (

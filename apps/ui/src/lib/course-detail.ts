@@ -25,6 +25,7 @@ export interface CourseDetail {
   slug: string;
   shortDescription: string | null;
   description: string | null;
+  accessMode?: 'on_demand' | 'cohort' | 'both';
   level: "beginner" | "intermediate" | "advanced" | null;
   thumbnailUrl: string | null;
   rating: number | null;
@@ -131,5 +132,44 @@ export async function enrollInCourse(courseId: string): Promise<void> {
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { message?: string };
     throw new Error(body.message ?? "Erro ao realizar inscrição. Tente novamente.");
+  }
+}
+
+// ── Turmas (Epic 7 — US-23) ────────────────────────────────────────────────────
+
+export interface PublicCohort {
+  id: string;
+  courseId: string;
+  name: string;
+  enrollmentStart: string;
+  enrollmentEnd: string;
+  seats: number;
+  seatsLeft: number;
+  enrolledCount: number;
+  status: "agendada" | "aberta" | "esgotada";
+}
+
+export async function fetchPublicCohorts(courseId: string): Promise<PublicCohort[]> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/api/courses/${courseId}/cohorts/public`,
+      { credentials: "include" },
+    );
+    if (!res.ok) return [];
+    const json = (await res.json()) as { data: PublicCohort[] };
+    return json.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function enrollInCohort(cohortId: string): Promise<void> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/api/cohorts/${cohortId}/enroll`,
+    { method: "POST", credentials: "include" },
+  );
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new Error(body.message ?? "Erro ao se inscrever na turma. Tente novamente.");
   }
 }

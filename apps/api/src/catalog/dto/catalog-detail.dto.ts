@@ -25,6 +25,7 @@ export class CatalogDetailDto {
   @ApiPropertyOptional({ nullable: true }) shortDescription?: string | null;
   @ApiPropertyOptional({ nullable: true }) description?: string | null;
   @ApiPropertyOptional({ enum: ['beginner', 'intermediate', 'advanced'], nullable: true }) level?: string | null;
+  @ApiProperty({ enum: ['on_demand', 'cohort', 'both'], description: 'Modo de acesso do curso (US-22)' }) accessMode!: string;
   @ApiPropertyOptional({ nullable: true }) thumbnailUrl?: string | null;
   @ApiPropertyOptional({ type: () => CatalogCategoryRefDto, nullable: true }) category?: CatalogCategoryRefDto | null;
   @ApiProperty({ type: () => CatalogInstructorDto }) instructor!: CatalogInstructorDto;

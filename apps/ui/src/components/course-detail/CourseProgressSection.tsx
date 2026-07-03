@@ -62,6 +62,14 @@ const EnrolledBadge = styled.div`
   margin-bottom: 10px;
 `;
 
+const CohortOnlyNote = styled.div`
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  text-align: center;
+  padding: 6px 4px;
+`;
+
 const CtaButton = styled.button`
   width: 100%;
   padding: 15px;
@@ -134,6 +142,17 @@ export function CourseProgressSection({
 
   if (!status.enrolled) {
     const loginUrl = `/login?return=${encodeURIComponent(pathname)}`;
+
+    // Curso somente-turma: sem CTA on demand — a inscrição acontece nos cards de turma (US-22/23)
+    if (course.accessMode === "cohort") {
+      return (
+        <Wrapper>
+          <CohortOnlyNote>
+            Este curso é oferecido por turmas. Escolha uma turma com inscrições abertas para participar.
+          </CohortOnlyNote>
+        </Wrapper>
+      );
+    }
 
     function handleEnroll() {
       if (!status.authenticated) {

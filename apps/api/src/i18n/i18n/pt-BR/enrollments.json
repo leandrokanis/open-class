@@ -1,4 +1,6 @@
 {
   "already_enrolled": "Aluno já matriculado neste curso.",
-  "not_enrolled": "Aluno não matriculado neste curso."
+  "not_enrolled": "Aluno não matriculado neste curso.",
+  "cohort_only": "Este curso aceita matrícula apenas via turma.",
+  "already_in_cohort": "Você está matriculado em uma turma deste curso; o acesso on demand fica indisponível."
 }

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, UnprocessableEntityException } from '@nestjs/common';
 import { EnrollmentsRepository } from './enrollments.repository';
 import { ProgressRepository } from '../progress/progress.repository';
 import { MailService } from '../mail/mail.service';
@@ -15,6 +15,16 @@ export class EnrollmentsService {
   ) {}
 
   async enroll(studentId: string, courseId: string) {
+    // Curso somente-turma não aceita matrícula on demand (US-22/23)
+    const accessMode = await this.repo.findCourseAccessMode(courseId);
+    if (accessMode === 'cohort') {
+      throw new UnprocessableEntityException(t('enrollments.cohort_only'));
+    }
+    // Aluno vinculado a uma turma deste curso perde o on demand (US-23)
+    if (await this.repo.hasCohortEnrollment(studentId, courseId)) {
+      throw new ConflictException(t('enrollments.already_in_cohort'));
+    }
+
     const enrollment = await this.repo.create(studentId, courseId);
     if (!enrollment) throw new ConflictException(t('enrollments.already_enrolled'));
 

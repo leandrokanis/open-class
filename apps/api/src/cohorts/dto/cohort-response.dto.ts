@@ -59,3 +59,38 @@ export class CohortListResponseDto {
   @ApiProperty({ type: [CohortDto] })
   data!: CohortDto[];
 }
+
+export class PublicCohortDto extends CohortDto {
+  @ApiProperty({ example: 12, description: 'Vagas restantes' })
+  seatsLeft!: number;
+
+  @ApiProperty({ example: 5, description: 'Inscritos até o momento' })
+  enrolledCount!: number;
+}
+
+export class PublicCohortListResponseDto {
+  @ApiProperty({ type: [PublicCohortDto] })
+  data!: PublicCohortDto[];
+}
+
+export class MyCohortCourseDto {
+  @ApiProperty({ example: 'JavaScript do Zero' }) title!: string;
+  @ApiProperty({ example: 'javascript-do-zero' }) slug!: string;
+  @ApiProperty({ nullable: true, example: null }) thumbnailUrl!: string | null;
+}
+
+export class MyCohortScheduleItemDto extends CohortScheduleItemDto {
+  @ApiProperty({ example: 'Fundamentos' }) moduleTitle!: string;
+  @ApiProperty({ example: 1 }) modulePosition!: number;
+}
+
+export class MyCohortDto extends CohortDto {
+  @ApiProperty({ type: MyCohortCourseDto }) course!: MyCohortCourseDto;
+  @ApiProperty({ type: [MyCohortScheduleItemDto] }) schedule!: MyCohortScheduleItemDto[];
+  @ApiProperty({ example: '2026-07-02T12:00:00.000Z' }) enrolledAt!: Date;
+}
+
+export class MyCohortListResponseDto {
+  @ApiProperty({ type: [MyCohortDto] })
+  data!: MyCohortDto[];
+}

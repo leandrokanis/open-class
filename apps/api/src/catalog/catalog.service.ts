@@ -100,6 +100,7 @@ export class CatalogService {
       shortDescription: course.shortDescription ?? null,
       description: course.description ?? null,
       level: course.level ?? null,
+      accessMode: course.accessMode,
       thumbnailUrl: course.thumbnailUrl ?? null,
       category: course.category
         ? { id: course.category.id, name: course.category.name, slug: course.category.slug }

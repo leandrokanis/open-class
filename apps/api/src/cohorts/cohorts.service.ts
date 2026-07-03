@@ -1,5 +1,5 @@
 import {
-  Injectable, NotFoundException, ForbiddenException, UnprocessableEntityException,
+  Injectable, NotFoundException, ForbiddenException, UnprocessableEntityException, ConflictException,
 } from '@nestjs/common';
 import { CohortsRepository } from './cohorts.repository';
 import { CoursesRepository } from '../courses/courses.repository';
@@ -100,6 +100,47 @@ export class CohortsService {
     );
     const schedule = await this.repo.findSchedule(id);
     return { ...this.withStatus(cohort), schedule };
+  }
+
+  // ── Inscrições (US-23) ────────────────────────────────────────────────────
+
+  async enrollStudent(cohortId: string, studentId: string) {
+    const cohort = await this.repo.findById(cohortId);
+    if (!cohort) throw new NotFoundException(t('cohorts.not_found'));
+
+    if (this.statusOf(cohort) !== 'aberta') {
+      throw new UnprocessableEntityException(t('cohorts.not_open'));
+    }
+    if (await this.repo.hasCohortEnrollmentInCourse(studentId, cohort.courseId)) {
+      throw new ConflictException(t('cohorts.already_in_course_cohort'));
+    }
+    // Exclusividade: quem já tem matrícula on demand não entra em turma (US-22/23)
+    if (await this.repo.hasBaseEnrollment(studentId, cohort.courseId)) {
+      throw new ConflictException(t('cohorts.already_on_demand'));
+    }
+
+    const outcome = await this.repo.enrollTransaction(cohortId, studentId, cohort.courseId, cohort.seats);
+    if (outcome === 'full') throw new ConflictException(t('cohorts.full'));
+
+    return this.withStatus(cohort);
+  }
+
+  /** Turmas exibidas na página do curso: abertas, agendadas e esgotadas (US-23). */
+  async listPublic(courseId: string) {
+    const rows = await this.repo.findPublicByCourse(courseId);
+    return rows
+      .map((c) => {
+        const base = this.statusOf(c);
+        const seatsLeft = Math.max(0, c.seats - c.enrolledCount);
+        const status = base === 'aberta' && seatsLeft === 0 ? 'esgotada' : base;
+        return { ...c, status, seatsLeft };
+      })
+      .filter((c) => c.status !== 'encerrada');
+  }
+
+  async myCohorts(studentId: string) {
+    const rows = await this.repo.findByStudent(studentId);
+    return rows.map((c) => ({ ...c, status: this.statusOf(c) }));
   }
 
   statusOf(cohort: CohortLike, now: Date = new Date()): CohortStatus {
