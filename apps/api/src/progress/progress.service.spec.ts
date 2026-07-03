@@ -200,6 +200,50 @@ describe('ProgressService', () => {
     });
   });
 
+  // ── acesso privilegiado: admin e instrutor dono ────────────────────────
+
+  describe('acesso como aluno para admin e instrutor dono', () => {
+    beforeEach(() => {
+      repo.isEnrolled.mockResolvedValue(false);
+      repo.findCourseById.mockResolvedValue({ id: 'course-1', title: 'Curso 1', instructorId: 'prof-1' });
+    });
+
+    it('admin não matriculado acessa progresso de qualquer curso', async () => {
+      const result = await service.getCourseProgress('admin-1', 'course-1', 'admin');
+      expect(result.courseId).toBe('course-1');
+    });
+
+    it('instrutor dono não matriculado acessa progresso do próprio curso', async () => {
+      const result = await service.getCourseProgress('prof-1', 'course-1', 'instrutor');
+      expect(result.courseId).toBe('course-1');
+    });
+
+    it('instrutor que não é dono continua bloqueado', async () => {
+      await expect(service.getCourseProgress('prof-2', 'course-1', 'instrutor'))
+        .rejects.toThrow(ForbiddenException);
+    });
+
+    it('aluno não matriculado continua bloqueado', async () => {
+      await expect(service.getCourseProgress('student-1', 'course-1', 'aluno'))
+        .rejects.toThrow(ForbiddenException);
+    });
+
+    it('admin acessa lista de aulas concluídas sem matrícula', async () => {
+      const result = await service.getCompletedLessonIds('admin-1', 'course-1', 'admin');
+      expect(result).toEqual(['lesson-1', 'lesson-2']);
+    });
+
+    it('admin marca aula sem matrícula', async () => {
+      const result = await service.markLesson('admin-1', 'lesson-1', true, 'admin');
+      expect(result.lessonId).toBe('lesson-1');
+    });
+
+    it('instrutor dono vê status de extras sem matrícula', async () => {
+      const result = await service.getExtrasStatus('prof-1', 'course-1', 'instrutor');
+      expect(result).toEqual([]);
+    });
+  });
+
   // ── aulas extras (US-20) ───────────────────────────────────────────────
 
   describe('markLesson em aula extra', () => {

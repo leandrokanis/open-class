@@ -22,7 +22,7 @@ export class ProgressController {
 
   @Put('lessons/:lessonId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno, Role.Instrutor)
+  @Roles(Role.Aluno, Role.Instrutor, Role.Admin)
   @ApiOperation({ summary: 'Marcar aula como concluída / não concluída (aluno)' })
   @ApiResponse({ status: 200, description: 'Progresso atualizado.' })
   @ApiResponse({ status: 400, description: 'Corpo inválido.' })
@@ -34,12 +34,12 @@ export class ProgressController {
     @Param('lessonId') lessonId: string,
     @Body() body: MarkLessonDto,
   ) {
-    return this.progressService.markLesson(req.user.id, lessonId, body.isCompleted);
+    return this.progressService.markLesson(req.user.id, lessonId, body.isCompleted, req.user.role);
   }
 
   @Get('courses/:courseId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno, Role.Instrutor)
+  @Roles(Role.Aluno, Role.Instrutor, Role.Admin)
   @ApiOperation({ summary: 'Percentual de conclusão do curso (aluno)' })
   @ApiResponse({ status: 200, description: 'Estatísticas de progresso do curso.' })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
@@ -49,12 +49,12 @@ export class ProgressController {
     @Req() req: Request & { user: AuthUser },
     @Param('courseId') courseId: string,
   ) {
-    return this.progressService.getCourseProgress(req.user.id, courseId);
+    return this.progressService.getCourseProgress(req.user.id, courseId, req.user.role);
   }
 
   @Get('courses/:courseId/lessons')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno, Role.Instrutor)
+  @Roles(Role.Aluno, Role.Instrutor, Role.Admin)
   @ApiOperation({ summary: 'IDs das aulas concluídas no curso (aluno)' })
   @ApiResponse({ status: 200, description: 'Lista de IDs de aulas concluídas.' })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
@@ -63,14 +63,14 @@ export class ProgressController {
     @Req() req: Request & { user: AuthUser },
     @Param('courseId') courseId: string,
   ) {
-    return this.progressService.getCompletedLessonIds(req.user.id, courseId).then(
+    return this.progressService.getCompletedLessonIds(req.user.id, courseId, req.user.role).then(
       (completedLessonIds) => ({ completedLessonIds }),
     );
   }
 
   @Get('courses/:courseId/last-accessed')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno, Role.Instrutor)
+  @Roles(Role.Aluno, Role.Instrutor, Role.Admin)
   @ApiOperation({ summary: 'Última aula acessada no curso (aluno)' })
   @ApiResponse({ status: 200, description: 'Última aula acessada ou null.' })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
@@ -80,12 +80,12 @@ export class ProgressController {
     @Req() req: Request & { user: AuthUser },
     @Param('courseId') courseId: string,
   ) {
-    return this.progressService.getLastAccessed(req.user.id, courseId);
+    return this.progressService.getLastAccessed(req.user.id, courseId, req.user.role);
   }
 
   @Get('courses/:courseId/extras')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno, Role.Instrutor)
+  @Roles(Role.Aluno, Role.Instrutor, Role.Admin)
   @ApiParam({ name: 'courseId', description: 'ID do curso', type: String })
   @ApiOperation({ summary: 'Status das aulas extras por módulo (aluno)' })
   @ApiResponse({ status: 200, description: 'Status por módulo: hasExtras, unlocked, celebrated.', type: ExtrasStatusResponseDto })
@@ -95,13 +95,13 @@ export class ProgressController {
     @Req() req: Request & { user: AuthUser },
     @Param('courseId') courseId: string,
   ) {
-    const data = await this.progressService.getExtrasStatus(req.user.id, courseId);
+    const data = await this.progressService.getExtrasStatus(req.user.id, courseId, req.user.role);
     return { data };
   }
 
   @Post('modules/:moduleId/extras-celebration')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno, Role.Instrutor)
+  @Roles(Role.Aluno, Role.Instrutor, Role.Admin)
   @ApiParam({ name: 'moduleId', description: 'ID do módulo', type: String })
   @ApiOperation({ summary: 'Registrar celebração de desbloqueio das extras (uma vez por módulo)' })
   @ApiResponse({ status: 201, description: 'Celebração registrada (idempotente).', type: CelebrationResponseDto })
@@ -112,13 +112,13 @@ export class ProgressController {
     @Req() req: Request & { user: AuthUser },
     @Param('moduleId') moduleId: string,
   ) {
-    const data = await this.progressService.celebrateExtras(req.user.id, moduleId);
+    const data = await this.progressService.celebrateExtras(req.user.id, moduleId, req.user.role);
     return { data };
   }
 
   @Get('recent')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno, Role.Instrutor)
+  @Roles(Role.Aluno, Role.Instrutor, Role.Admin)
   @ApiOperation({ summary: 'Atividade recente do aluno — últimas N aulas acessadas' })
   @ApiQuery({ name: 'limit', required: false, example: 5, description: 'Número de itens (default 5, max 20)' })
   @ApiResponse({ status: 200, description: 'Lista de atividade recente.', type: [RecentActivityItemDto] })

@@ -43,7 +43,7 @@ export class CohortsStudentController {
 
   @Post('cohorts/:id/enroll')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Aluno, Role.Instrutor)
+  @Roles(Role.Aluno, Role.Instrutor, Role.Admin)
   @HttpCode(HttpStatus.CREATED)
   @ApiCookieAuth('access_token')
   @ApiBearerAuth()
