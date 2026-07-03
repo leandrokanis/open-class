@@ -1,0 +1,6 @@
+{
+  "not_found": "Cohort not found.",
+  "no_permission": "You do not have permission to manage cohorts of this course.",
+  "invalid_period": "Invalid enrollment period: start must be before end.",
+  "module_not_in_course": "One or more modules do not belong to this cohort's course."
+}

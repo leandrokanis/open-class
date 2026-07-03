@@ -76,6 +76,7 @@ export class CoursesService {
     if (dto.level !== undefined) update.level = dto.level;
     if (dto.categoryId !== undefined) update.categoryId = dto.categoryId;
     if (dto.thumbnailUrl !== undefined) update.thumbnailUrl = dto.thumbnailUrl ?? null;
+    if (dto.accessMode !== undefined) update.accessMode = dto.accessMode;
 
     return this.repo.update(id, update);
   }

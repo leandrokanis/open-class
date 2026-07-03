@@ -9,6 +9,7 @@ export * from './schema/lessons';
 export * from './schema/enrollments';
 export * from './schema/lesson-progress';
 export * from './schema/extra-unlock-celebrations';
+export * from './schema/cohorts';
 export * from './schema/platform-config';
 export * from './schema/relations';
 export * from './schema/oauth-clients';

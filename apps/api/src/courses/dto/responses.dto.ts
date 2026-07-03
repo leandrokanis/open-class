@@ -97,6 +97,9 @@ export class CourseResponseDto {
   @ApiProperty({ enum: ['draft', 'published'], example: 'draft' })
   status!: string;
 
+  @ApiProperty({ enum: ['on_demand', 'cohort', 'both'], example: 'on_demand', description: 'Modo de acesso do curso (US-22)' })
+  accessMode!: string;
+
   @ApiPropertyOptional({ example: 'http://localhost:3001/uploads/thumbnails/uuid-ts.jpg' })
   thumbnailUrl?: string | null;
 

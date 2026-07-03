@@ -373,6 +373,7 @@ export default function CurriculumPanel({
     { href: basePath,                       label: 'Curso',          icon: 'info' },
     { href: `${basePath}/settings`,    label: 'Configurações',  icon: 'tune' },
     { href: `${basePath}/students`,           label: 'Alunos',         icon: 'group' },
+    { href: `${basePath}/cohorts`,          label: 'Turmas',         icon: 'groups' },
   ];
 
   return (

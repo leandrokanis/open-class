@@ -80,6 +80,7 @@ export interface CourseEditorData {
   description: string | null;
   level: 'beginner' | 'intermediate' | 'advanced' | null;
   status: 'draft' | 'published';
+  accessMode?: 'on_demand' | 'cohort' | 'both';
   thumbnailUrl: string | null;
   categoryId: string | null;
   rating: string | null;
@@ -87,6 +88,96 @@ export interface CourseEditorData {
   instructorId: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// ── Turmas (Epic 7 — US-22) ────────────────────────────────────────────────────
+
+export interface CohortScheduleEntry {
+  moduleId: string;
+  availableFrom: string;
+}
+
+export interface CohortData {
+  id: string;
+  courseId: string;
+  name: string;
+  enrollmentStart: string;
+  enrollmentEnd: string;
+  seats: number;
+  closedAt: string | null;
+  status: 'agendada' | 'aberta' | 'encerrada';
+  schedule?: CohortScheduleEntry[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function fetchCohorts(courseId: string): Promise<CohortData[]> {
+  const res = await fetch(`${API_PUBLIC}/api/courses/${courseId}/cohorts`, { credentials: 'include' });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data ?? [];
+}
+
+export async function fetchCohort(id: string): Promise<CohortData | null> {
+  const res = await fetch(`${API_PUBLIC}/api/cohorts/${id}`, { credentials: 'include' });
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.data;
+}
+
+export async function createCohort(
+  courseId: string,
+  data: { name: string; enrollmentStart: string; enrollmentEnd: string; seats: number },
+): Promise<CohortData | null> {
+  const res = await fetch(`${API_PUBLIC}/api/courses/${courseId}/cohorts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.data;
+}
+
+export async function updateCohort(
+  id: string,
+  data: Partial<{ name: string; enrollmentStart: string; enrollmentEnd: string; seats: number }>,
+): Promise<CohortData | null> {
+  const res = await fetch(`${API_PUBLIC}/api/cohorts/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.data;
+}
+
+export async function closeCohort(id: string): Promise<CohortData | null> {
+  const res = await fetch(`${API_PUBLIC}/api/cohorts/${id}/close`, {
+    method: 'PATCH',
+    credentials: 'include',
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.data;
+}
+
+export async function setCohortSchedule(
+  id: string,
+  entries: CohortScheduleEntry[],
+): Promise<CohortData | null> {
+  const res = await fetch(`${API_PUBLIC}/api/cohorts/${id}/schedule`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ entries }),
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.data;
 }
 
 // ── Server-side fetchers ───────────────────────────────────────────────────────
@@ -167,6 +258,7 @@ export async function updateCourse(
     level?: string;
     categoryId?: string;
     thumbnailUrl?: string | null;
+    accessMode?: 'on_demand' | 'cohort' | 'both';
   },
 ): Promise<CourseEditorData | null> {
   const res = await fetch(`${API_PUBLIC}/api/courses/${id}`, {
