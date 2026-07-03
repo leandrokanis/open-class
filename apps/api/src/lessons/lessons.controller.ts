@@ -17,6 +17,7 @@ import {
 } from './dto/lesson-response.dto';
 import { ReorderResponseDto } from '../modules/dto/module-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { RolesGuard, Roles, Role } from '../common';
 
 @ApiTags('lessons')
@@ -44,6 +45,7 @@ export class LessonsController {
   }
 
   @Get('modules/:moduleId/lessons')
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiParam({ name: 'moduleId', description: 'ID do módulo', type: String })
   @ApiOperation({ summary: 'Listar aulas de um módulo' })
   @ApiResponse({ status: 200, description: 'Lista de aulas.', type: LessonListResponseDto })
@@ -56,6 +58,7 @@ export class LessonsController {
   }
 
   @Get('lessons/:id')
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiParam({ name: 'id', description: 'ID da aula', type: String })
   @ApiOperation({ summary: 'Detalhes de uma aula (inclui recursos)' })
   @ApiResponse({ status: 200, description: 'Detalhes da aula.', type: LessonWithResourcesResponseDto })
