@@ -548,6 +548,119 @@ Critérios de Aceitação:
 - Indicação de alunos sem acesso nos últimos 7 dias (inativos)
 ```
 
+### Epic 8 — Gamificação das Turmas
+
+> Design estratégico completo em `docs/gamification-octalysis.md` (framework
+> Octalysis). Princípios: o jogo existe **exclusivamente dentro de turmas** e
+> está **sempre ativo** (sem configuração); premia **sincronia** com o
+> cronograma semanal — estar em dia vale mais que volume assistido; a perda
+> máxima possível é a chama e a posição no ranking (nunca progresso, acesso
+> ou certificação). Objetivo de negócio: aumentar a taxa de conclusão de cursos.
+
+#### US-27 — Ganhar XP por sincronia com o cronograma da turma
+
+> **Depende de**: US-22, US-23, US-24
+
+```
+Como aluno matriculado em uma turma,
+Quero ganhar pontos (XP) ao concluir as aulas do conteúdo da semana corrente,
+Para ser recompensado por acompanhar o ritmo da turma.
+
+Critérios de Aceitação:
+- Concluir aula do bloco da semana corrente concede 10 XP
+- Concluir aula de semana já encerrada concede 5 XP (metade — atraso recuperado vale menos que sincronia)
+- Concluir todas as aulas de um módulo dentro do prazo do cronograma concede bônus de 20 XP
+- Aulas exclusivas da turma concedem XP pelas mesmas regras
+- O XP acumulado do aluno é exibido no painel da turma
+- XP existe apenas no contexto de turmas; cursos acessados on demand não geram XP
+- Ao concluir todas as aulas do bloco da semana dentro dela, um modal celebra o fechamento da semana (exibido uma vez por semana fechada, mesmo padrão visual da celebração da US-20)
+```
+
+#### US-28 — Manter a chama semanal
+
+> **Depende de**: US-27
+
+```
+Como aluno matriculado em uma turma,
+Quero manter uma chama de semanas consecutivas em dia com o conteúdo,
+Para ter um símbolo visível da minha constância que eu não queira perder.
+
+Critérios de Aceitação:
+- Concluir todas as aulas do bloco da semana dentro dela incrementa a chama em 1
+- Falhar uma semana (não concluir o bloco dentro dela) zera a chama
+- Reacendimento único por turma: na primeira falha, se o aluno concluir todo o conteúdo atrasado até o fim da semana seguinte, a chama é restaurada; nas falhas seguintes a perda é definitiva
+- Semanas sem conteúdo programado no cronograma não quebram nem incrementam a chama
+- A chama atual e a maior chama da turma são exibidas no painel da turma do aluno
+- Perder a chama não afeta progresso, XP acumulado, acesso a conteúdo nem certificação
+```
+
+#### US-29 — Ver o ranking da turma
+
+> **Depende de**: US-27
+
+```
+Como aluno matriculado em uma turma,
+Quero ver o ranking de XP da minha turma,
+Para me comparar com colegas que começaram junto comigo.
+
+Critérios de Aceitação:
+- Ranking ordenado por XP total acumulado na turma
+- Exibe o top 10 com nome e avatar de cada aluno
+- A posição do próprio aluno é sempre visível e destacada, mesmo fora do top 10
+- Empate em XP é desempatado pela chama mais longa
+- Não existe ranking global, por curso nem entre turmas — somente dentro de cada turma
+- Após o encerramento da turma, o ranking final permanece visível para os alunos que dela participaram
+```
+
+#### US-30 — Acompanhar o prazo e o status da semana corrente
+
+> **Depende de**: US-27, US-28
+
+```
+Como aluno matriculado em uma turma,
+Quero ver quanto tempo resta para fechar a semana e se estou em dia,
+Para conseguir agir antes de perder minha chama.
+
+Critérios de Aceitação:
+- O painel da turma exibe contagem regressiva até o fim da semana corrente
+- Status pessoal visível: "em dia" ou "atrasado", com a lista do que falta concluir
+- Prova social: o painel exibe o percentual da turma que já fechou a semana corrente
+- Aviso de chama em risco: notificação in-app quando faltam 48 horas para o fim da semana e o bloco não está concluído
+- Se houver SMTP configurado na instância, o aviso de chama em risco também é enviado por e-mail; sem SMTP, apenas in-app (a funcionalidade degrada graciosamente em instâncias self-hosted sem e-mail)
+```
+
+#### US-31 — Meta coletiva da turma
+
+> **Depende de**: US-23
+
+```
+Como aluno matriculado em uma turma,
+Quero acompanhar uma meta coletiva de conclusão da turma,
+Para sentir que fazemos parte de algo maior e que a turma termina junta.
+
+Critérios de Aceitação:
+- Meta coletiva fixa: 70% dos alunos matriculados concluírem o curso
+- O painel da turma exibe o progresso rumo à meta (ex: "12 de 30 alunos concluíram — faltam 9 para a meta da turma")
+- Ao atingir a meta, todos os matriculados veem uma celebração (exibida uma vez por aluno)
+- O instrutor visualiza no painel da turma o progresso da meta coletiva e o percentual de alunos em dia por semana
+```
+
+#### US-32 — Colecionar conquistas da turma
+
+> **Depende de**: US-27, US-28
+
+```
+Como aluno matriculado em uma turma,
+Quero ganhar conquistas por marcos do meu percurso na turma,
+Para colecionar provas permanentes do meu esforço.
+
+Critérios de Aceitação:
+- Conjunto inicial de conquistas: "Primeira semana" (fechar a semana 1 em dia), "Módulo no prazo" (concluir um módulo dentro do cronograma), "Turma perfeita" (todas as semanas em dia sem usar o reacendimento), "Formado na turma" (concluir o curso durante a vigência da turma)
+- Cada conquista é celebrada via modal uma única vez no momento em que é obtida
+- Conquistas ficam permanentes no perfil do aluno, mesmo após o encerramento da turma
+- Conquistas não concedem XP nem alteram o ranking — são colecionáveis
+```
+
 ---
 
 ## 6. Métricas de Sucesso
