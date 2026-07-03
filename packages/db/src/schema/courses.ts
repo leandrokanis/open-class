@@ -4,6 +4,8 @@ import { categories } from './categories';
 
 export const courseStatusEnum = pgEnum('course_status_enum', ['draft', 'published']);
 export const levelEnum        = pgEnum('level_enum', ['beginner', 'intermediate', 'advanced']);
+// Modo de acesso do curso: on demand, somente via turma, ou ambos (Epic 7 — US-22)
+export const accessModeEnum   = pgEnum('access_mode_enum', ['on_demand', 'cohort', 'both']);
 
 export const courses = pgTable(
   'courses',
@@ -17,6 +19,7 @@ export const courses = pgTable(
     description:      text('description'),
     level:            levelEnum('level'),
     status:           courseStatusEnum('status').notNull().default('draft'),
+    accessMode:       accessModeEnum('access_mode').notNull().default('on_demand'),
     thumbnailUrl:     text('thumbnail_url'),
     rating:           decimal('rating', { precision: 3, scale: 2 }),
     reviewCount:      integer('review_count').notNull().default(0),
@@ -31,3 +34,4 @@ export type Course       = typeof courses.$inferSelect;
 export type NewCourse    = typeof courses.$inferInsert;
 export type CourseStatus = 'draft' | 'published';
 export type Level        = 'beginner' | 'intermediate' | 'advanced';
+export type AccessMode   = 'on_demand' | 'cohort' | 'both';

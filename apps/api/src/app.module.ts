@@ -14,6 +14,7 @@ import { ModulesModule } from './modules/modules.module';
 import { LessonsModule } from './lessons/lessons.module';
 import { CoursesModule } from './courses/courses.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
+import { CohortsModule } from './cohorts/cohorts.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { ProgressModule } from './progress/progress.module';
 import { PlatformConfigModule } from './platform-config/platform-config.module';
@@ -57,6 +58,7 @@ import { setUploadsCrossOriginHeaders } from './config/static-assets-config';
     LessonsModule,
     CoursesModule,
     EnrollmentsModule,
+    CohortsModule,
     CatalogModule,
     ProgressModule,
     PlatformConfigModule,
