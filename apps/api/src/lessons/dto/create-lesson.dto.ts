@@ -31,4 +31,13 @@ export class CreateLessonDto {
   @Min(0, { message: i18nValidationMessage('validation.min') })
   @IsOptional()
   duration?: number;
+
+  @ApiPropertyOptional({
+    example: false,
+    default: false,
+    description: 'Aula extra (bônus) — desbloqueada quando o aluno conclui as aulas normais do módulo',
+  })
+  @IsBoolean({ message: i18nValidationMessage('validation.is_boolean') })
+  @IsOptional()
+  isExtra?: boolean;
 }

@@ -13,7 +13,9 @@ const makeRepo = (overrides = {}) => ({
   delete: vi.fn(),
   nextPosition: vi.fn().mockResolvedValue(1),
   updatePosition: vi.fn().mockResolvedValue(undefined),
-  findAllIdsByModule: vi.fn().mockResolvedValue([]),
+  findGroupIds: vi.fn().mockResolvedValue([]),
+  compactGroup: vi.fn().mockResolvedValue(undefined),
+  countExtraUnlockedStudents: vi.fn().mockResolvedValue(0),
   moveToModule: vi.fn().mockResolvedValue({ id: 'lesson-1', moduleId: 'module-2', position: 1 }),
   ...overrides,
 });
@@ -105,9 +107,13 @@ describe('LessonsService', () => {
   });
 
   describe('reorder', () => {
-    it('reordena aulas com IDs válidos', async () => {
-      const ids = ['l1', 'l2', 'l3'];
-      const repo = makeRepo({ findAllIdsByModule: vi.fn().mockResolvedValue([...ids]) });
+    it('reordena as aulas normais quando os IDs cobrem exatamente esse grupo', async () => {
+      // Arrange
+      const ids = ['l3', 'l1', 'l2'];
+      const repo = makeRepo({
+        findGroupIds: vi.fn().mockImplementation((_m: string, isExtra: boolean) =>
+          Promise.resolve(isExtra ? ['x1'] : ['l1', 'l2', 'l3'])),
+      });
       service = new LessonsService(
         repo as never,
         makeModulesRepo() as never,
@@ -115,12 +121,61 @@ describe('LessonsService', () => {
         makeYoutube() as never,
       );
 
+      // Act
       const result = await service.reorder('module-1', ids, 'user-1', 'instructor');
+
+      // Assert — posições 1..K na ordem submetida, sem tocar nas extras
       expect(result).toEqual({ reordered: 3 });
+      expect(repo.updatePosition).toHaveBeenCalledWith('l3', 1);
+      expect(repo.updatePosition).toHaveBeenCalledWith('l1', 2);
+      expect(repo.updatePosition).toHaveBeenCalledWith('l2', 3);
+      expect(repo.updatePosition).not.toHaveBeenCalledWith('x1', expect.anything());
     });
 
-    it('lança 422 quando IDs não batem', async () => {
-      const repo = makeRepo({ findAllIdsByModule: vi.fn().mockResolvedValue(['l1', 'l2']) });
+    it('reordena as aulas extras independentemente das normais', async () => {
+      // Arrange
+      const repo = makeRepo({
+        findGroupIds: vi.fn().mockImplementation((_m: string, isExtra: boolean) =>
+          Promise.resolve(isExtra ? ['x1', 'x2'] : ['l1', 'l2'])),
+      });
+      service = new LessonsService(
+        repo as never,
+        makeModulesRepo() as never,
+        makeCoursesRepo() as never,
+        makeYoutube() as never,
+      );
+
+      // Act
+      const result = await service.reorder('module-1', ['x2', 'x1'], 'user-1', 'instructor');
+
+      // Assert
+      expect(result).toEqual({ reordered: 2 });
+      expect(repo.updatePosition).toHaveBeenCalledWith('x2', 1);
+      expect(repo.updatePosition).toHaveBeenCalledWith('x1', 2);
+    });
+
+    it('lança 422 para conjunto misto de normais e extras', async () => {
+      const repo = makeRepo({
+        findGroupIds: vi.fn().mockImplementation((_m: string, isExtra: boolean) =>
+          Promise.resolve(isExtra ? ['x1'] : ['l1', 'l2'])),
+      });
+      service = new LessonsService(
+        repo as never,
+        makeModulesRepo() as never,
+        makeCoursesRepo() as never,
+        makeYoutube() as never,
+      );
+
+      await expect(
+        service.reorder('module-1', ['l1', 'x1'], 'user-1', 'instructor'),
+      ).rejects.toThrow(UnprocessableEntityException);
+    });
+
+    it('lança 422 quando IDs não cobrem o grupo inteiro', async () => {
+      const repo = makeRepo({
+        findGroupIds: vi.fn().mockImplementation((_m: string, isExtra: boolean) =>
+          Promise.resolve(isExtra ? [] : ['l1', 'l2'])),
+      });
       service = new LessonsService(
         repo as never,
         makeModulesRepo() as never,
@@ -131,6 +186,152 @@ describe('LessonsService', () => {
       await expect(
         service.reorder('module-1', ['l1'], 'user-1', 'instructor'),
       ).rejects.toThrow(UnprocessableEntityException);
+    });
+  });
+
+  describe('aulas extras (US-21)', () => {
+    it('cria aula extra no fim do grupo de extras', async () => {
+      // Arrange
+      const repo = makeRepo({ nextPosition: vi.fn().mockResolvedValue(3) });
+      service = new LessonsService(
+        repo as never,
+        makeModulesRepo() as never,
+        makeCoursesRepo() as never,
+        makeYoutube() as never,
+      );
+
+      // Act
+      await service.create('module-1', { title: 'Bônus', isExtra: true }, 'user-1', 'instrutor');
+
+      // Assert — posição calculada dentro do grupo de extras
+      expect(repo.nextPosition).toHaveBeenCalledWith('module-1', true);
+      expect(repo.insert).toHaveBeenCalledWith(expect.objectContaining({ isExtra: true, position: 3 }));
+    });
+
+    it('marca aula normal como extra: move para o fim do grupo extra e compacta as normais', async () => {
+      // Arrange
+      const repo = makeRepo({
+        findById: vi.fn().mockResolvedValue({
+          id: 'lesson-1', moduleId: 'module-1', isExtra: false, position: 1,
+          youtubeUrl: null, youtubeVideoId: null, duration: null,
+        }),
+        nextPosition: vi.fn().mockResolvedValue(2),
+        update: vi.fn().mockImplementation((id, d) => Promise.resolve({ id, ...d })),
+      });
+      service = new LessonsService(
+        repo as never,
+        makeModulesRepo() as never,
+        makeCoursesRepo() as never,
+        makeYoutube() as never,
+      );
+
+      // Act
+      await service.update('lesson-1', { isExtra: true }, 'user-1', 'instrutor');
+
+      // Assert
+      expect(repo.nextPosition).toHaveBeenCalledWith('module-1', true);
+      expect(repo.update).toHaveBeenCalledWith('lesson-1', expect.objectContaining({ isExtra: true, position: 2 }));
+      expect(repo.compactGroup).toHaveBeenCalledWith('module-1', false);
+    });
+
+    it('desmarca extra: volta ao fim do grupo normal e compacta as extras', async () => {
+      // Arrange
+      const repo = makeRepo({
+        findById: vi.fn().mockResolvedValue({
+          id: 'lesson-9', moduleId: 'module-1', isExtra: true, position: 1,
+          youtubeUrl: null, youtubeVideoId: null, duration: null,
+        }),
+        nextPosition: vi.fn().mockResolvedValue(4),
+        update: vi.fn().mockImplementation((id, d) => Promise.resolve({ id, ...d })),
+      });
+      service = new LessonsService(
+        repo as never,
+        makeModulesRepo() as never,
+        makeCoursesRepo() as never,
+        makeYoutube() as never,
+      );
+
+      // Act
+      await service.update('lesson-9', { isExtra: false }, 'user-1', 'instrutor');
+
+      // Assert
+      expect(repo.nextPosition).toHaveBeenCalledWith('module-1', false);
+      expect(repo.update).toHaveBeenCalledWith('lesson-9', expect.objectContaining({ isExtra: false, position: 4 }));
+      expect(repo.compactGroup).toHaveBeenCalledWith('module-1', true);
+    });
+
+    it('update sem isExtra não muda grupo nem posição', async () => {
+      // Arrange
+      const repo = makeRepo({
+        findById: vi.fn().mockResolvedValue({
+          id: 'lesson-1', moduleId: 'module-1', isExtra: false, position: 2,
+          youtubeUrl: null, youtubeVideoId: null, duration: null,
+        }),
+        update: vi.fn().mockImplementation((id, d) => Promise.resolve({ id, ...d })),
+      });
+      service = new LessonsService(
+        repo as never,
+        makeModulesRepo() as never,
+        makeCoursesRepo() as never,
+        makeYoutube() as never,
+      );
+
+      // Act
+      await service.update('lesson-1', { title: 'Novo título' }, 'user-1', 'instrutor');
+
+      // Assert
+      expect(repo.compactGroup).not.toHaveBeenCalled();
+      const updateArg = (repo.update as ReturnType<typeof vi.fn>).mock.calls[0][1];
+      expect(updateArg).not.toHaveProperty('position');
+      expect(updateArg).not.toHaveProperty('isExtra');
+    });
+
+    it('update com isExtra igual ao atual não recalcula posição', async () => {
+      // Arrange
+      const repo = makeRepo({
+        findById: vi.fn().mockResolvedValue({
+          id: 'lesson-1', moduleId: 'module-1', isExtra: true, position: 1,
+          youtubeUrl: null, youtubeVideoId: null, duration: null,
+        }),
+        update: vi.fn().mockImplementation((id, d) => Promise.resolve({ id, ...d })),
+      });
+      service = new LessonsService(
+        repo as never,
+        makeModulesRepo() as never,
+        makeCoursesRepo() as never,
+        makeYoutube() as never,
+      );
+
+      // Act
+      await service.update('lesson-1', { isExtra: true, title: 'x' }, 'user-1', 'instrutor');
+
+      // Assert
+      expect(repo.nextPosition).not.toHaveBeenCalled();
+      expect(repo.compactGroup).not.toHaveBeenCalled();
+    });
+
+    it('extraUnlocksCount retorna contagem para o dono do curso', async () => {
+      // Arrange
+      const repo = makeRepo({ countExtraUnlockedStudents: vi.fn().mockResolvedValue(7) });
+      service = new LessonsService(
+        repo as never,
+        makeModulesRepo() as never,
+        makeCoursesRepo() as never,
+        makeYoutube() as never,
+      );
+
+      // Act
+      const result = await service.extraUnlocksCount('module-1', 'user-1', 'instrutor');
+
+      // Assert
+      expect(result).toEqual({ unlockedStudents: 7 });
+      expect(repo.countExtraUnlockedStudents).toHaveBeenCalledWith('module-1');
+    });
+
+    it('extraUnlocksCount lança Forbidden para instrutor que não é dono', async () => {
+      await expect(
+        service.extraUnlocksCount('module-1', 'outro-user', 'instrutor'),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 

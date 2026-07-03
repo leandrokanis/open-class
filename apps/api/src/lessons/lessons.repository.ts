@@ -10,7 +10,7 @@ export class LessonsRepository {
   findByModule(moduleId: string) {
     return this.db.query.lessons.findMany({
       where: eq(lessons.moduleId, moduleId),
-      orderBy: lessons.position,
+      orderBy: [lessons.isExtra, lessons.position],
     });
   }
 
@@ -43,11 +43,11 @@ export class LessonsRepository {
     await this.db.delete(lessons).where(eq(lessons.id, id));
   }
 
-  async nextPosition(moduleId: string): Promise<number> {
+  async nextPosition(moduleId: string, isExtra = false): Promise<number> {
     const result = await this.db
       .select({ max: sql<number>`coalesce(max(${lessons.position}), 0)` })
       .from(lessons)
-      .where(eq(lessons.moduleId, moduleId));
+      .where(and(eq(lessons.moduleId, moduleId), eq(lessons.isExtra, isExtra)));
     return (result[0]?.max ?? 0) + 1;
   }
 
@@ -55,38 +55,78 @@ export class LessonsRepository {
     await this.db.update(lessons).set({ position }).where(eq(lessons.id, id));
   }
 
-  async findAllIdsByModule(moduleId: string): Promise<string[]> {
+  async findGroupIds(moduleId: string, isExtra: boolean): Promise<string[]> {
     const rows = await this.db
       .select({ id: lessons.id })
       .from(lessons)
-      .where(eq(lessons.moduleId, moduleId))
+      .where(and(eq(lessons.moduleId, moduleId), eq(lessons.isExtra, isExtra)))
       .orderBy(lessons.position);
     return rows.map((r) => r.id);
   }
 
+  /** Renumera as posições de um grupo (normais ou extras) para 1..K preservando a ordem. */
+  async compactGroup(moduleId: string, isExtra: boolean) {
+    const ids = await this.findGroupIds(moduleId, isExtra);
+    await Promise.all(ids.map((id, i) => this.updatePosition(id, i + 1)));
+  }
+
+  /**
+   * Alunos matriculados no curso do módulo que concluíram todas as aulas
+   * normais visíveis — ou seja, que já desbloquearam as extras (US-21).
+   * Módulo sem aulas normais visíveis → todos os matriculados contam.
+   */
+  async countExtraUnlockedStudents(moduleId: string): Promise<number> {
+    const rows = await this.db.execute(sql`
+      WITH module_course AS (
+        SELECT course_id FROM modules WHERE id = ${moduleId}
+      ),
+      normals AS (
+        SELECT id FROM lessons
+        WHERE module_id = ${moduleId} AND is_extra = false AND visibility = 'visible'
+      ),
+      enrolled AS (
+        SELECT e.student_id FROM enrollments e
+        JOIN module_course mc ON e.course_id = mc.course_id
+      )
+      SELECT count(*)::int AS unlocked FROM enrolled en
+      WHERE (SELECT count(*) FROM normals) = (
+        SELECT count(*) FROM lesson_progress lp
+        JOIN normals n ON n.id = lp.lesson_id
+        WHERE lp.student_id = en.student_id AND lp.is_completed = true
+      )
+    `);
+    const first = (rows as unknown as { rows?: Array<{ unlocked: number }> }).rows?.[0]
+      ?? (rows as unknown as Array<{ unlocked: number }>)[0];
+    return Number(first?.unlocked ?? 0);
+  }
+
   async moveToModule(id: string, sourceModuleId: string, targetModuleId: string, position: number) {
     return this.db.transaction(async (tx) => {
+      // O grupo (normal/extra) acompanha a aula; compactação e inserção são por grupo
+      const moved = await tx.query.lessons.findFirst({ where: eq(lessons.id, id) });
+      const group = moved?.isExtra ?? false;
+
       // 1. Move lesson to target module with a temporary high position to avoid constraint conflicts
       await tx
         .update(lessons)
         .set({ moduleId: targetModuleId, position: 999999, updatedAt: new Date() })
         .where(eq(lessons.id, id));
 
-      // 2. Compact source module (excluding the moved lesson, now in target)
+      // 2. Compact source module group (excluding the moved lesson, now in target)
       const sourceRows = await tx
         .select({ id: lessons.id })
         .from(lessons)
-        .where(and(eq(lessons.moduleId, sourceModuleId), ne(lessons.id, id)))
+        .where(and(eq(lessons.moduleId, sourceModuleId), eq(lessons.isExtra, group), ne(lessons.id, id)))
         .orderBy(lessons.position);
       await Promise.all(sourceRows.map((r, i) =>
         tx.update(lessons).set({ position: i + 1 }).where(eq(lessons.id, r.id)),
       ));
 
-      // 3. Reorder target module: insert moved lesson at requested position
+      // 3. Reorder target module group: insert moved lesson at requested position
       const targetOthers = await tx
         .select({ id: lessons.id })
         .from(lessons)
-        .where(and(eq(lessons.moduleId, targetModuleId), ne(lessons.id, id)))
+        .where(and(eq(lessons.moduleId, targetModuleId), eq(lessons.isExtra, group), ne(lessons.id, id)))
         .orderBy(lessons.position);
 
       const newOrder = targetOthers.map((r) => r.id);

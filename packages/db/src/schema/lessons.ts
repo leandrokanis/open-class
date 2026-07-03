@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, integer, timestamp, pgEnum, jsonb, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, integer, timestamp, pgEnum, jsonb, boolean, index } from 'drizzle-orm/pg-core';
 import { modules, visibilityEnum } from './modules';
 
 export const contentTypeEnum = pgEnum('content_type_enum', ['video', 'text', 'quiz']);
@@ -17,6 +17,8 @@ export const lessons = pgTable(
     resources:      jsonb('resources').$type<Array<{ label: string; url: string }>>(),
     position:       integer('position').notNull(),
     visibility:     visibilityEnum('visibility').notNull().default('visible'),
+    // Aula extra: conteúdo bônus desbloqueado ao concluir as normais do módulo (US-20/21)
+    isExtra:        boolean('is_extra').notNull().default(false),
     createdAt:      timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt:      timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

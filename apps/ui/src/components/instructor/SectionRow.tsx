@@ -9,11 +9,32 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/Icon';
-import { deleteModule, updateModule, setModuleVisibility } from '@/lib/instructor';
+import { deleteModule, updateModule, setModuleVisibility, fetchExtraUnlocks } from '@/lib/instructor';
 import type { ModuleWithLessons } from '@/lib/instructor';
 import LessonRow from './LessonRow';
 
 const DBLCLICK_DELAY = 220;
+
+const ExtrasHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 2px 26px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+`;
+
+const ExtrasUnlockBadge = styled.span`
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--color-text-tertiary);
+  margin-left: auto;
+`;
 
 const Wrapper = styled.div<{ $dragging?: boolean }>`
   display: flex;
@@ -363,7 +384,21 @@ export default function SectionRow({
     setDeleteOpen(false);
   }
 
-  const lessonIds = (section.lessons ?? []).map((l) => l.id);
+  const normalLessons = (section.lessons ?? []).filter((l) => !l.isExtra);
+  const extraLessons = (section.lessons ?? []).filter((l) => l.isExtra);
+  const normalIds = normalLessons.map((l) => l.id);
+  const extraIds = extraLessons.map((l) => l.id);
+
+  const [unlockCount, setUnlockCount] = useState<number | null>(null);
+  useEffect(() => {
+    if (!open || extraLessons.length === 0) return;
+    let cancelled = false;
+    fetchExtraUnlocks(section.id).then((n) => {
+      if (!cancelled) setUnlockCount(n);
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, extraLessons.length, section.id]);
 
   return (
     <Wrapper ref={setNodeRef} style={sortableStyle} $dragging={isDragging}>
@@ -496,8 +531,8 @@ export default function SectionRow({
 
       {open && (
         <TreeChildren>
-          <SortableContext items={lessonIds} strategy={verticalListSortingStrategy}>
-            {(section.lessons ?? []).map((lesson) => (
+          <SortableContext items={normalIds} strategy={verticalListSortingStrategy}>
+            {normalLessons.map((lesson) => (
               <LessonRow
                 key={lesson.id}
                 lesson={lesson}
@@ -513,6 +548,37 @@ export default function SectionRow({
               />
             ))}
           </SortableContext>
+
+          {extraLessons.length > 0 && (
+            <>
+              <ExtrasHeader>
+                <Icon name="star" size={12} />
+                Aulas extras
+                {unlockCount !== null && (
+                  <ExtrasUnlockBadge title="Alunos que já desbloquearam as aulas extras deste módulo">
+                    {unlockCount} {unlockCount === 1 ? 'aluno desbloqueou' : 'alunos desbloquearam'}
+                  </ExtrasUnlockBadge>
+                )}
+              </ExtrasHeader>
+              <SortableContext items={extraIds} strategy={verticalListSortingStrategy}>
+                {extraLessons.map((lesson) => (
+                  <LessonRow
+                    key={lesson.id}
+                    lesson={lesson}
+                    selected={lesson.id === selectedLessonId}
+                    onClick={() => onSelectLesson(lesson.id)}
+                    onRenamed={onLessonRenamed}
+                    onDeleted={onLessonDeleted}
+                    onVisibilityChange={onLessonVisibilityChange}
+                    onAutoEditDone={onLessonAutoEditDone}
+                    autoEdit={lesson.id === autoEditLessonId}
+                    sectionDraft={visibility === 'hidden'}
+                    sectionId={section.id}
+                  />
+                ))}
+              </SortableContext>
+            </>
+          )}
         </TreeChildren>
       )}
     </Wrapper>

@@ -331,13 +331,17 @@ export default function CurriculumPanel({
     if (!currentSection) return;
 
     const lessons = currentSection.lessons ?? [];
-    const position = lessons.findIndex((l) => l.id === active.id);
-    const finalPosition = position >= 0 ? position + 1 : lessons.length;
+    // Reordenação e posição são por grupo: normais e extras têm sequências independentes (US-21)
+    const dragged = lessons.find((l) => l.id === active.id);
+    const draggedIsExtra = dragged?.isExtra ?? false;
+    const groupLessons = lessons.filter((l) => (l.isExtra ?? false) === draggedIsExtra);
+    const position = groupLessons.findIndex((l) => l.id === active.id);
+    const finalPosition = position >= 0 ? position + 1 : groupLessons.length;
 
     onSectionsChange(sections);
 
     if (sourceSectionId === currentSection.id) {
-      const ok = await reorderLessons(currentSection.id, lessons.map((l) => l.id));
+      const ok = await reorderLessons(currentSection.id, groupLessons.map((l) => l.id));
       if (!ok) {
         setSections(snapshotRef.current);
         onSectionsChange(snapshotRef.current);
