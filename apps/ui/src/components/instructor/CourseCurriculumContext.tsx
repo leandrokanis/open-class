@@ -111,6 +111,7 @@ export function CourseCurriculumProvider({ courseId, children }: Props) {
       const json = await res.json();
       dispatch({ type: 'SET_SECTIONS', payload: json.data.modules ?? [] });
       if (json.data.slug) editorCtx?.setSlug(json.data.slug);
+      if (json.data.title) editorCtx?.setCourseName(json.data.title);
       setLoading(false);
     }
     load();
