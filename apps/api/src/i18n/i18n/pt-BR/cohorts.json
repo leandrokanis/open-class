@@ -6,5 +6,6 @@
   "not_open": "As inscrições desta turma não estão abertas.",
   "full": "Turma esgotada: não há vagas disponíveis.",
   "already_in_course_cohort": "Você já está matriculado em uma turma deste curso.",
-  "already_on_demand": "Você já tem matrícula on demand neste curso."
+  "already_on_demand": "Você já tem matrícula on demand neste curso.",
+  "module_locked": "Este módulo ainda não foi liberado para a sua turma."
 }

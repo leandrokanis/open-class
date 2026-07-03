@@ -6,5 +6,6 @@
   "not_open": "This cohort is not open for enrollment.",
   "full": "Cohort is full: no seats available.",
   "already_in_course_cohort": "You are already enrolled in a cohort of this course.",
-  "already_on_demand": "You already have an on-demand enrollment in this course."
+  "already_on_demand": "You already have an on-demand enrollment in this course.",
+  "module_locked": "This module has not been released to your cohort yet."
 }

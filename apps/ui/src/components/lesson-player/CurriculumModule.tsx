@@ -82,6 +82,8 @@ interface CurriculumModuleProps {
   defaultOpen?: boolean;
   /** Extras do módulo desbloqueadas para o aluno (todas as normais concluídas) */
   extrasUnlocked?: boolean;
+  /** Data de liberação do módulo no cronograma da turma; null = liberado (US-24) */
+  lockedUntil?: string | null;
 }
 
 function formatDuration(seconds: number): string {
@@ -111,8 +113,15 @@ export function CurriculumModule({
   onLessonClick,
   defaultOpen = false,
   extrasUnlocked = false,
+  lockedUntil = null,
 }: CurriculumModuleProps) {
   const [open, setOpen] = useState(defaultOpen);
+
+  // Módulo com liberação futura no cronograma da turma (US-24)
+  const isModuleLocked = lockedUntil !== null && new Date(lockedUntil) > new Date();
+  const releaseDate = isModuleLocked
+    ? new Date(lockedUntil).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
+    : null;
 
   // Extras ficam fora dos totais: progresso e duração contam só as normais (US-20)
   const normalLessons = module.lessons.filter((l) => !l.isExtra);
@@ -125,11 +134,15 @@ export function CurriculumModule({
   return (
     <ModuleWrap>
       <ModuleHeader onClick={() => setOpen((p) => !p)}>
-        <ModuleNum>{module.order}</ModuleNum>
+        <ModuleNum>
+          {isModuleLocked ? <Icon name="lock" size={13} /> : module.order}
+        </ModuleNum>
         <ModuleInfo>
           <ModuleTitle>{module.title}</ModuleTitle>
           <ModuleMeta>
-            {completedCount} de {totalLessons} aulas{durationStr}
+            {isModuleLocked
+              ? `Libera em ${releaseDate}`
+              : `${completedCount} de ${totalLessons} aulas${durationStr}`}
           </ModuleMeta>
         </ModuleInfo>
         <Icon
@@ -147,6 +160,7 @@ export function CurriculumModule({
               isCompleted={completedLessonIds.includes(lesson.id)}
               isActive={lesson.id === activeLessonId}
               onClick={() => onLessonClick(lesson.id)}
+              locked={isModuleLocked}
             />
           ))}
           {extraLessons.length > 0 && (
@@ -162,7 +176,7 @@ export function CurriculumModule({
                   isCompleted={completedLessonIds.includes(lesson.id)}
                   isActive={lesson.id === activeLessonId}
                   onClick={() => onLessonClick(lesson.id)}
-                  locked={!extrasUnlocked}
+                  locked={!extrasUnlocked || isModuleLocked}
                 />
               ))}
             </>

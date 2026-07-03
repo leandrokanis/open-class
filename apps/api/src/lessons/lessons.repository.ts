@@ -70,6 +70,32 @@ export class LessonsRepository {
     await Promise.all(ids.map((id, i) => this.updatePosition(id, i + 1)));
   }
 
+  /**
+   * Lock de cronograma de turma para um módulo (US-24).
+   * null → aluno não está em turma do curso deste módulo.
+   * availableFrom null → módulo sem data no cronograma (liberado desde o início).
+   * cohortClosed → encerramento manual da turma (libera o conteúdo regular).
+   */
+  async findCohortModuleLock(studentId: string, moduleId: string) {
+    const rows = await this.db.execute(sql`
+      SELECT cms.available_from AS "availableFrom",
+             (c.closed_at IS NOT NULL) AS "cohortClosed"
+      FROM modules m
+      JOIN cohorts c ON c.course_id = m.course_id
+      JOIN cohort_enrollments ce ON ce.cohort_id = c.id AND ce.student_id = ${studentId}
+      LEFT JOIN cohort_module_schedules cms ON cms.cohort_id = c.id AND cms.module_id = m.id
+      WHERE m.id = ${moduleId}
+      LIMIT 1
+    `);
+    const first = (rows as unknown as { rows?: Array<{ availableFrom: Date | string | null; cohortClosed: boolean }> }).rows?.[0]
+      ?? (rows as unknown as Array<{ availableFrom: Date | string | null; cohortClosed: boolean }>)[0];
+    if (!first) return null;
+    return {
+      availableFrom: first.availableFrom ? new Date(first.availableFrom) : null,
+      cohortClosed: Boolean(first.cohortClosed),
+    };
+  }
+
   /** O aluno concluiu todas as normais visíveis do módulo? (extras desbloqueadas — US-20) */
   async isExtraUnlockedFor(studentId: string, moduleId: string): Promise<boolean> {
     const rows = await this.db.execute(sql`

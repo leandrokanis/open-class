@@ -34,6 +34,7 @@ const makeRepo = (overrides: Record<string, unknown> = {}) => ({
   getExtrasStatus: vi.fn().mockResolvedValue([]),
   upsertExtrasCelebration: vi.fn().mockResolvedValue(undefined),
   findModuleCourseId: vi.fn().mockResolvedValue('course-1'),
+  findCohortModuleLock: vi.fn().mockResolvedValue(null),
   ...overrides,
 });
 
@@ -238,6 +239,29 @@ describe('ProgressService', () => {
     it('aula normal não consulta desbloqueio', async () => {
       await service.markLesson('student-1', 'lesson-1', true);
       expect(repo.hasCompletedAllNormals).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('markLesson com cronograma de turma (US-24)', () => {
+    it('nega marcação em módulo ainda não liberado para aluno de turma', async () => {
+      repo.findCohortModuleLock.mockResolvedValue({
+        availableFrom: new Date(Date.now() + 86400000),
+        cohortClosed: false,
+      });
+
+      await expect(service.markLesson('student-1', 'lesson-1', true))
+        .rejects.toThrow(ForbiddenException);
+      expect(repo.upsertProgress).not.toHaveBeenCalled();
+    });
+
+    it('permite marcação em módulo liberado', async () => {
+      repo.findCohortModuleLock.mockResolvedValue({
+        availableFrom: new Date(Date.now() - 86400000),
+        cohortClosed: false,
+      });
+
+      const result = await service.markLesson('student-1', 'lesson-1', true);
+      expect(result.lessonId).toBe('lesson-1');
     });
   });
 

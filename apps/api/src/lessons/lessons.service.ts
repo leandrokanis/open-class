@@ -61,6 +61,13 @@ export class LessonsService {
       const unlocked = userId ? await this.repo.isExtraUnlockedFor(userId, lesson.moduleId) : false;
       if (!unlocked) throw new ForbiddenException(t('progress.extra_locked'));
     }
+    // Cronograma de turma: módulo ainda não liberado bloqueia a aula (US-24)
+    if (!isStaff && userId) {
+      const lock = await this.repo.findCohortModuleLock(userId, lesson.moduleId);
+      if (lock && !lock.cohortClosed && lock.availableFrom && lock.availableFrom > new Date()) {
+        throw new ForbiddenException(t('cohorts.module_locked'));
+      }
+    }
     return lesson;
   }
 

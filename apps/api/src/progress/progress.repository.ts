@@ -234,4 +234,25 @@ export class ProgressRepository {
 
     return rows;
   }
+
+  /** Lock de cronograma de turma para um módulo (US-24) — vide lessons.repository. */
+  async findCohortModuleLock(studentId: string, moduleId: string) {
+    const rows = await this.db.execute(sql`
+      SELECT cms.available_from AS "availableFrom",
+             (c.closed_at IS NOT NULL) AS "cohortClosed"
+      FROM modules m
+      JOIN cohorts c ON c.course_id = m.course_id
+      JOIN cohort_enrollments ce ON ce.cohort_id = c.id AND ce.student_id = ${studentId}
+      LEFT JOIN cohort_module_schedules cms ON cms.cohort_id = c.id AND cms.module_id = m.id
+      WHERE m.id = ${moduleId}
+      LIMIT 1
+    `);
+    const first = (rows as unknown as { rows?: Array<{ availableFrom: Date | string | null; cohortClosed: boolean }> }).rows?.[0]
+      ?? (rows as unknown as Array<{ availableFrom: Date | string | null; cohortClosed: boolean }>)[0];
+    if (!first) return null;
+    return {
+      availableFrom: first.availableFrom ? new Date(first.availableFrom) : null,
+      cohortClosed: Boolean(first.cohortClosed),
+    };
+  }
 }
