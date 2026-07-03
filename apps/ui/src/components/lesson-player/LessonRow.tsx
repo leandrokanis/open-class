@@ -88,11 +88,15 @@ interface LessonRowProps {
   isActive: boolean;
   onClick: () => void;
   locked?: boolean;
+  /** Clique numa extra bloqueada: abre o modal de incentivo em vez de navegar */
+  onLockedClick?: () => void;
 }
 
-export function LessonRow({ lesson, isCompleted, isActive, onClick, locked = false }: LessonRowProps) {
+export function LessonRow({ lesson, isCompleted, isActive, onClick, locked = false, onLockedClick }: LessonRowProps) {
   // Extra bloqueada: esconde título e duração para preservar a surpresa (curiosidade)
   const masked = locked && (lesson.isExtra ?? false);
+  // Extra bloqueada é clicável (abre modal de incentivo); demais bloqueios não
+  const clickable = !locked || (masked && !!onLockedClick);
 
   const iconName = locked
     ? "lock"
@@ -108,13 +112,18 @@ export function LessonRow({ lesson, isCompleted, isActive, onClick, locked = fal
       ? "var(--color-primary)"
       : "var(--color-text-tertiary)";
 
+  function handleClick() {
+    if (masked && onLockedClick) return onLockedClick();
+    if (!locked) return onClick();
+  }
+
   return (
     <Row
       $isActive={isActive}
-      onClick={locked ? undefined : onClick}
-      aria-disabled={locked}
+      onClick={clickable ? handleClick : undefined}
+      aria-disabled={locked && !clickable}
       title={masked ? "Conteúdo bônus — conclua as aulas do módulo para desbloquear" : undefined}
-      style={locked ? { cursor: "not-allowed", opacity: 0.55 } : undefined}
+      style={locked ? { cursor: clickable ? "pointer" : "not-allowed", opacity: 0.55 } : undefined}
     >
       <IconSlot>
         <Icon name={iconName} size={20} fill={!locked && (isCompleted || isActive)} style={{ color: iconColor }} />
