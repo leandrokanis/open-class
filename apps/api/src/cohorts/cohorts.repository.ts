@@ -144,7 +144,7 @@ export class CohortsRepository {
           AND l.visibility = 'visible' AND l.is_extra = false AND l.cohort_id IS NULL
       ),
       total AS (SELECT count(*)::int AS n FROM regulars)
-      SELECT u.id, u.name,
+      SELECT u.id, u.name, u.avatar_url AS "avatarUrl",
         (SELECT count(*)::int FROM lesson_progress lp
           JOIN regulars r ON r.id = lp.lesson_id
           WHERE lp.student_id = u.id AND lp.is_completed = true) AS completed,
@@ -170,6 +170,7 @@ export class CohortsRepository {
     return (list ?? []).map((r) => ({
       id: String(r.id),
       name: String(r.name),
+      avatarUrl: (r.avatarUrl as string | null) ?? null,
       completed: Number(r.completed ?? 0),
       total: Number(r.total ?? 0),
       lastLessonTitle: (r.lastLessonTitle as string | null) ?? null,

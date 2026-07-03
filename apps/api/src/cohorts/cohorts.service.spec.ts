@@ -271,16 +271,36 @@ describe('CohortsService', () => {
       const result = await service.getProgress('cohort-1', 'user-1', 'instrutor');
 
       // Assert
-      expect(result.summary).toEqual({ enrolledCount: 3, seatsLeft: 27, avgCompletion: 33.3 });
+      // Ana ativa (2 dias); Bruno inativo (8 dias); Caio nunca → 1 ativo, 0 concluintes (ninguém 100%)
+      expect(result.summary).toEqual({
+        enrolledCount: 3, seatsLeft: 27, avgCompletion: 33.3, activeCount: 1, completedCount: 0,
+      });
       expect(result.students[0]).toMatchObject({ id: 'u1', progressPct: 80, inactive: false });
       expect(result.students[1]).toMatchObject({ id: 'u2', progressPct: 20, inactive: true });
       expect(result.students[2]).toMatchObject({ id: 'u3', progressPct: 0, inactive: true });
       expect(result.modules).toHaveLength(2);
     });
 
+    it('cada aluno traz avatarUrl vindo do repositório', async () => {
+      // Arrange
+      repo.findCohortStudentsProgress.mockResolvedValue([
+        { id: 'u1', name: 'Ana', completed: 5, total: 10, lastLessonTitle: 'Aula 5', lastAccessAt: new Date(), avatarUrl: 'https://cdn/ana.jpg' },
+        { id: 'u2', name: 'Bruno', completed: 1, total: 10, lastLessonTitle: null, lastAccessAt: null, avatarUrl: null },
+      ]);
+
+      // Act
+      const result = await service.getProgress('cohort-1', 'user-1', 'instrutor');
+
+      // Assert
+      expect(result.students[0]).toMatchObject({ id: 'u1', avatarUrl: 'https://cdn/ana.jpg' });
+      expect(result.students[1]).toMatchObject({ id: 'u2', avatarUrl: null });
+    });
+
     it('turma sem alunos → summary zerado sem divisão por zero', async () => {
       const result = await service.getProgress('cohort-1', 'user-1', 'instrutor');
-      expect(result.summary).toEqual({ enrolledCount: 0, seatsLeft: 30, avgCompletion: 0 });
+      expect(result.summary).toEqual({
+        enrolledCount: 0, seatsLeft: 30, avgCompletion: 0, activeCount: 0, completedCount: 0,
+      });
     });
 
     it('lança Forbidden para não-dono', async () => {
