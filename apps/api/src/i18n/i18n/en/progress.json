@@ -1,4 +1,5 @@
 {
   "lesson_not_found": "Lesson not found.",
-  "course_not_found": "Course not found."
+  "course_not_found": "Course not found.",
+  "extra_locked": "Extra lesson locked. Complete all regular lessons of the module to unlock it."
 }

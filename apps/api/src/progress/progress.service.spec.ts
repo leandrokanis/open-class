@@ -10,6 +10,7 @@ const makeRepo = (overrides: Record<string, unknown> = {}) => ({
     id:       'lesson-1',
     title:    'Aula 1',
     moduleId: 'module-1',
+    isExtra:  false,
     module:   { id: 'module-1', courseId: 'course-1' },
   }),
   isEnrolled: vi.fn().mockResolvedValue(true),
@@ -29,6 +30,10 @@ const makeRepo = (overrides: Record<string, unknown> = {}) => ({
     updatedAt: now,
   }),
   findCourseById: vi.fn().mockResolvedValue({ id: 'course-1', title: 'Curso 1' }),
+  hasCompletedAllNormals: vi.fn().mockResolvedValue(false),
+  getExtrasStatus: vi.fn().mockResolvedValue([]),
+  upsertExtrasCelebration: vi.fn().mockResolvedValue(undefined),
+  findModuleCourseId: vi.fn().mockResolvedValue('course-1'),
   ...overrides,
 });
 
@@ -191,6 +196,108 @@ describe('ProgressService', () => {
       repo.getRecentActivity.mockResolvedValue([]);
       await service.getRecentActivity('student-1', 3);
       expect(repo.getRecentActivity).toHaveBeenCalledWith('student-1', 3);
+    });
+  });
+
+  // ── aulas extras (US-20) ───────────────────────────────────────────────
+
+  describe('markLesson em aula extra', () => {
+    it('lança ForbiddenException para extra ainda bloqueada', async () => {
+      // Arrange — aula extra e normais do módulo incompletas
+      repo.findLessonWithCourse.mockResolvedValue({
+        id: 'lesson-x', title: 'Bônus', moduleId: 'module-1', isExtra: true,
+        module: { id: 'module-1', courseId: 'course-1' },
+      });
+      repo.hasCompletedAllNormals.mockResolvedValue(false);
+
+      // Act + Assert
+      await expect(service.markLesson('student-1', 'lesson-x', true))
+        .rejects.toThrow(ForbiddenException);
+      expect(repo.upsertProgress).not.toHaveBeenCalled();
+    });
+
+    it('registra progresso em extra desbloqueada (histórico normal)', async () => {
+      // Arrange
+      repo.findLessonWithCourse.mockResolvedValue({
+        id: 'lesson-x', title: 'Bônus', moduleId: 'module-1', isExtra: true,
+        module: { id: 'module-1', courseId: 'course-1' },
+      });
+      repo.hasCompletedAllNormals.mockResolvedValue(true);
+      repo.upsertProgress.mockResolvedValue({
+        lessonId: 'lesson-x', isCompleted: true, completedAt: now, updatedAt: now,
+      });
+
+      // Act
+      const result = await service.markLesson('student-1', 'lesson-x', true);
+
+      // Assert
+      expect(result.lessonId).toBe('lesson-x');
+      expect(repo.upsertProgress).toHaveBeenCalledWith('student-1', 'lesson-x', true);
+    });
+
+    it('aula normal não consulta desbloqueio', async () => {
+      await service.markLesson('student-1', 'lesson-1', true);
+      expect(repo.hasCompletedAllNormals).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getExtrasStatus', () => {
+    it('mapeia módulos para hasExtras/unlocked/celebrated', async () => {
+      // Arrange
+      repo.getExtrasStatus.mockResolvedValue([
+        { moduleId: 'module-1', extrasCount: 2, normalsTotal: 3, normalsCompleted: 3, celebrated: false },
+        { moduleId: 'module-2', extrasCount: 0, normalsTotal: 2, normalsCompleted: 1, celebrated: false },
+        { moduleId: 'module-3', extrasCount: 1, normalsTotal: 2, normalsCompleted: 1, celebrated: false },
+      ]);
+
+      // Act
+      const result = await service.getExtrasStatus('student-1', 'course-1');
+
+      // Assert
+      expect(result).toEqual([
+        { moduleId: 'module-1', hasExtras: true, unlocked: true, celebrated: false },
+        { moduleId: 'module-2', hasExtras: false, unlocked: false, celebrated: false },
+        { moduleId: 'module-3', hasExtras: true, unlocked: false, celebrated: false },
+      ]);
+    });
+
+    it('módulo sem aulas normais visíveis conta como desbloqueado (verdade vácua)', async () => {
+      repo.getExtrasStatus.mockResolvedValue([
+        { moduleId: 'module-1', extrasCount: 1, normalsTotal: 0, normalsCompleted: 0, celebrated: true },
+      ]);
+
+      const result = await service.getExtrasStatus('student-1', 'course-1');
+
+      expect(result[0]).toEqual({ moduleId: 'module-1', hasExtras: true, unlocked: true, celebrated: true });
+    });
+
+    it('lança Forbidden para aluno não matriculado', async () => {
+      repo.isEnrolled.mockResolvedValue(false);
+      await expect(service.getExtrasStatus('student-1', 'course-1'))
+        .rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('celebrateExtras', () => {
+    it('registra celebração para aluno matriculado', async () => {
+      // Act
+      const result = await service.celebrateExtras('student-1', 'module-1');
+
+      // Assert
+      expect(result).toEqual({ celebrated: true });
+      expect(repo.upsertExtrasCelebration).toHaveBeenCalledWith('student-1', 'module-1');
+    });
+
+    it('lança NotFound para módulo inexistente', async () => {
+      repo.findModuleCourseId.mockResolvedValue(null);
+      await expect(service.celebrateExtras('student-1', 'module-x'))
+        .rejects.toThrow(NotFoundException);
+    });
+
+    it('lança Forbidden para não matriculado', async () => {
+      repo.isEnrolled.mockResolvedValue(false);
+      await expect(service.celebrateExtras('student-1', 'module-1'))
+        .rejects.toThrow(ForbiddenException);
     });
   });
 });

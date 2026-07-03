@@ -59,12 +59,13 @@ export class LessonsController {
   @ApiParam({ name: 'id', description: 'ID da aula', type: String })
   @ApiOperation({ summary: 'Detalhes de uma aula (inclui recursos)' })
   @ApiResponse({ status: 200, description: 'Detalhes da aula.', type: LessonWithResourcesResponseDto })
+  @ApiResponse({ status: 403, description: 'Aula extra ainda bloqueada para o aluno.' })
   @ApiResponse({ status: 404, description: 'Aula não encontrada.' })
   async findById(
     @Param('id') id: string,
-    @Req() req: Request & { user?: { role: string } },
+    @Req() req: Request & { user?: { id: string; role: string } },
   ) {
-    const data = await this.service.findById(id, req.user?.role);
+    const data = await this.service.findById(id, req.user?.role, req.user?.id);
     return { data };
   }
 

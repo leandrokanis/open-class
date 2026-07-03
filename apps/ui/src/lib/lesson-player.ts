@@ -21,7 +21,40 @@ export interface LessonDetail {
   durationSeconds: number | null;
   position: number;
   isVisible: boolean;
+  isExtra?: boolean;
   resources: LessonResource[];
+}
+
+export interface ModuleExtrasStatus {
+  moduleId: string;
+  hasExtras: boolean;
+  unlocked: boolean;
+  celebrated: boolean;
+}
+
+export async function fetchExtrasStatus(courseId: string): Promise<ModuleExtrasStatus[]> {
+  try {
+    const res = await fetch(`${CLIENT_API_URL}/api/progress/courses/${courseId}/extras`, {
+      credentials: "include",
+    });
+    if (!res.ok) return [];
+    const json = (await res.json()) as { data: ModuleExtrasStatus[] };
+    return json.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function postExtrasCelebration(moduleId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${CLIENT_API_URL}/api/progress/modules/${moduleId}/extras-celebration`, {
+      method: "POST",
+      credentials: "include",
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 export interface LessonProgress {

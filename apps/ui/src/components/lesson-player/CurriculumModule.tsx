@@ -64,6 +64,7 @@ interface Lesson {
   title: string;
   durationSeconds: number | null;
   position: number;
+  isExtra?: boolean;
 }
 
 interface Module {
@@ -79,6 +80,8 @@ interface CurriculumModuleProps {
   completedLessonIds: string[];
   onLessonClick: (lessonId: string) => void;
   defaultOpen?: boolean;
+  /** Extras do módulo desbloqueadas para o aluno (todas as normais concluídas) */
+  extrasUnlocked?: boolean;
 }
 
 function formatDuration(seconds: number): string {
@@ -89,18 +92,34 @@ function formatDuration(seconds: number): string {
   return rem > 0 ? `${h}h ${rem}min` : `${h}h`;
 }
 
+const ExtrasDivider = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+`;
+
 export function CurriculumModule({
   module,
   activeLessonId,
   completedLessonIds,
   onLessonClick,
   defaultOpen = false,
+  extrasUnlocked = false,
 }: CurriculumModuleProps) {
   const [open, setOpen] = useState(defaultOpen);
 
-  const totalLessons = module.lessons.length;
-  const completedCount = module.lessons.filter((l) => completedLessonIds.includes(l.id)).length;
-  const totalSeconds = module.lessons.reduce((acc, l) => acc + (l.durationSeconds ?? 0), 0);
+  // Extras ficam fora dos totais: progresso e duração contam só as normais (US-20)
+  const normalLessons = module.lessons.filter((l) => !l.isExtra);
+  const extraLessons = module.lessons.filter((l) => l.isExtra);
+  const totalLessons = normalLessons.length;
+  const completedCount = normalLessons.filter((l) => completedLessonIds.includes(l.id)).length;
+  const totalSeconds = normalLessons.reduce((acc, l) => acc + (l.durationSeconds ?? 0), 0);
   const durationStr = totalSeconds > 0 ? ` · ${formatDuration(totalSeconds)}` : "";
 
   return (
@@ -121,7 +140,7 @@ export function CurriculumModule({
       </ModuleHeader>
       {open && (
         <LessonList>
-          {module.lessons.map((lesson) => (
+          {normalLessons.map((lesson) => (
             <LessonRow
               key={lesson.id}
               lesson={lesson}
@@ -130,6 +149,24 @@ export function CurriculumModule({
               onClick={() => onLessonClick(lesson.id)}
             />
           ))}
+          {extraLessons.length > 0 && (
+            <>
+              <ExtrasDivider>
+                <Icon name={extrasUnlocked ? "lock_open" : "lock"} size={12} />
+                Aulas extras
+              </ExtrasDivider>
+              {extraLessons.map((lesson) => (
+                <LessonRow
+                  key={lesson.id}
+                  lesson={lesson}
+                  isCompleted={completedLessonIds.includes(lesson.id)}
+                  isActive={lesson.id === activeLessonId}
+                  onClick={() => onLessonClick(lesson.id)}
+                  locked={!extrasUnlocked}
+                />
+              ))}
+            </>
+          )}
         </LessonList>
       )}
     </ModuleWrap>

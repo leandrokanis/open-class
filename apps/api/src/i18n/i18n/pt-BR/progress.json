@@ -1,4 +1,5 @@
 {
   "lesson_not_found": "Aula não encontrada.",
-  "course_not_found": "Curso não encontrado."
+  "course_not_found": "Curso não encontrado.",
+  "extra_locked": "Aula extra bloqueada. Conclua todas as aulas normais do módulo para desbloquear."
 }

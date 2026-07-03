@@ -161,7 +161,9 @@ export function CourseContent({ modules }: CourseContentProps) {
       <ModuleList>
         {modules.map((mod) => {
           const isOpen = openModules.has(mod.id);
-          const duration = formatModuleDuration(mod.lessons);
+          // Extras não contam para a duração nem para o total de aulas do módulo (US-20)
+          const normalLessons = mod.lessons.filter((l) => !l.isExtra);
+          const duration = formatModuleDuration(normalLessons);
 
           return (
             <ModuleCard key={mod.id}>
@@ -169,7 +171,10 @@ export function CourseContent({ modules }: CourseContentProps) {
                 <ModuleInfo>
                   <ModuleTitle>{mod.title}</ModuleTitle>
                   <ModuleMeta>
-                    {mod.lessons.length} aulas{duration ? ` · ${duration}` : ""}
+                    {normalLessons.length} aulas{duration ? ` · ${duration}` : ""}
+                    {mod.lessons.length > normalLessons.length
+                      ? ` · +${mod.lessons.length - normalLessons.length} extra${mod.lessons.length - normalLessons.length > 1 ? "s" : ""}`
+                      : ""}
                   </ModuleMeta>
                 </ModuleInfo>
                 <ChevronIcon $open={isOpen} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

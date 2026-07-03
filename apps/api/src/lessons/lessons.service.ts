@@ -49,11 +49,17 @@ export class LessonsService {
     return all.filter((l) => l.visibility === 'visible');
   }
 
-  async findById(id: string, userRole?: string) {
+  async findById(id: string, userRole?: string, userId?: string) {
     const lesson = await this.repo.findByIdWithResources(id);
     if (!lesson) throw new NotFoundException(t('lessons.not_found'));
-    if (lesson.visibility !== 'visible' && userRole !== 'instrutor' && userRole !== 'admin') {
+    const isStaff = userRole === 'instrutor' || userRole === 'admin';
+    if (lesson.visibility !== 'visible' && !isStaff) {
       throw new NotFoundException(t('lessons.not_found'));
+    }
+    // Extra bloqueada para quem ainda não concluiu as normais do módulo (US-20)
+    if (lesson.isExtra && !isStaff) {
+      const unlocked = userId ? await this.repo.isExtraUnlockedFor(userId, lesson.moduleId) : false;
+      if (!unlocked) throw new ForbiddenException(t('progress.extra_locked'));
     }
     return lesson;
   }

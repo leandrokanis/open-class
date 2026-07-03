@@ -28,6 +28,7 @@ interface Lesson {
   title: string;
   durationSeconds: number | null;
   position: number;
+  isExtra?: boolean;
 }
 
 interface Module {
@@ -46,6 +47,8 @@ interface CurriculumPanelProps {
   completedCount: number;
   onLessonClick: (lessonId: string) => void;
   showHeader?: boolean;
+  /** moduleId → extras desbloqueadas para o aluno */
+  extrasUnlockedByModule?: Record<string, boolean>;
 }
 
 export function CurriculumPanel({
@@ -57,6 +60,7 @@ export function CurriculumPanel({
   completedCount,
   onLessonClick,
   showHeader = true,
+  extrasUnlockedByModule = {},
 }: CurriculumPanelProps) {
   const activeModuleId = modules.find((m) => m.lessons.some((l) => l.id === activeLessonId))?.id;
 
@@ -78,6 +82,7 @@ export function CurriculumPanel({
           completedLessonIds={completedLessonIds}
           onLessonClick={onLessonClick}
           defaultOpen={module.id === activeModuleId}
+          extrasUnlocked={extrasUnlockedByModule[module.id] ?? false}
         />
       ))}
     </Panel>

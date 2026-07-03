@@ -16,6 +16,7 @@ const makeRepo = (overrides = {}) => ({
   findGroupIds: vi.fn().mockResolvedValue([]),
   compactGroup: vi.fn().mockResolvedValue(undefined),
   countExtraUnlockedStudents: vi.fn().mockResolvedValue(0),
+  isExtraUnlockedFor: vi.fn().mockResolvedValue(false),
   moveToModule: vi.fn().mockResolvedValue({ id: 'lesson-1', moduleId: 'module-2', position: 1 }),
   ...overrides,
 });
@@ -332,6 +333,56 @@ describe('LessonsService', () => {
       await expect(
         service.extraUnlocksCount('module-1', 'outro-user', 'instrutor'),
       ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('findById em aula extra (US-20)', () => {
+    const extraLesson = {
+      id: 'lesson-x', moduleId: 'module-1', visibility: 'visible', isExtra: true, resources: [],
+    };
+
+    it('nega extra bloqueada para aluno', async () => {
+      const repo = makeRepo({
+        findByIdWithResources: vi.fn().mockResolvedValue(extraLesson),
+        isExtraUnlockedFor: vi.fn().mockResolvedValue(false),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      await expect(service.findById('lesson-x', 'aluno', 'student-1'))
+        .rejects.toThrow(ForbiddenException);
+      expect(repo.isExtraUnlockedFor).toHaveBeenCalledWith('student-1', 'module-1');
+    });
+
+    it('retorna extra desbloqueada para aluno', async () => {
+      const repo = makeRepo({
+        findByIdWithResources: vi.fn().mockResolvedValue(extraLesson),
+        isExtraUnlockedFor: vi.fn().mockResolvedValue(true),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      const result = await service.findById('lesson-x', 'aluno', 'student-1');
+      expect(result.id).toBe('lesson-x');
+    });
+
+    it('nega extra para usuário não autenticado', async () => {
+      const repo = makeRepo({
+        findByIdWithResources: vi.fn().mockResolvedValue(extraLesson),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      await expect(service.findById('lesson-x', undefined, undefined))
+        .rejects.toThrow(ForbiddenException);
+    });
+
+    it('instrutor acessa extra sem verificação de desbloqueio', async () => {
+      const repo = makeRepo({
+        findByIdWithResources: vi.fn().mockResolvedValue(extraLesson),
+      });
+      service = new LessonsService(repo as never, makeModulesRepo() as never, makeCoursesRepo() as never, makeYoutube() as never);
+
+      const result = await service.findById('lesson-x', 'instrutor', 'user-1');
+      expect(result.id).toBe('lesson-x');
+      expect(repo.isExtraUnlockedFor).not.toHaveBeenCalled();
     });
   });
 

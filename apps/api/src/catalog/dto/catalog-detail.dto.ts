@@ -7,6 +7,7 @@ export class CatalogLessonDto {
   @ApiProperty({ enum: ['video', 'text', 'quiz'] }) contentType!: string;
   @ApiPropertyOptional({ nullable: true }) duration?: number | null;
   @ApiProperty() order!: number;
+  @ApiProperty({ example: false, description: 'Aula extra (bônus) — bloqueada até concluir as normais do módulo' }) isExtra!: boolean;
 }
 
 export class CatalogModuleDto {

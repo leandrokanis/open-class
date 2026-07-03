@@ -79,7 +79,12 @@ export class CatalogRepository {
       })
       .from(courses)
       .innerJoin(modules, eq(modules.courseId, courses.id))
-      .innerJoin(lessons, and(eq(lessons.moduleId, modules.id), eq(lessons.visibility, 'visible')))
+      .innerJoin(lessons, and(
+        eq(lessons.moduleId, modules.id),
+        eq(lessons.visibility, 'visible'),
+        // Extras ficam fora da contagem e do tempo total estimado (US-20)
+        eq(lessons.isExtra, false),
+      ))
       .where(and(eq(modules.visibility, 'visible'), isNull(courses.deletedAt)))
       .groupBy(courses.id)
       .as('lesson_stats');

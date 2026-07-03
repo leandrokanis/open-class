@@ -70,6 +70,24 @@ export class LessonsRepository {
     await Promise.all(ids.map((id, i) => this.updatePosition(id, i + 1)));
   }
 
+  /** O aluno concluiu todas as normais visíveis do módulo? (extras desbloqueadas — US-20) */
+  async isExtraUnlockedFor(studentId: string, moduleId: string): Promise<boolean> {
+    const rows = await this.db.execute(sql`
+      SELECT
+        count(*) FILTER (WHERE l.is_extra = false AND l.visibility = 'visible') AS total,
+        count(*) FILTER (
+          WHERE l.is_extra = false AND l.visibility = 'visible' AND lp.is_completed = true
+        ) AS completed
+      FROM lessons l
+      LEFT JOIN lesson_progress lp
+        ON lp.lesson_id = l.id AND lp.student_id = ${studentId}
+      WHERE l.module_id = ${moduleId}
+    `);
+    const first = (rows as unknown as { rows?: Array<{ total: number; completed: number }> }).rows?.[0]
+      ?? (rows as unknown as Array<{ total: number; completed: number }>)[0];
+    return Number(first?.total ?? 0) === Number(first?.completed ?? 0);
+  }
+
   /**
    * Alunos matriculados no curso do módulo que concluíram todas as aulas
    * normais visíveis — ou seja, que já desbloquearam as extras (US-21).
