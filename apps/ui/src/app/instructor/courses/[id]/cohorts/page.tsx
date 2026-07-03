@@ -215,13 +215,50 @@ function formatPeriod(start: string, end: string): string {
   return `${fmt(start)} — ${fmt(end)}`;
 }
 
+type DurationUnit = 'days' | 'weeks' | 'months';
+
+const UNIT_LABEL: Record<DurationUnit, string> = {
+  days: 'dias',
+  weeks: 'semanas',
+  months: 'meses',
+};
+
+/** Fim das inscrições = início + duração (unidade de calendário para meses). */
+function addDuration(startLocal: string, value: number, unit: DurationUnit): Date {
+  const d = new Date(startLocal);
+  if (unit === 'days') d.setDate(d.getDate() + value);
+  else if (unit === 'weeks') d.setDate(d.getDate() + value * 7);
+  else d.setMonth(d.getMonth() + value);
+  return d;
+}
+
+/** Deriva duração a partir de um período salvo, escolhendo a unidade mais limpa. */
+function deriveDuration(startIso: string, endIso: string): { value: number; unit: DurationUnit } {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+  for (let n = 1; n <= 36; n++) {
+    const probe = new Date(start);
+    probe.setMonth(probe.getMonth() + n);
+    if (probe.getTime() === end.getTime()) return { value: n, unit: 'months' };
+  }
+  const days = Math.round((end.getTime() - start.getTime()) / 86_400_000);
+  if (days > 0 && days % 7 === 0) return { value: days / 7, unit: 'weeks' };
+  return { value: Math.max(1, days), unit: 'days' };
+}
+
 const STATUS_LABEL: Record<CohortData['status'], string> = {
   agendada: 'Agendada',
   aberta: 'Inscrições abertas',
   encerrada: 'Encerrada',
 };
 
-const emptyForm = { name: '', enrollmentStart: '', enrollmentEnd: '', seats: 30 };
+const emptyForm = {
+  name: '',
+  enrollmentStart: '',
+  durationValue: 2,
+  durationUnit: 'weeks' as DurationUnit,
+  seats: 30,
+};
 
 export default function CohortsPage() {
   const params = useParams<{ id: string }>();
@@ -280,25 +317,27 @@ export default function CohortsPage() {
 
   function openEdit(cohort: CohortData) {
     setEditing(cohort);
+    const dur = deriveDuration(cohort.enrollmentStart, cohort.enrollmentEnd);
     setForm({
       name: cohort.name,
       enrollmentStart: toLocalInput(cohort.enrollmentStart),
-      enrollmentEnd: toLocalInput(cohort.enrollmentEnd),
+      durationValue: dur.value,
+      durationUnit: dur.unit,
       seats: cohort.seats,
     });
     setFormOpen(true);
   }
 
   async function handleSubmit() {
-    if (!form.name.trim() || !form.enrollmentStart || !form.enrollmentEnd || form.seats < 1) {
-      toast.error('Preencha nome, período de inscrições e vagas.');
+    if (!form.name.trim() || !form.enrollmentStart || form.durationValue < 1 || form.seats < 1) {
+      toast.error('Preencha nome, início das inscrições, duração e vagas.');
       return;
     }
     setSaving(true);
     const payload = {
       name: form.name.trim(),
       enrollmentStart: fromLocalInput(form.enrollmentStart),
-      enrollmentEnd: fromLocalInput(form.enrollmentEnd),
+      enrollmentEnd: addDuration(form.enrollmentStart, Number(form.durationValue), form.durationUnit).toISOString(),
       seats: Number(form.seats),
     };
     const result = editing
@@ -640,15 +679,42 @@ export default function CohortsPage() {
               />
             </Field>
             <Field>
-              <Label htmlFor="cohort-end">Fim das inscrições</Label>
-              <Input
-                id="cohort-end"
-                type="datetime-local"
-                value={form.enrollmentEnd}
-                onChange={(e) => setForm((p) => ({ ...p, enrollmentEnd: e.target.value }))}
-              />
+              <Label htmlFor="cohort-duration">Ficam abertas por</Label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Input
+                  id="cohort-duration"
+                  type="number"
+                  min={1}
+                  value={form.durationValue}
+                  onChange={(e) => setForm((p) => ({ ...p, durationValue: Number(e.target.value) }))}
+                  style={{ maxWidth: 90 }}
+                />
+                <Select
+                  value={form.durationUnit}
+                  onValueChange={(v) => setForm((p) => ({ ...p, durationUnit: v as DurationUnit }))}
+                >
+                  <SelectTrigger aria-label="Unidade da duração">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="days">{UNIT_LABEL.days}</SelectItem>
+                    <SelectItem value="weeks">{UNIT_LABEL.weeks}</SelectItem>
+                    <SelectItem value="months">{UNIT_LABEL.months}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </Field>
           </TwoCols>
+          {form.enrollmentStart && form.durationValue >= 1 && (
+            <CardDesc>
+              Inscrições abertas de{' '}
+              {new Date(form.enrollmentStart).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+              {' '}até{' '}
+              {addDuration(form.enrollmentStart, Number(form.durationValue), form.durationUnit)
+                .toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+              .
+            </CardDesc>
+          )}
           <Field>
             <Label htmlFor="cohort-seats">Vagas</Label>
             <Input
