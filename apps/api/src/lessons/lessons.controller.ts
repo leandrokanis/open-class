@@ -15,6 +15,7 @@ import { MoveLessonDto } from './dto/move-lesson.dto';
 import {
   LessonResponseDto, LessonListResponseDto, LessonWithResourcesResponseDto, ExtraUnlocksResponseDto,
 } from './dto/lesson-response.dto';
+import { SetLessonCohortsDto, LessonCohortsResponseDto } from './dto/set-lesson-cohorts.dto';
 import { ReorderResponseDto } from '../modules/dto/module-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
@@ -140,6 +141,46 @@ export class LessonsController {
     @Req() req: Request & { user: { id: string; role: string } },
   ) {
     await this.service.delete(id, req.user.id, req.user.role);
+  }
+
+  @Get('lessons/:id/cohorts')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Instrutor, Role.Admin)
+  @ApiCookieAuth('access_token')
+  @ApiBearerAuth()
+  @ApiParam({ name: 'id', description: 'ID da aula', type: String })
+  @ApiOperation({ summary: 'Listar as turmas às quais a aula é exclusiva' })
+  @ApiResponse({ status: 200, description: 'Turmas exclusivas da aula.', type: LessonCohortsResponseDto })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @ApiResponse({ status: 403, description: 'Sem acesso ao curso.' })
+  @ApiResponse({ status: 404, description: 'Aula não encontrada.' })
+  async getCohorts(
+    @Param('id') id: string,
+    @Req() req: Request & { user: { id: string; role: string } },
+  ) {
+    const cohortIds = await this.service.getCohorts(id, req.user.id, req.user.role);
+    return { data: { cohortIds } };
+  }
+
+  @Put('lessons/:id/cohorts')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Instrutor, Role.Admin)
+  @ApiCookieAuth('access_token')
+  @ApiBearerAuth()
+  @ApiParam({ name: 'id', description: 'ID da aula', type: String })
+  @ApiOperation({ summary: 'Definir as turmas às quais a aula é exclusiva (substitui a lista)' })
+  @ApiResponse({ status: 200, description: 'Turmas atualizadas.', type: LessonCohortsResponseDto })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @ApiResponse({ status: 403, description: 'Sem acesso ao curso.' })
+  @ApiResponse({ status: 404, description: 'Aula não encontrada.' })
+  @ApiResponse({ status: 422, description: 'Alguma turma não pertence ao curso da aula.' })
+  async setCohorts(
+    @Param('id') id: string,
+    @Body() dto: SetLessonCohortsDto,
+    @Req() req: Request & { user: { id: string; role: string } },
+  ) {
+    const data = await this.service.setCohorts(id, dto.cohortIds, req.user.id, req.user.role);
+    return { data };
   }
 
   @Get('modules/:moduleId/extra-unlocks')

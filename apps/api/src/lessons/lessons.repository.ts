@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, ne, sql } from 'drizzle-orm';
-import { lessons, lessonResources, type NewLesson } from '@open-class/db';
+import { and, eq, inArray, ne, sql } from 'drizzle-orm';
+import { lessons, lessonResources, lessonCohorts, type NewLesson } from '@open-class/db';
 import type { Db } from '../db';
 
 @Injectable()
@@ -80,19 +80,61 @@ export class LessonsRepository {
     return first?.courseId ?? null;
   }
 
-  /** O aluno está na turma? A turma está encerrada? (acesso a exclusivas — US-25) */
-  async findCohortAccess(studentId: string, cohortId: string) {
+  /** Turmas (ids) às quais a aula é exclusiva (US-25 many-to-many). */
+  async findLessonCohortIds(lessonId: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ cohortId: lessonCohorts.cohortId })
+      .from(lessonCohorts)
+      .where(eq(lessonCohorts.lessonId, lessonId));
+    return rows.map((r) => r.cohortId);
+  }
+
+  /** cohortIds por aula, em lote (para anexar ao currículo). */
+  async findCohortIdsForLessons(lessonIds: string[]): Promise<Record<string, string[]>> {
+    if (lessonIds.length === 0) return {};
+    const rows = await this.db
+      .select({ lessonId: lessonCohorts.lessonId, cohortId: lessonCohorts.cohortId })
+      .from(lessonCohorts)
+      .where(inArray(lessonCohorts.lessonId, lessonIds));
+    const map: Record<string, string[]> = {};
+    for (const r of rows) (map[r.lessonId] ??= []).push(r.cohortId);
+    return map;
+  }
+
+  /** Substitui em lote as turmas exclusivas de uma aula. */
+  async setLessonCohorts(lessonId: string, cohortIds: string[]) {
+    await this.db.transaction(async (tx) => {
+      await tx.delete(lessonCohorts).where(eq(lessonCohorts.lessonId, lessonId));
+      if (cohortIds.length > 0) {
+        await tx.insert(lessonCohorts).values(cohortIds.map((cohortId) => ({ lessonId, cohortId })));
+      }
+    });
+  }
+
+  /**
+   * Acesso do aluno a uma aula exclusiva (US-25 many-to-many):
+   * - cohortCount = 0  → aula regular (sem restrição).
+   * - enrolledCount = 0 → aluno não pertence a nenhuma turma da aula (404).
+   * - activeCount = 0  → só turmas encerradas (403).
+   */
+  async getExclusiveAccess(studentId: string, lessonId: string) {
     const rows = await this.db.execute(sql`
-      SELECT (c.closed_at IS NOT NULL) AS "closed"
-      FROM cohort_enrollments ce
-      JOIN cohorts c ON c.id = ce.cohort_id
-      WHERE ce.cohort_id = ${cohortId} AND ce.student_id = ${studentId}
-      LIMIT 1
+      SELECT
+        (SELECT count(*)::int FROM lesson_cohorts WHERE lesson_id = ${lessonId}) AS "cohortCount",
+        count(ce.cohort_id)::int AS "enrolledCount",
+        count(*) FILTER (WHERE c.closed_at IS NULL)::int AS "activeCount"
+      FROM lesson_cohorts lc
+      JOIN cohorts c ON c.id = lc.cohort_id
+      JOIN cohort_enrollments ce ON ce.cohort_id = lc.cohort_id AND ce.student_id = ${studentId}
+      WHERE lc.lesson_id = ${lessonId}
     `);
-    const first = (rows as unknown as { rows?: Array<{ closed: boolean }> }).rows?.[0]
-      ?? (rows as unknown as Array<{ closed: boolean }>)[0];
-    if (!first) return null;
-    return { enrolled: true, closed: Boolean(first.closed) };
+    const first = (rows as unknown as { rows?: Array<Record<string, number>> }).rows?.[0]
+      ?? (rows as unknown as Array<Record<string, number>>)[0];
+    return {
+      cohortCount: Number(first?.cohortCount ?? 0),
+      enrolledCount: Number(first?.enrolledCount ?? 0),
+      activeCount: Number(first?.activeCount ?? 0),
+    };
   }
 
   /**
@@ -125,9 +167,9 @@ export class LessonsRepository {
   async isExtraUnlockedFor(studentId: string, moduleId: string): Promise<boolean> {
     const rows = await this.db.execute(sql`
       SELECT
-        count(*) FILTER (WHERE l.is_extra = false AND l.visibility = 'visible' AND l.cohort_id IS NULL) AS total,
+        count(*) FILTER (WHERE l.is_extra = false AND l.visibility = 'visible' AND NOT EXISTS (SELECT 1 FROM lesson_cohorts lc WHERE lc.lesson_id = l.id)) AS total,
         count(*) FILTER (
-          WHERE l.is_extra = false AND l.visibility = 'visible' AND l.cohort_id IS NULL
+          WHERE l.is_extra = false AND l.visibility = 'visible' AND NOT EXISTS (SELECT 1 FROM lesson_cohorts lc WHERE lc.lesson_id = l.id)
             AND lp.is_completed = true
         ) AS completed
       FROM lessons l
@@ -152,8 +194,8 @@ export class LessonsRepository {
       ),
       normals AS (
         SELECT id FROM lessons
-        WHERE module_id = ${moduleId} AND is_extra = false AND visibility = 'visible'
-          AND cohort_id IS NULL
+        WHERE module_id =  AND is_extra = false AND visibility = 'visible'
+          AND NOT EXISTS (SELECT 1 FROM lesson_cohorts lc WHERE lc.lesson_id = lessons.id)
       ),
       enrolled AS (
         SELECT e.student_id FROM enrollments e

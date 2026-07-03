@@ -39,6 +39,7 @@ const makeRepo = (overrides = {}) => ({
   ]),
   getStats: vi.fn().mockResolvedValue({ totalCourses: 12, totalInstructors: 6, percentFree: 100 }),
   findStudentCohortForCourse: vi.fn().mockResolvedValue(null),
+  findLessonCohortIds: vi.fn().mockResolvedValue({}),
   ...overrides,
 });
 
@@ -234,9 +235,9 @@ describe('CatalogService', () => {
     const modulesWithExclusives = [{
       id: 'm1', title: 'Mod 1', description: null, position: 1,
       lessons: [
-        { id: 'l-reg', title: 'Regular', contentType: 'video', duration: 60, position: 1, isExtra: false, cohortId: null },
-        { id: 'l-exc-1', title: 'Exclusiva T1', contentType: 'video', duration: 60, position: 2, isExtra: false, cohortId: 'cohort-1' },
-        { id: 'l-exc-2', title: 'Exclusiva T2', contentType: 'video', duration: 60, position: 3, isExtra: false, cohortId: 'cohort-2' },
+        { id: 'l-reg', title: 'Regular', contentType: 'video', duration: 60, position: 1, isExtra: false },
+        { id: 'l-exc-1', title: 'Exclusiva T1', contentType: 'video', duration: 60, position: 2, isExtra: false },
+        { id: 'l-exc-2', title: 'Exclusiva T2', contentType: 'video', duration: 60, position: 3, isExtra: false },
       ],
     }];
 
@@ -248,6 +249,8 @@ describe('CatalogService', () => {
         modules: modulesWithExclusives, status: 'published',
         createdAt: new Date('2026-01-01T00:00:00Z'),
       });
+      // l-reg regular; l-exc-1 exclusiva da cohort-1; l-exc-2 da cohort-2
+      repo.findLessonCohortIds.mockResolvedValue({ 'l-exc-1': ['cohort-1'], 'l-exc-2': ['cohort-2'] });
     });
 
     it('visitante não vê aulas exclusivas', async () => {

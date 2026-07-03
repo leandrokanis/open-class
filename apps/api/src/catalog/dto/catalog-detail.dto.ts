@@ -8,6 +8,7 @@ export class CatalogLessonDto {
   @ApiPropertyOptional({ nullable: true }) duration?: number | null;
   @ApiProperty() order!: number;
   @ApiProperty({ example: false, description: 'Aula extra (bônus) — bloqueada até concluir as normais do módulo' }) isExtra!: boolean;
+  @ApiProperty({ type: [String], example: [], description: 'Turmas às quais a aula é exclusiva (US-25); vazio = regular' }) cohortIds!: string[];
 }
 
 export class CatalogModuleDto {

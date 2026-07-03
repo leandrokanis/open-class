@@ -19,8 +19,7 @@ export const lessons = pgTable(
     visibility:     visibilityEnum('visibility').notNull().default('visible'),
     // Aula extra: conteúdo bônus desbloqueado ao concluir as normais do módulo (US-20/21)
     isExtra:        boolean('is_extra').notNull().default(false),
-    // Aula exclusiva de turma: null = regular; setado = só para a turma (US-25)
-    cohortId:       uuid('cohort_id'),
+    // Exclusividade de turma agora é many-to-many via lesson_cohorts (US-25 estendida).
     createdAt:      timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt:      timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

@@ -41,7 +41,7 @@ export interface LessonData {
   visibility: 'visible' | 'hidden';
   position: number;
   isExtra: boolean;
-  cohortId: string | null;
+  cohortIds: string[];
   resources: Resource[];
   contentType: string;
   createdAt: string;
@@ -433,7 +433,7 @@ export async function deleteModule(courseId: string, id: string): Promise<boolea
 
 export async function createLesson(
   moduleId: string,
-  data: { title: string; youtubeUrl?: string; description?: string; cohortId?: string },
+  data: { title: string; youtubeUrl?: string; description?: string; cohortIds?: string[] },
 ): Promise<LessonData | null> {
   const res = await fetch(`${API_PUBLIC}/api/modules/${moduleId}/lessons`, {
     method: 'POST',
@@ -444,6 +444,27 @@ export async function createLesson(
   if (!res.ok) return null;
   const json = await res.json();
   return json.data;
+}
+
+/** Turmas às quais a aula é exclusiva (US-25). */
+export async function fetchLessonCohorts(lessonId: string): Promise<string[]> {
+  const res = await fetch(`${API_PUBLIC}/api/lessons/${lessonId}/cohorts`, { credentials: 'include' });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data?.cohortIds ?? [];
+}
+
+/** Substitui a lista de turmas exclusivas da aula. Retorna a nova lista ou null em erro. */
+export async function setLessonCohorts(lessonId: string, cohortIds: string[]): Promise<string[] | null> {
+  const res = await fetch(`${API_PUBLIC}/api/lessons/${lessonId}/cohorts`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ cohortIds }),
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.data?.cohortIds ?? [];
 }
 
 export async function updateLesson(

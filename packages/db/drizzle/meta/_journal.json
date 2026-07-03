@@ -92,6 +92,13 @@
       "when": 1782950800000,
       "tag": "0012_lessons_cohort_exclusive",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1782950900000,
+      "tag": "0013_lesson_cohorts",
+      "breakpoints": true
     }
   ]
 }

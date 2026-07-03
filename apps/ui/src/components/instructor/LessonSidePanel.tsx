@@ -13,6 +13,7 @@ import type { LessonData } from '@/lib/instructor';
 import { CourseEditorContext } from '@/app/instructor/courses/[id]/layout';
 import YouTubePreview, { type VideoInfo } from './YouTubePreview';
 import ResourceList from './ResourceList';
+import LessonCohortsCard from './LessonCohortsCard';
 
 const Panel = styled.div`
   display: flex;
@@ -322,6 +323,14 @@ export default function LessonSidePanel({
             : 'Aula normal do currículo: conta para o progresso e para a duração do curso.'}
         </VisibilityDesc>
       </Card>
+
+      {ctx?.courseId && (
+        <LessonCohortsCard
+          lessonId={lesson.id}
+          courseId={ctx.courseId}
+          onChanged={(cohortIds) => onUpdated({ ...lesson, cohortIds })}
+        />
+      )}
 
       <Card>
         <CardTitle>Recursos externos</CardTitle>

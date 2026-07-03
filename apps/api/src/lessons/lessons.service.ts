@@ -28,18 +28,15 @@ export class LessonsService {
       videoId = info.videoId;
       durationSeconds = info.durationSeconds;
     }
-    // Aula exclusiva de turma: a turma precisa pertencer ao curso do módulo (US-25)
-    if (dto.cohortId) {
-      const mod = await this.modulesRepo.findById(moduleId);
-      const cohortCourseId = await this.repo.findCohortCourseId(dto.cohortId);
-      if (!cohortCourseId || cohortCourseId !== mod?.courseId) {
-        throw new UnprocessableEntityException(t('cohorts.module_not_in_course'));
-      }
+    // Aula exclusiva de turma: cada turma precisa pertencer ao curso do módulo (US-25)
+    const cohortIds = dto.cohortIds ?? [];
+    if (cohortIds.length > 0) {
+      await this.assertCohortsBelongToCourse(moduleId, cohortIds);
     }
 
     const isExtra = dto.isExtra ?? false;
     const position = await this.repo.nextPosition(moduleId, isExtra);
-    return this.repo.insert({
+    const lesson = await this.repo.insert({
       moduleId,
       title: dto.title,
       description: dto.description,
@@ -49,15 +46,18 @@ export class LessonsService {
       position,
       visibility: 'hidden',
       isExtra,
-      cohortId: dto.cohortId ?? null,
     });
+    if (cohortIds.length > 0) await this.repo.setLessonCohorts(lesson.id, cohortIds);
+    return { ...lesson, cohortIds };
   }
 
   async findByModule(moduleId: string, userRole?: string) {
     const all = await this.repo.findByModule(moduleId);
-    if (userRole === 'instrutor' || userRole === 'admin') return all;
+    const cohortMap = await this.repo.findCohortIdsForLessons(all.map((l) => l.id));
+    const withCohorts = all.map((l) => ({ ...l, cohortIds: cohortMap[l.id] ?? [] }));
+    if (userRole === 'instrutor' || userRole === 'admin') return withCohorts;
     // Exclusivas de turma ficam fora da listagem pública (US-25)
-    return all.filter((l) => l.visibility === 'visible' && !l.cohortId);
+    return withCohorts.filter((l) => l.visibility === 'visible' && l.cohortIds.length === 0);
   }
 
   async findById(id: string, userRole?: string, userId?: string) {
@@ -67,11 +67,14 @@ export class LessonsService {
     if (lesson.visibility !== 'visible' && !isStaff) {
       throw new NotFoundException(t('lessons.not_found'));
     }
-    // Aula exclusiva de turma: só para matriculados na turma, e só enquanto ativa (US-25)
-    if (lesson.cohortId && !isStaff) {
-      const access = userId ? await this.repo.findCohortAccess(userId, lesson.cohortId) : null;
-      if (!access) throw new NotFoundException(t('lessons.not_found'));
-      if (access.closed) throw new ForbiddenException(t('cohorts.exclusive_closed'));
+    const cohortIds = await this.repo.findLessonCohortIds(id);
+    // Aula exclusiva de turma: só para matriculados em alguma turma ativa da aula (US-25)
+    if (cohortIds.length > 0 && !isStaff) {
+      const access = userId
+        ? await this.repo.getExclusiveAccess(userId, id)
+        : { cohortCount: cohortIds.length, enrolledCount: 0, activeCount: 0 };
+      if (access.enrolledCount === 0) throw new NotFoundException(t('lessons.not_found'));
+      if (access.activeCount === 0) throw new ForbiddenException(t('cohorts.exclusive_closed'));
     }
     // Extra bloqueada para quem ainda não concluiu as normais do módulo (US-20)
     if (lesson.isExtra && !isStaff) {
@@ -85,7 +88,35 @@ export class LessonsService {
         throw new ForbiddenException(t('cohorts.module_locked'));
       }
     }
-    return lesson;
+    return { ...lesson, cohortIds };
+  }
+
+  /** Turmas exclusivas de uma aula (instrutor dono/admin). */
+  async getCohorts(lessonId: string, userId: string, userRole: string): Promise<string[]> {
+    const lesson = await this.repo.findById(lessonId);
+    if (!lesson) throw new NotFoundException(t('lessons.not_found'));
+    await this.assertModuleOwnership(lesson.moduleId, userId, userRole);
+    return this.repo.findLessonCohortIds(lessonId);
+  }
+
+  /** Substitui em lote as turmas exclusivas de uma aula (US-25). */
+  async setCohorts(lessonId: string, cohortIds: string[], userId: string, userRole: string) {
+    const lesson = await this.repo.findById(lessonId);
+    if (!lesson) throw new NotFoundException(t('lessons.not_found'));
+    await this.assertModuleOwnership(lesson.moduleId, userId, userRole);
+    if (cohortIds.length > 0) await this.assertCohortsBelongToCourse(lesson.moduleId, cohortIds);
+    await this.repo.setLessonCohorts(lessonId, cohortIds);
+    return { lessonId, cohortIds };
+  }
+
+  private async assertCohortsBelongToCourse(moduleId: string, cohortIds: string[]) {
+    const mod = await this.modulesRepo.findById(moduleId);
+    for (const cohortId of cohortIds) {
+      const cohortCourseId = await this.repo.findCohortCourseId(cohortId);
+      if (!cohortCourseId || cohortCourseId !== mod?.courseId) {
+        throw new UnprocessableEntityException(t('cohorts.module_not_in_course'));
+      }
+    }
   }
 
   async update(id: string, dto: UpdateLessonDto, userId: string, userRole: string) {

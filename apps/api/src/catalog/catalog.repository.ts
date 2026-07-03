@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, countDistinct, desc, eq, ilike, isNull, lt, or, sql, sum } from 'drizzle-orm';
-import { categories, courses, modules, lessons, users } from '@open-class/db';
+import { and, asc, count, countDistinct, desc, eq, ilike, inArray, isNull, lt, or, sql, sum } from 'drizzle-orm';
+import { categories, courses, modules, lessons, users, lessonCohorts } from '@open-class/db';
 import type { Db } from '../db';
 
 interface FindPublishedOpts {
@@ -85,7 +85,7 @@ export class CatalogRepository {
         // Extras ficam fora da contagem e do tempo total estimado (US-20)
         eq(lessons.isExtra, false),
         // Exclusivas de turma também não entram nos agregados públicos (US-25)
-        isNull(lessons.cohortId),
+        sql`NOT EXISTS (SELECT 1 FROM lesson_cohorts lc WHERE lc.lesson_id = ${lessons.id})`,
       ))
       .where(and(eq(modules.visibility, 'visible'), isNull(courses.deletedAt)))
       .groupBy(courses.id)
@@ -178,6 +178,18 @@ export class CatalogRepository {
       })
       .from(categories)
       .orderBy(asc(categories.position));
+  }
+
+  /** cohortIds por aula (exclusividade many-to-many — US-25), em lote. */
+  async findLessonCohortIds(lessonIds: string[]): Promise<Record<string, string[]>> {
+    if (lessonIds.length === 0) return {};
+    const rows = await this.db
+      .select({ lessonId: lessonCohorts.lessonId, cohortId: lessonCohorts.cohortId })
+      .from(lessonCohorts)
+      .where(inArray(lessonCohorts.lessonId, lessonIds));
+    const map: Record<string, string[]> = {};
+    for (const r of rows) (map[r.lessonId] ??= []).push(r.cohortId);
+    return map;
   }
 
   /** Turma do aluno neste curso (para exibição de aulas exclusivas — US-25). */
