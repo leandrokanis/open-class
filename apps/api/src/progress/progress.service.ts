@@ -6,13 +6,26 @@ import { t } from '../i18n/translate';
 export class ProgressService {
   constructor(private readonly repo: ProgressRepository) {}
 
-  async markLesson(studentId: string, lessonId: string, isCompleted: boolean) {
+  /**
+   * Acesso de aluno com privilégios: admin acessa qualquer curso; instrutor,
+   * os próprios cursos; demais precisam de matrícula.
+   */
+  private async assertStudentAccess(userId: string, courseId: string, role?: string) {
+    if (role === 'admin') return;
+    if (await this.repo.isEnrolled(userId, courseId)) return;
+    if (role === 'instrutor') {
+      const course = await this.repo.findCourseById(courseId);
+      if (course && course.instructorId === userId) return;
+    }
+    throw new ForbiddenException(t('enrollments.not_enrolled'));
+  }
+
+  async markLesson(studentId: string, lessonId: string, isCompleted: boolean, role?: string) {
     const lesson = await this.repo.findLessonWithCourse(lessonId);
     if (!lesson) throw new NotFoundException(t('progress.lesson_not_found'));
 
     const courseId = lesson.module.courseId;
-    const enrolled = await this.repo.isEnrolled(studentId, courseId);
-    if (!enrolled) throw new ForbiddenException(t('enrollments.not_enrolled'));
+    await this.assertStudentAccess(studentId, courseId, role);
 
     // Extra bloqueada: só pode ser marcada após concluir as normais do módulo (US-20)
     if (lesson.isExtra) {
@@ -35,12 +48,11 @@ export class ProgressService {
     };
   }
 
-  async getCourseProgress(studentId: string, courseId: string) {
+  async getCourseProgress(studentId: string, courseId: string, role?: string) {
     const course = await this.repo.findCourseById(courseId);
     if (!course) throw new NotFoundException(t('progress.course_not_found'));
 
-    const enrolled = await this.repo.isEnrolled(studentId, courseId);
-    if (!enrolled) throw new ForbiddenException(t('enrollments.not_enrolled'));
+    await this.assertStudentAccess(studentId, courseId, role);
 
     const { completed, total } = await this.repo.getCompletionStats(studentId, courseId);
     const percentage = total === 0 ? 0 : Math.round((completed / total) * 1000) / 10;
@@ -48,9 +60,8 @@ export class ProgressService {
     return { courseId, completedLessons: completed, totalLessons: total, percentage };
   }
 
-  async getCompletedLessonIds(studentId: string, courseId: string): Promise<string[]> {
-    const enrolled = await this.repo.isEnrolled(studentId, courseId);
-    if (!enrolled) throw new ForbiddenException(t('enrollments.not_enrolled'));
+  async getCompletedLessonIds(studentId: string, courseId: string, role?: string): Promise<string[]> {
+    await this.assertStudentAccess(studentId, courseId, role);
 
     return this.repo.getCompletedLessonIds(studentId, courseId);
   }
@@ -60,9 +71,8 @@ export class ProgressService {
   }
 
   /** Status das aulas extras por módulo do curso (US-20). */
-  async getExtrasStatus(studentId: string, courseId: string) {
-    const enrolled = await this.repo.isEnrolled(studentId, courseId);
-    if (!enrolled) throw new ForbiddenException(t('enrollments.not_enrolled'));
+  async getExtrasStatus(studentId: string, courseId: string, role?: string) {
+    await this.assertStudentAccess(studentId, courseId, role);
 
     const rows = await this.repo.getExtrasStatus(studentId, courseId);
     return rows.map((r) => ({
@@ -76,23 +86,21 @@ export class ProgressService {
   }
 
   /** Registra a celebração de desbloqueio — idempotente, uma vez por módulo (US-20). */
-  async celebrateExtras(studentId: string, moduleId: string) {
+  async celebrateExtras(studentId: string, moduleId: string, role?: string) {
     const courseId = await this.repo.findModuleCourseId(moduleId);
     if (!courseId) throw new NotFoundException(t('modules.not_found'));
 
-    const enrolled = await this.repo.isEnrolled(studentId, courseId);
-    if (!enrolled) throw new ForbiddenException(t('enrollments.not_enrolled'));
+    await this.assertStudentAccess(studentId, courseId, role);
 
     await this.repo.upsertExtrasCelebration(studentId, moduleId);
     return { celebrated: true };
   }
 
-  async getLastAccessed(studentId: string, courseId: string) {
+  async getLastAccessed(studentId: string, courseId: string, role?: string) {
     const course = await this.repo.findCourseById(courseId);
     if (!course) throw new NotFoundException(t('progress.course_not_found'));
 
-    const enrolled = await this.repo.isEnrolled(studentId, courseId);
-    if (!enrolled) throw new ForbiddenException(t('enrollments.not_enrolled'));
+    await this.assertStudentAccess(studentId, courseId, role);
 
     const lesson = await this.repo.getLastAccessedLesson(studentId, courseId);
     return { lastAccessedLesson: lesson };
