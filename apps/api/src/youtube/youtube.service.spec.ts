@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { UnprocessableEntityException, ServiceUnavailableException } from '@nestjs/common';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { UnprocessableEntityException } from '@nestjs/common';
 import { YouTubeService } from './youtube.service';
 
 describe('YouTubeService', () => {
@@ -62,6 +62,15 @@ describe('YouTubeService', () => {
   });
 
   describe('validateAndFetchInfo', () => {
+    beforeEach(() => {
+      vi.stubEnv('YOUTUBE_API_KEY', 'test-key');
+      service = new YouTubeService();
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
     it('lança UnprocessableEntityException para URL inválida', async () => {
       await expect(service.validateAndFetchInfo('https://vimeo.com/123')).rejects.toThrow(
         UnprocessableEntityException,
@@ -116,12 +125,12 @@ describe('YouTubeService', () => {
       vi.unstubAllGlobals();
     });
 
-    it('lança ServiceUnavailableException quando fetch falha', async () => {
+    it('degrada graciosamente quando o fetch falha (duração nula)', async () => {
       vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
 
       await expect(
         service.validateAndFetchInfo('https://youtu.be/dQw4w9WgXcQ'),
-      ).rejects.toThrow(ServiceUnavailableException);
+      ).resolves.toEqual({ videoId: 'dQw4w9WgXcQ', durationSeconds: null });
 
       vi.unstubAllGlobals();
     });
