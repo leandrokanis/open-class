@@ -157,7 +157,8 @@ export class CatalogRepository {
           with: {
             lessons: {
               where: eq(lessons.visibility, 'visible'),
-              orderBy: [asc(lessons.position)],
+              // Normais primeiro, extras depois; posição é por grupo (US-20/21)
+              orderBy: [asc(lessons.isExtra), asc(lessons.position)],
             },
           },
         },

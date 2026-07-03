@@ -302,8 +302,6 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
 
   const flatLessons = buildFlatList(modules, extrasUnlockedByModule, moduleLocks);
   const currentIndex = flatLessons.findIndex((l) => l.id === lesson.id);
-  const prevLesson = currentIndex > 0 ? flatLessons[currentIndex - 1] : null;
-  const nextLesson = currentIndex >= 0 && currentIndex < flatLessons.length - 1 ? flatLessons[currentIndex + 1] : null;
   const normalFlat = modules.flatMap((m) => m.lessons.filter((l) => !l.isExtra));
   const lessonIndex = currentIndex + 1;
   const totalLessons = normalFlat.length;
@@ -330,12 +328,26 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
     router.push(`/course/${courseSlug}/lesson/${lessonId}`);
   }
 
+  // Próxima aula considerando que a atual acabou de ser concluída: recalcula o
+  // desbloqueio de extras localmente para não depender do fetch assíncrono, de
+  // modo que concluir a última normal do módulo avance para a extra recém-liberada.
+  function nextLessonIdAfterCompleting(currentId: string): string | null {
+    const completed = new Set([...completedLessonIds, currentId]);
+    const unlocked: Record<string, boolean> = {};
+    for (const m of modules) {
+      const normals = m.lessons.filter((l) => !l.isExtra);
+      unlocked[m.id] = normals.length > 0 && normals.every((l) => completed.has(l.id));
+    }
+    const flat = buildFlatList(modules, unlocked, moduleLocks);
+    const idx = flat.findIndex((l) => l.id === currentId);
+    return idx >= 0 && idx < flat.length - 1 ? flat[idx + 1].id : null;
+  }
+
   async function handleVideoEnded() {
     if (isCompleted(lesson.id)) return;
     await toggle(lesson.id);
-    if (nextLesson) {
-      router.push(`/course/${courseSlug}/lesson/${nextLesson.id}`);
-    }
+    const nextId = nextLessonIdAfterCompleting(lesson.id);
+    if (nextId) router.push(`/course/${courseSlug}/lesson/${nextId}`);
   }
 
   async function handleToggle() {
@@ -344,9 +356,8 @@ export function PlayerLayout({ lesson, modules, courseId, courseTitle, courseSlu
       return;
     }
     await toggle(lesson.id);
-    if (nextLesson) {
-      router.push(`/course/${courseSlug}/lesson/${nextLesson.id}`);
-    }
+    const nextId = nextLessonIdAfterCompleting(lesson.id);
+    if (nextId) router.push(`/course/${courseSlug}/lesson/${nextId}`);
   }
 
   async function handleConfirmUnmark() {
