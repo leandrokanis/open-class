@@ -14,7 +14,9 @@ const Page = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
   max-width: 900px;
+  margin-inline: auto;
 `;
 
 const Header = styled.div`

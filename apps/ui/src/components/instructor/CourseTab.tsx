@@ -14,7 +14,9 @@ const ScrollArea = styled.div`
   flex: 1;
   overflow-y: auto;
   padding: 40px 48px;
+  width: 100%;
   max-width: 720px;
+  margin-inline: auto;
 `;
 
 const fadeIn = keyframes`

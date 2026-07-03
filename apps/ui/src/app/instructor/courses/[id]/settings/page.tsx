@@ -14,7 +14,9 @@ const Page = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  width: 100%;
   max-width: 720px;
+  margin-inline: auto;
 `;
 
 const PageTitle = styled.h1`
